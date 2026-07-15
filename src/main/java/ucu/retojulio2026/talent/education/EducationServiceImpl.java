@@ -1,8 +1,7 @@
 package ucu.retojulio2026.talent.education;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -24,13 +23,13 @@ public class EducationServiceImpl implements EducationService {
     @Override
     public Education getById(String id) {
         return educationRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            .orElseThrow(() -> new ResourceNotFoundException(
                         "Education con id '" + id + "' no encontrada"));
     }
 
     @Override
     public List<Education> getByPerfilAlumnoId(String perfilAlumnoId) {
-        return educationRepository.findByPerfilAlumnoId(perfilAlumnoId);
+        return educationRepository.getByPerfilAlumnoId(perfilAlumnoId);
     }
 
     @Override
