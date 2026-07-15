@@ -1,0 +1,25 @@
+package ucu.retojulio2026.talent.user.dto;
+
+import java.time.LocalDate;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import ucu.retojulio2026.talent.user.Role;
+
+//Datos que la API DEVUELVE de un usuario.
+
+public record UserResponse(
+        @Schema(description = "Id del usuario (NanoID)", example = "V1StGXR8_Z5j")
+        String userId,
+
+        @Schema(description = "Nombre del usuario", example = "Nicolas Gonzalez")
+        String name,
+
+        @Schema(description = "Email del usuario", example = "nicogon@ucu.edu.uy")
+        String email,
+
+        @Schema(description = "Rol del usuario", example = "ALUMNO")
+        Role role,
+
+        @Schema(description = "Fecha de alta del usuario", example = "2026-07-15")
+        LocalDate registeredAt
+) {}
