@@ -2,6 +2,9 @@
 
 API Rest del proyecto **Talent** (Reto Julio 2026 - UCU).
 
+## Swagger
+http://localhost:8080/swagger-ui/index.html
+
 ## Stack
 
 - **Java 21**
