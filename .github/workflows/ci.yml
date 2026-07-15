@@ -1,5 +1,5 @@
 
-name: Backend CI Java + Maven
+name: Backend CI Java +Maven
 
 on:
   push:
