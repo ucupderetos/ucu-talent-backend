@@ -1,24 +1,24 @@
 package ucu.retojulio2026.talent.Vacancy;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "vacancy") // puesto
+@Table(name = "\"vacancy\"") // Puesto
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class Vacancy {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Ver luego como es con la libreria.
+    @Column(name = "vacancy_id", length = 12, updatable = false, nullable = false)
+    private String vacancyId;
 
     //@ManyToOne(fetch = FetchType.LAZY, optional = false)
     //@JoinColumn(name = "company_id", nullable = false)
@@ -28,8 +28,9 @@ public class Vacancy {
     //@JoinColumn(name = "area_id", nullable = false)
     //private Area area;
 
-    @Column(name = "publication_date")
-    private LocalDate publicationDate; // Ver si es LocalDate o LocalDateTime
+    @CreationTimestamp
+    @Column(name = "publication_date", updatable = false, nullable = false)
+    private LocalDate publicationDate;
 
     @Column(name = "closing_date")
     private LocalDate closingDate;
@@ -61,91 +62,10 @@ public class Vacancy {
     @Column(name = "salary_range", length = 80)
     private String salaryRange;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDate getPublicationDate() {
-        return publicationDate;
-    }
-
-    public void setPublicationDate(LocalDate publicationDate) {
-        this.publicationDate = publicationDate;
-    }
-
-    public LocalDate getClosingDate() {
-        return closingDate;
-    }
-
-    public void setClosingDate(LocalDate closingDate) {
-        this.closingDate = closingDate;
-    }
-
-    public Departamento getLocality() {
-        return locality;
-    }
-
-    public void setLocality(Departamento locality) {
-        this.locality = locality;
-    }
-
-    public Modality getModality() {
-        return modality;
-    }
-
-    public void setModality(Modality modality) {
-        this.modality = modality;
-    }
-
-    public JobStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(JobStatus status) {
-        this.status = status;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getRequirements() {
-        return requirements;
-    }
-
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
-    }
-
-    public String getContractType() {
-        return contractType;
-    }
-
-    public void setContractType(String contractType) {
-        this.contractType = contractType;
-    }
-
-    public String getSalaryRange() {
-        return salaryRange;
-    }
-
-    public void setSalaryRange(String salaryRange) {
-        this.salaryRange = salaryRange;
+    @PrePersist
+    protected void assignId() {
+        if (this.vacancyId == null) {
+            this.vacancyId = NanoIdGenerator.generate();
+        }
     }
 }
