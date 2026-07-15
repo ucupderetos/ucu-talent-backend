@@ -6,8 +6,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface EducationRepository extends JpaRepository<Education, Long> {
+public interface EducationRepository extends JpaRepository<Education, String> {
     
     // listar todas las educaciones de un perfil de alumno.
-    List<Education> findByPerfilAlumnoId(Long perfilAlumnoId);
+    List<Education> getByPerfilAlumnoId(String perfilAlumnoId);
 }
