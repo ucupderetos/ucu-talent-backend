@@ -34,3 +34,8 @@ build/
 
 
 .claude
+
+### Docker / secrets ###
+.env
+
+learning/
