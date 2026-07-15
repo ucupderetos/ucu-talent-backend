@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ucu.retojulio2026.talent.education.dto.GetEducationByIdRequest;
 
 import java.util.List;
 
@@ -54,6 +56,17 @@ public class EducationController {
     public ResponseEntity<Education> getById(
             @Parameter(description = "Id de education") @PathVariable String id) {
         return ResponseEntity.ok(educationService.getById(id));
+    }
+
+    @Operation(summary = "Obtener un registro de educacion por id (DTO request)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Registro encontrado"),
+            @ApiResponse(responseCode = "400", description = "Parametro invalido"),
+            @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
+    })
+    @GetMapping("/by-id")
+    public ResponseEntity<Education> getByIdRequest(@Valid @ModelAttribute GetEducationByIdRequest request) {
+        return ResponseEntity.ok(educationService.getById(request.id()));
     }
 
     @Operation(summary = "Listar educacion por perfilAlumnoId")
