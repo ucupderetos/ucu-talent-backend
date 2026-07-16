@@ -6,11 +6,11 @@ public interface EducationService {
 
     Education create(Education education);
 
-    Education getById(String id);
+    Education getByEducationId(String education_id);
 
-    List<Education> getByPerfilAlumnoId(String perfilAlumnoId);
+    List<Education> getByStudentProfileId(String studentProfileId);
 
-    Education update(String id, Education education);
+    Education update(String education_id, Education education);
 
-    void delete(String id);
+    void delete(String education_id);
 }
