@@ -28,20 +28,20 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     }
 
     @Override
-    public List<WorkExperience> getByPerfilAlumnoId(String perfilAlumnoId) {
-        return workExperienceRepository.findByPerfilAlumnoId(perfilAlumnoId);
+    public List<WorkExperience> getByStudentProfileId(String studentProfileId) {
+        return workExperienceRepository.findByStudentProfileId(studentProfileId);
     }
 
     @Override
     public WorkExperience update(String id, WorkExperience workExperience) {
         WorkExperience existing = getById(id);
 
-        existing.setPerfilAlumnoId(workExperience.getPerfilAlumnoId());
-        existing.setEmpresa(workExperience.getEmpresa());
-        existing.setPuesto(workExperience.getPuesto());
-        existing.setFechaInicio(workExperience.getFechaInicio());
-        existing.setFechaFin(workExperience.getFechaFin());
-        existing.setDescripcion(workExperience.getDescripcion());
+        existing.setStudentProfileId(workExperience.getStudentProfileId());
+        existing.setCompany(workExperience.getCompany());
+        existing.setPosition(workExperience.getPosition());
+        existing.setStartDate(workExperience.getStartDate());
+        existing.setEndDate(workExperience.getEndDate());
+        existing.setDescription(workExperience.getDescription());
 
         return workExperienceRepository.save(existing);
     }

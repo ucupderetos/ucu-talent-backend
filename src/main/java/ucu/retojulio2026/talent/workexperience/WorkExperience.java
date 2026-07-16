@@ -3,14 +3,15 @@ package ucu.retojulio2026.talent.workexperience;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 import java.time.LocalDate;
 
@@ -24,27 +25,32 @@ import java.time.LocalDate;
 public class WorkExperience {
 
     @Id
+    @Column(name = "id", length = 12, updatable = false, nullable = false)
     private String id;
 
-    @NotBlank(message = "El perfilAlumnoId es obligatorio")
-    @Column(name = "perfil_alumno_id", nullable = false)
-    private String perfilAlumnoId;
+    @NotBlank(message = "El studentProfileId es obligatorio")
+    @Column(name = "student_profile_id", nullable = false)
+    private String studentProfileId;
 
-    @NotBlank(message = "La empresa es obligatoria")
-    @Column(nullable = false)
-    private String empresa;
+    @Column(name = "company")
+    private String company;
 
-    @NotBlank(message = "El puesto es obligatorio")
-    @Column(nullable = false)
-    private String puesto;
+    @Column(name = "position")
+    private String position;
 
-    @NotNull(message = "La fecha de inicio es obligatoria")
-    @Column(name = "fecha_inicio", nullable = false)
-    private LocalDate fechaInicio;
+    @Column(name = "start_date")
+    private LocalDate startDate;
 
-    @Column(name = "fecha_fin")
-    private LocalDate fechaFin;
+    @Column(name = "end_date")
+    private LocalDate endDate;
 
-    @Column(columnDefinition = "TEXT")
-    private String descripcion;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @PrePersist
+    protected void assignId() {
+        if (this.id == null) {
+            this.id = NanoIdGenerator.generate();
+        }
+    }
 }
