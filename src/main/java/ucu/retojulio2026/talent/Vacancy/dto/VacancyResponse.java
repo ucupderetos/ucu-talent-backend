@@ -1,0 +1,43 @@
+package ucu.retojulio2026.talent.vacancy.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import ucu.retojulio2026.talent.vacancy.Departamento;
+import ucu.retojulio2026.talent.vacancy.JobStatus;
+import ucu.retojulio2026.talent.vacancy.Modality;
+
+import java.time.LocalDate;
+
+public record VacancyResponse (
+        @Schema(description = "Id del puesto (NanoID)", example = "V1StGXR8_Z5j")
+        String vacancyId,
+
+        @Schema(description = "Fecha de publicación", example = "2026-07-15")
+        LocalDate publicationDate,
+
+        @Schema(description = "Fecha de cierre del puesto", example = "2026-08-15")
+        LocalDate closingDate,
+
+        @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
+        Departamento locality,
+
+        @Schema(description = "Modalidad de trabajo", example = "REMOTO")
+        Modality modality,
+
+        @Schema(description = "Estado del puesto", example = "PENDIENTE")
+        JobStatus status,
+
+        @Schema(description = "Nombre del puesto", example = "Java Backend Developer")
+        String name,
+
+        @Schema(description = "Descripción del puesto", example = "Desarrollo de APIs REST con Spring Boot")
+        String description,
+
+        @Schema(description = "Requisitos del puesto", example = "Java 21, Spring Boot, PostgreSQL")
+        String requirements,
+
+        @Schema(description = "Tipo de contrato", example = "Full time")
+        String contractType,
+
+        @Schema(description = "Rango salarial", example = "USD 700 - 2000")
+        String salaryRange
+        ) {}
