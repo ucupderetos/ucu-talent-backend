@@ -36,7 +36,7 @@ public class VacancyServiceImpl implements VacancyService {
     @Transactional
     public Vacancy create(CreateVacancyRequest request) {
         Vacancy vacancy = vacancyMapper.toEntity(request);
-        vacancy.setStatus(JobStatus.PENDIENTE);
+        vacancy.setStatus(VacancyStatus.PENDIENTE);
         return vacancyRepository.save(vacancy);
     }
 
@@ -50,7 +50,7 @@ public class VacancyServiceImpl implements VacancyService {
 
         existing.setPublicationDate(updated.getPublicationDate());
         existing.setClosingDate(updated.getClosingDate());
-        existing.setLocality(updated.getLocality());
+        existing.setLocation(updated.getLocation());
         existing.setModality(updated.getModality());
         existing.setStatus(updated.getStatus());
         existing.setName(updated.getName());
