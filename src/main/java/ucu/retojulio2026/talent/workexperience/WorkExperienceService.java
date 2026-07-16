@@ -8,7 +8,7 @@ public interface WorkExperienceService {
 
     WorkExperience getById(String id);
 
-    List<WorkExperience> getByPerfilAlumnoId(String perfilAlumnoId);
+    List<WorkExperience> getByStudentProfileId(String studentProfileId);
 
     WorkExperience update(String id, WorkExperience workExperience);
 
