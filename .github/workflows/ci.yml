@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Give execute permission to mvnw
+        run: chmod +x mvnw
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
