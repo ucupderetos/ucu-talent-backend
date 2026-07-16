@@ -21,15 +21,15 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
-    public Education getById(String id) {
-        return educationRepository.findById(id)
+    public Education getByEducationId(String education_id) {
+        return educationRepository.findById(education_id)
             .orElseThrow(() -> new ResourceNotFoundException(
-                        "Education con id '" + id + "' no encontrada"));
+                        "Education con id '" + education_id + "' no encontrada"));
     }
 
     @Override
-    public List<Education> getByPerfilAlumnoId(String perfilAlumnoId) {
-        return educationRepository.getByPerfilAlumnoId(perfilAlumnoId);
+    public List<Education> getByStudentProfileId(String studentProfileId) {
+        return educationRepository.findByStudentProfileId(studentProfileId);
     }
 
     @Override
