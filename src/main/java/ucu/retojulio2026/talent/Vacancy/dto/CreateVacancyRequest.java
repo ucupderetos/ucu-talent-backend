@@ -10,10 +10,13 @@ import ucu.retojulio2026.talent.vacancy.Modality;
 import java.time.LocalDate;
 
 public record CreateVacancyRequest (
-    @Schema(description = "Fecha de cierre de la vacante", example = "2026-08-15")
+    @Schema(description = "Fecha de publicación del puesto", example = "2026-08-15")
+    LocalDate publicationDate,
+
+    @Schema(description = "Fecha de cierre del puesto", example = "2026-08-15")
     LocalDate closingDate,
 
-    @Schema(description = "Localidad de la vacante", example = "MONTEVIDEO")
+    @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
     @NotNull(message = "La localidad es obligatoria")
     Departamento locality,
 
@@ -21,18 +24,18 @@ public record CreateVacancyRequest (
     @NotNull(message = "La modalidad es obligatoria")
     Modality modality,
 
-    @Schema(description = "Estado de la vacante", example = "PENDIENTE")
+    @Schema(description = "Estado del puesto", example = "PENDIENTE")
     JobStatus status,
 
-    @Schema(description = "Nombre de la vacante", example = "Java Backend Developer")
+    @Schema(description = "Nombre del puesto", example = "Java Backend Developer")
     @NotBlank(message = "El nombre es obligatorio")
     String name,
 
-    @Schema(description = "Descripción de la vacante", example = "Desarrollo de APIs REST con Spring Boot")
+    @Schema(description = "Descripción del puesto", example = "Desarrollo de APIs REST con Spring Boot")
     @NotBlank(message = "La descripción es obligatoria")
     String description,
 
-    @Schema(description = "Requisitos de la vacante", example = "Java 21, Spring Boot, PostgreSQL")
+    @Schema(description = "Requisitos del puesto", example = "Java 21, Spring Boot, PostgreSQL")
     @NotBlank(message = "Los requisitos son obligatorios")
     String requirements,
 
