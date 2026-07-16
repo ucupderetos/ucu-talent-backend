@@ -1,7 +1,9 @@
 package ucu.retojulio2026.talent.common;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -12,6 +14,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+
+import tools.jackson.databind.exc.InvalidFormatException;
 
 //Manejo centralizado de excepciones para toda la API.
 
@@ -63,5 +68,38 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST, "Uno o mas campos son invalidos");
         problem.setProperty("errores", errores);
         return problem;
+    }
+
+    //Cuerpo JSON ilegible. Cubre el caso de un enum con valor invalido (ej: location "BUENOS_AIRES"),
+    //que Jackson rechaza al deserializar, ANTES de que corran las validaciones de @Valid.
+    //Lo devolvemos con el mismo formato {campo: mensaje} y listamos los valores validos del enum.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleNotReadable(HttpMessageNotReadableException ex) {
+        // Buscamos un InvalidFormatException en TODA la cadena de causas: cuando el campo
+        // problematico pertenece a un record, Jackson envuelve el error en un ValueInstantiationException.
+        InvalidFormatException ife = null;
+        for (Throwable t = ex.getCause(); t != null; t = t.getCause()) {
+            if (t instanceof InvalidFormatException found) {
+                ife = found;
+                break;
+            }
+        }
+        if (ife != null && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+            String campo = ife.getPath().isEmpty()
+                    ? "cuerpo"
+                    : ife.getPath().get(ife.getPath().size() - 1).getPropertyName();
+            String validos = Arrays.stream(ife.getTargetType().getEnumConstants())
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "));
+            Map<String, String> errores = new LinkedHashMap<>();
+            errores.put(campo, "Valor invalido '" + ife.getValue() + "'. Valores validos: " + validos);
+            ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST, "Uno o mas campos son invalidos");
+            problem.setProperty("errores", errores);
+            return problem;
+        }
+        //JSON malformado u otro cuerpo ilegible que no sea un enum invalido.
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "El cuerpo de la peticion es invalido o esta mal formado");
     }
 }
