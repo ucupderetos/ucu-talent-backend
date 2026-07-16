@@ -1,6 +1,7 @@
 package ucu.retojulio2026.talent.Vacancy.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import ucu.retojulio2026.talent.Vacancy.Departamento;
 import ucu.retojulio2026.talent.Vacancy.JobStatus;
 import ucu.retojulio2026.talent.Vacancy.Modality;

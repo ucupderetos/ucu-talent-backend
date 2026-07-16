@@ -37,6 +37,7 @@ public class VacancyServiceImpl implements VacancyService {
     @Transactional
     public Vacancy create(CreateVacancyRequest request) {
         Vacancy vacancy = vacancyMapper.toEntity(request);
+        vacancy.setStatus(JobStatus.PENDIENTE);
         return vacancyRepository.save(vacancy);
     }
 

@@ -1,5 +1,5 @@
 CREATE TABLE "vacancy" (
-       vacancy_id VARCHAR(12) PRIMARY KEY,
+       vacancy_id VARCHAR(12) PRIMARY KEY NOT NULL,
        publication_date DATE NOT NULL,
        closing_date DATE,
        locality VARCHAR(30),
