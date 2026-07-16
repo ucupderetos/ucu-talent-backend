@@ -69,16 +69,16 @@ public class EducationController {
         return ResponseEntity.ok(educationService.getByEducationId(request.education_id()));
     }
 
-    @Operation(summary = "Listar educacion por perfilAlumnoId")
+    @Operation(summary = "Listar educacion por studentProfileId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "400", description = "Parametro invalido")
     })
-    @GetMapping(params = "perfilAlumnoId")
+    @GetMapping(params = "studentProfileId")
     public ResponseEntity<List<Education>> getByStudentProfileId(
             @Parameter(description = "Id del perfil alumno")
             @RequestParam
-            @NotBlank(message = "perfilAlumnoId es obligatorio")
+            @NotBlank(message = "studentProfileId es obligatorio")
             String studentProfileId) {
         return ResponseEntity.ok(educationService.getByStudentProfileId(studentProfileId));
     }

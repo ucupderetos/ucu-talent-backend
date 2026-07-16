@@ -32,7 +32,7 @@ public class Education {
     private String education_id;
 
     @NotNull(message = "El perfilAlumnoId es obligatorio")
-    @Column(name = "perfil_alumno_id", nullable = false)
+    @Column(name = "student_profile_id", nullable = false)
     private String studentProfileId;
 
     @NotNull(message = "El titulo es obligatorio")
@@ -48,10 +48,10 @@ public class Education {
     private String description;
 
     @NotNull(message = "La fecha de inicio es obligatoria")
-    @Column(name = "fecha_inicio", nullable = false)
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "fecha_fin")
+    @Column(name = "end_date")
     private LocalDate endDate;
 
     public enum DegreeLevel {
