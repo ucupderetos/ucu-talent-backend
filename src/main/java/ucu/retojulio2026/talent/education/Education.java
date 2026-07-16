@@ -29,43 +29,43 @@ public class Education {
 
     @Id
     @Column(name = "education_id", length = 12, updatable = false, nullable = false)
-    private String id;
+    private String education_id;
 
     @NotNull(message = "El perfilAlumnoId es obligatorio")
-    @Column(name = "perfil_alumno_id", nullable = false)
-    private String perfilAlumnoId;
+    @Column(name = "student_profile_id", nullable = false)
+    private String studentProfileId;
 
     @NotNull(message = "El titulo es obligatorio")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EducationTitle titulo;
+    private DegreeLevel degreeLevel;
 
     @NotBlank(message = "La carrera es obligatoria")
     @Column(nullable = false)
-    private String carrera;
+    private String degreeId;
 
     @Column(columnDefinition = "TEXT")
-    private String descripcion;
+    private String description;
 
     @NotNull(message = "La fecha de inicio es obligatoria")
-    @Column(name = "fecha_inicio", nullable = false)
-    private LocalDate fechaInicio;
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
 
-    @Column(name = "fecha_fin")
-    private LocalDate fechaFin;
+    @Column(name = "end_date")
+    private LocalDate endDate;
 
-    public enum EducationTitle {
+    public enum DegreeLevel {
         TECNICATURA,
         LICENCIATURA,
         GRADO,
-        MAESTRIA,
+        POSGRADO,
         DOCTORADO
     }
 
     @PrePersist
-    protected void assignId() {
-        if (this.id == null) {
-            this.id = NanoIdGenerator.generate();
+    protected void assignEducationId() {
+        if (this.education_id == null) {
+            this.education_id = NanoIdGenerator.generate();
         }
     }
 }

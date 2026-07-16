@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ucu.retojulio2026.talent.education.dto.GetEducationByIdRequest;
 
 import java.util.List;
 
@@ -51,23 +53,34 @@ public class EducationController {
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Education> getById(
-            @Parameter(description = "Id de education") @PathVariable String id) {
-        return ResponseEntity.ok(educationService.getById(id));
+    public ResponseEntity<Education> getByEducationId(
+            @Parameter(description = "Id de education") @PathVariable("id") String education_id) {
+        return ResponseEntity.ok(educationService.getByEducationId(education_id));
     }
 
-    @Operation(summary = "Listar educacion por perfilAlumnoId")
+    @Operation(summary = "Obtener un registro de educacion por id (DTO request)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Registro encontrado"),
+            @ApiResponse(responseCode = "400", description = "Parametro invalido"),
+            @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
+    })
+    @GetMapping("/by-id")
+    public ResponseEntity<Education> getByEducationIdRequest(@Valid @ModelAttribute GetEducationByIdRequest request) {
+        return ResponseEntity.ok(educationService.getByEducationId(request.education_id()));
+    }
+
+    @Operation(summary = "Listar educacion por studentProfileId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "400", description = "Parametro invalido")
     })
-    @GetMapping(params = "perfilAlumnoId")
-    public ResponseEntity<List<Education>> getByPerfilAlumnoId(
+    @GetMapping(params = "studentProfileId")
+    public ResponseEntity<List<Education>> getByStudentProfileId(
             @Parameter(description = "Id del perfil alumno")
             @RequestParam
-            @NotBlank(message = "perfilAlumnoId es obligatorio")
-            String perfilAlumnoId) {
-        return ResponseEntity.ok(educationService.getByPerfilAlumnoId(perfilAlumnoId));
+            @NotBlank(message = "studentProfileId es obligatorio")
+            String studentProfileId) {
+        return ResponseEntity.ok(educationService.getByStudentProfileId(studentProfileId));
     }
 
     @Operation(summary = "Actualizar un registro de educacion por id")
@@ -78,9 +91,9 @@ public class EducationController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<Education> update(
-            @Parameter(description = "Id de education") @PathVariable String id,
+            @Parameter(description = "Id de education") @PathVariable("id") String education_id,
             @Valid @RequestBody Education education) {
-        return ResponseEntity.ok(educationService.update(id, education));
+        return ResponseEntity.ok(educationService.update(education_id, education));
     }
 
     @Operation(summary = "Eliminar un registro de educacion por id")
@@ -90,8 +103,8 @@ public class EducationController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "Id de education") @PathVariable String id) {
-        educationService.delete(id);
+            @Parameter(description = "Id de education") @PathVariable("id") String education_id) {
+        educationService.delete(education_id);
         return ResponseEntity.noContent().build();
     }
 }
