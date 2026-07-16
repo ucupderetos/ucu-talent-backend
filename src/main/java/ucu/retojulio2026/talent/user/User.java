@@ -23,19 +23,36 @@ public class User {
     //Indica que es una calumna a mapear en la base de datos y sus restricciones.
     private String userId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
+
+    @Column(nullable = false, length = 50)
+    private String surname;
 
     @Column(unique = true, nullable = false)
     private String email;
 
     @ToString.Exclude // nunca loguear el hash de la contraseña
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", length = 60, nullable = false) // BCrypt produce siempre 60 caracteres (largo fijo)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    // Tipo y numero de documento. Nullable (ej: los usuarios EMPRESA pueden no tenerlo).
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_type", length = 20)
+    private DocumentType documentType;
+
+    @Column(name = "document_number", length = 20)
+    private String documentNumber;
+
+    @Column(name = "linkedin_url", length = 255)
+    private String linkedinUrl;
 
     // Hibernate setea la fecha de alta automaticamente en el insert.
     @CreationTimestamp

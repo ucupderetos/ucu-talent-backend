@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
+import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
@@ -40,6 +41,19 @@ public class UserServiceImpl implements UserService {
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User con email '" + email + "' no encontrado"));
+    }
+
+    @Override
+    public User update(String id, UpdateUserRequest request) {
+        User user = getById(id); // lanza 404 si no existe
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setPhoneNumber(request.phoneNumber());
+        user.setDocumentType(request.documentType());
+        user.setDocumentNumber(request.documentNumber());
+        user.setLinkedinUrl(request.linkedinUrl());
+        return userRepository.save(user);
+        // No se tocan email, passwordHash ni role: se cambian por flujos aparte.
     }
 
     @Override

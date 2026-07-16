@@ -6,15 +6,20 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import ucu.retojulio2026.talent.common.validation.PublicSignupRole;
+import ucu.retojulio2026.talent.user.DocumentType;
 import ucu.retojulio2026.talent.user.Role;
 
 //Datos que la API RECIBE para crear un usuario.
 //Usar records garantiza inmutabilidad y evita boilerplate (getters, setters, equlas, etc)
 public record CreateUserRequest(
 
-        @Schema(description = "Nombre del usuario", example = "Nicolas Gonzalez")
+        @Schema(description = "Nombre del usuario", example = "Nicolas")
         @NotBlank(message = "El nombre es obligatorio")
         String name,
+
+        @Schema(description = "Apellido del usuario", example = "Gonzalez")
+        @NotBlank(message = "El apellido es obligatorio")
+        String surname,
 
         @Schema(description = "Email unico del usuario", example = "nicogon@ucu.edu.uy")
         @NotBlank(message = "El email es obligatorio")
@@ -29,6 +34,18 @@ public record CreateUserRequest(
         @Schema(description = "Rol del usuario en el registro publico. Solo ALUMNO o EMPRESA; ADMIN se crea por un flujo aparte.", example = "ALUMNO")
         @NotNull(message = "El rol es obligatorio")
         @PublicSignupRole
-        Role role
+        Role role,
+
+        @Schema(description = "Numero de telefono (opcional)", example = "+59899123456")
+        String phoneNumber,
+
+        @Schema(description = "Tipo de documento (opcional)", example = "CEDULA_IDENTIDAD")
+        DocumentType documentType,
+
+        @Schema(description = "Numero de documento (opcional)", example = "1.234.567-8")
+        String documentNumber,
+
+        @Schema(description = "URL de LinkedIn (opcional)", example = "https://linkedin.com/in/nicolas-gonzalez")
+        String linkedinUrl
 
 ) {}
