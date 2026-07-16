@@ -56,18 +56,18 @@ public class WorkExperienceController {
         return ResponseEntity.ok(workExperienceService.getById(id));
     }
 
-    @Operation(summary = "Listar experiencia laboral por perfilAlumnoId")
+    @Operation(summary = "Listar experiencia laboral por studentProfileId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "400", description = "Parametro invalido")
     })
-    @GetMapping(params = "perfilAlumnoId")
-    public ResponseEntity<List<WorkExperience>> getByPerfilAlumnoId(
+    @GetMapping(params = "studentProfileId")
+    public ResponseEntity<List<WorkExperience>> getByStudentProfileId(
             @Parameter(description = "Id del perfil alumno")
             @RequestParam
-            @NotBlank(message = "perfilAlumnoId es obligatorio")
-            String perfilAlumnoId) {
-        return ResponseEntity.ok(workExperienceService.getByPerfilAlumnoId(perfilAlumnoId));
+            @NotBlank(message = "studentProfileId es obligatorio")
+            String studentProfileId) {
+        return ResponseEntity.ok(workExperienceService.getByStudentProfileId(studentProfileId));
     }
 
     @Operation(summary = "Actualizar una experiencia laboral por id")
