@@ -8,6 +8,6 @@ import java.util.List;
 @Repository
 public interface EducationRepository extends JpaRepository<Education, String> {
     
-    // listar todas las educaciones de un perfil de alumno.
-    List<Education> getByPerfilAlumnoId(String perfilAlumnoId);
+    // List all education entries for a student profile.
+    List<Education> findByStudentProfileId(String studentProfileId);
 }

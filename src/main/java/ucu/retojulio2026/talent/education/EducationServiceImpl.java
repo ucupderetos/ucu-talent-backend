@@ -16,39 +16,39 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     public Education create(Education education) {
-        education.setId(null);
+        education.setEducation_id(null);
         return educationRepository.save(education);
     }
 
     @Override
-    public Education getById(String id) {
-        return educationRepository.findById(id)
+    public Education getByEducationId(String education_id) {
+        return educationRepository.findById(education_id)
             .orElseThrow(() -> new ResourceNotFoundException(
-                        "Education con id '" + id + "' no encontrada"));
+                        "Education con id '" + education_id + "' no encontrada"));
     }
 
     @Override
-    public List<Education> getByPerfilAlumnoId(String perfilAlumnoId) {
-        return educationRepository.getByPerfilAlumnoId(perfilAlumnoId);
+    public List<Education> getByStudentProfileId(String studentProfileId) {
+        return educationRepository.findByStudentProfileId(studentProfileId);
     }
 
     @Override
-    public Education update(String id, Education education) {
-        Education existing = getById(id);
+    public Education update(String education_id, Education education) {
+        Education existing = getByEducationId(education_id);
 
-        existing.setPerfilAlumnoId(education.getPerfilAlumnoId());
-        existing.setTitulo(education.getTitulo());
-        existing.setCarrera(education.getCarrera());
-        existing.setDescripcion(education.getDescripcion());
-        existing.setFechaInicio(education.getFechaInicio());
-        existing.setFechaFin(education.getFechaFin());
+        existing.setStudentProfileId(education.getStudentProfileId());
+        existing.setDegreeLevel(education.getDegreeLevel());
+        existing.setDegreeId(education.getDegreeId());
+        existing.setDescription(education.getDescription());
+        existing.setStartDate(education.getStartDate());
+        existing.setEndDate(education.getEndDate());
 
         return educationRepository.save(existing);
     }
 
     @Override
-    public void delete(String id) {
-        Education existing = getById(id);
+    public void delete(String education_id) {
+        Education existing = getByEducationId(education_id);
         educationRepository.delete(existing);
     }
 }
