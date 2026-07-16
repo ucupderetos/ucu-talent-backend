@@ -155,7 +155,7 @@ Cuando necesites crear o cambiar una tabla, seguí estos pasos:
 1. Andá a la carpeta `src/main/resources/db/migration/`.
 2. Fijate cuál es el número más alto que ya existe.
 3. Creá un archivo nuevo con el número siguiente y una descripción clara, por
-   ejemplo: `V4__create_vacancy_table.sql`.
+   ejemplo: `V7__create_vacancy_table.sql`.
 4. Escribí adentro la instrucción del cambio.
 5. **Guardá y arrancá el proyecto.** Flyway aplica tu cambio automáticamente.
 6. Fijate en la consola que no aparezcan errores.

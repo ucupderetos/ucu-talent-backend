@@ -1,7 +1,6 @@
-package ucu.retojulio2026.talent.Vacancy;
+package ucu.retojulio2026.talent.vacancy;
 
-import ucu.retojulio2026.talent.Vacancy.dto.CreateVacancyRequest;
-import ucu.retojulio2026.talent.Vacancy.dto.VacancyResponse;
+import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
 
 import java.util.List;
 

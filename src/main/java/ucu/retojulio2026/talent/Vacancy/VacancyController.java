@@ -1,4 +1,4 @@
-package ucu.retojulio2026.talent.Vacancy;
+package ucu.retojulio2026.talent.vacancy;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,15 +9,15 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ucu.retojulio2026.talent.Vacancy.dto.CreateVacancyRequest;
-import ucu.retojulio2026.talent.Vacancy.dto.VacancyMapper;
-import ucu.retojulio2026.talent.Vacancy.dto.VacancyResponse;
+import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyResponse;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/vacancy")
-@Tag(name = "Vacancies", description = "Vacancy management")
+@Tag(name = "Puestos", description = "CRUD (Gestión) de un Puesto")
 public class VacancyController {
 
     private final VacancyService vacancyService;
@@ -29,8 +29,8 @@ public class VacancyController {
         this.vacancyMapper = vacancyMapper;
     }
 
-    @Operation(summary = "Get all vacancies")
-    @ApiResponse(responseCode = "200", description = "Vacancies retrieved successfully")
+    @Operation(summary = "Obtener todos los Puestos")
+    @ApiResponse(responseCode = "200", description = "Puestos encontrados")
     @GetMapping
     public ResponseEntity<List<VacancyResponse>> getAllVacancies() {
 
@@ -42,10 +42,10 @@ public class VacancyController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get vacancy by id")
+    @Operation(summary = "Obtener el Puesto por id")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Vacancy found"),
-            @ApiResponse(responseCode = "404", description = "Vacancy not found")
+            @ApiResponse(responseCode = "200", description = "Puesto encontrado"),
+            @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
     @GetMapping("/{id}")
     public ResponseEntity<VacancyResponse> getVacancyById(
@@ -56,10 +56,10 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(vacancy));
     }
 
-    @Operation(summary = "Create vacancy")
+    @Operation(summary = "Crear Puesto")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Vacancy created"),
-            @ApiResponse(responseCode = "400", description = "Invalid request")
+            @ApiResponse(responseCode = "201", description = "Puesto creado"),
+            @ApiResponse(responseCode = "400", description = "Puesto inválido")
     })
     @PostMapping
     public ResponseEntity<VacancyResponse> create(@Valid @RequestBody CreateVacancyRequest request) {
@@ -69,10 +69,10 @@ public class VacancyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyMapper.toResponse(created));
     }
 
-    @Operation(summary = "Update vacancy")
+    @Operation(summary = "Actualizar Puesto")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Vacancy updated"),
-            @ApiResponse(responseCode = "404", description = "Vacancy not found")
+            @ApiResponse(responseCode = "200", description = "Puesto actualizado"),
+            @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
     @PutMapping("/{id}")
     public ResponseEntity<VacancyResponse> updateVacancy(
@@ -84,10 +84,10 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 
-    @Operation(summary = "Delete vacancy")
+    @Operation(summary = "Borrar Puesto")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Vacancy deleted"),
-            @ApiResponse(responseCode = "404", description = "Vacancy not found")
+            @ApiResponse(responseCode = "204", description = "Puesto borrado"),
+            @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVacancy(

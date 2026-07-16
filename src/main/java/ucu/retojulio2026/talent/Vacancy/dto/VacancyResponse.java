@@ -1,10 +1,9 @@
-package ucu.retojulio2026.talent.Vacancy.dto;
+package ucu.retojulio2026.talent.vacancy.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import ucu.retojulio2026.talent.Vacancy.Departamento;
-import ucu.retojulio2026.talent.Vacancy.JobStatus;
-import ucu.retojulio2026.talent.Vacancy.Modality;
+import ucu.retojulio2026.talent.vacancy.Departamento;
+import ucu.retojulio2026.talent.vacancy.JobStatus;
+import ucu.retojulio2026.talent.vacancy.Modality;
 
 import java.time.LocalDate;
 
@@ -21,10 +20,10 @@ public record VacancyResponse (
         @Schema(description = "Localidad de la vacante", example = "MONTEVIDEO")
         Departamento locality,
 
-        @Schema(description = "Modalidad de trabajo", example = "REMOTE")
+        @Schema(description = "Modalidad de trabajo", example = "REMOTO")
         Modality modality,
 
-        @Schema(description = "Estado de la vacante", example = "PENDING")
+        @Schema(description = "Estado de la vacante", example = "PENDIENTE")
         JobStatus status,
 
         @Schema(description = "Nombre de la vacante", example = "Java Backend Developer")

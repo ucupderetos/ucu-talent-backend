@@ -1,4 +1,4 @@
-package ucu.retojulio2026.talent.Vacancy;
+package ucu.retojulio2026.talent.vacancy;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

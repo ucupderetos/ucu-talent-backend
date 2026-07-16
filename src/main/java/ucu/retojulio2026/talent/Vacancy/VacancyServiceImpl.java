@@ -1,8 +1,7 @@
-package ucu.retojulio2026.talent.Vacancy;
+package ucu.retojulio2026.talent.vacancy;
 
-import ucu.retojulio2026.talent.Vacancy.dto.CreateVacancyRequest;
-import ucu.retojulio2026.talent.Vacancy.dto.VacancyMapper;
-import ucu.retojulio2026.talent.Vacancy.dto.VacancyResponse;
+import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
