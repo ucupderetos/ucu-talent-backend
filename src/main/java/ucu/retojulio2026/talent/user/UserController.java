@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
+import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.user.dto.UserResponse;
 
@@ -55,7 +56,7 @@ public class UserController {
     })
     @GetMapping(params = "email")
     public ResponseEntity<UserResponse> getByEmail(
-            @Parameter(description = "Email exacto del usuario", example = "washi@ucu.edu.uy")
+            @Parameter(description = "Email exacto del usuario", example = "nicogon@ucu.edu.uy")
             @RequestParam
             @NotBlank(message = "El email es obligatorio")
             @Email(message = "El email no tiene un formato valido")
@@ -76,6 +77,21 @@ public class UserController {
         User created = userService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(created));
         //Devuelve el UserResponse (sin passwordHash) mas código HTTP 201 (Created)
+    }
+
+    //PutMapping indica que usa el verbo HTTP PUT para actualizar un recurso existente.
+    @Operation(summary = "Actualizar los datos editables de un usuario por id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario actualizado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> update(
+            @Parameter(description = "Id del usuario (NanoID de 12 caracteres)") @PathVariable String id,
+            @Valid @RequestBody UpdateUserRequest request) {
+        User updated = userService.update(id, request);
+        return ResponseEntity.ok(userMapper.toResponse(updated));
     }
 
     //Lo mismo que los otros con DELETE
