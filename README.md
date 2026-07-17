@@ -3,7 +3,7 @@
 API Rest del proyecto **Talent** (Reto Julio 2026 - UCU).
 
 ## Swagger
-http://localhost:8080/swagger-ui/index.html
+http://localhost:8080/docs
 
 ## Stack
 
@@ -116,8 +116,12 @@ spring.datasource.password=postgres
 Una vez levantado, la documentación de la API queda disponible en:
 
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/docs
 ```
+
+El OpenAPI en crudo (JSON) queda en `http://localhost:8080/api-docs`. Ambas rutas
+se configuran en `application.properties` (`springdoc.swagger-ui.path` y
+`springdoc.api-docs.path`).
 
 ## Estructura del proyecto
 
