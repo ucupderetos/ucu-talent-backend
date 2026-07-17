@@ -24,5 +24,8 @@ public record CompanyResponse(
         String linkedinUrl,
 
         @Schema(description = "Departamento donde esta ubicada la empresa", example = "MONTEVIDEO")
-        Department location
+        Department location,
+
+        @Schema(description = "Flag que indica si la Empresa fue aceptada por un ADMIN", example = "TRUE")
+        boolean approved
 ) {}

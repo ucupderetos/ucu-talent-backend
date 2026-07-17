@@ -37,5 +37,9 @@ build/
 
 ### Docker / secrets ###
 .env
+.env.*
+!.env.example
 
 learning/
+
+docker-compose.override.yml
