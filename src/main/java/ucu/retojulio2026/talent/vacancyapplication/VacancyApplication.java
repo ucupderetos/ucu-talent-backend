@@ -1,0 +1,41 @@
+package ucu.retojulio2026.talent.vacancyapplication;
+
+import jakarta.persistence.*;
+import lombok.*;
+import ucu.retojulio2026.talent.common.NanoIdGenerator;
+
+import java.time.LocalDate;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Entity
+@Table(name = "vacancy_application")
+public class VacancyApplication {
+
+    @Id
+    @Column(name = "id", length = 12, updatable = false, nullable = false)
+    private String id;
+
+    @Column(name = "vacancy_id", length = 12, nullable = false)
+    private String vacancyId;
+
+    @Column(name = "student_profile_id", length = 12, nullable = false)
+    private String studentProfileId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private VacancyApplicationStatus status;
+
+    @Column(name = "applied_at", nullable = false)
+    private LocalDate appliedAt;
+
+    @PrePersist
+    protected void assignId() {
+        if (this.id == null) {
+            this.id = NanoIdGenerator.generate();
+        }
+    }
+}
