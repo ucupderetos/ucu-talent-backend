@@ -1,39 +1,36 @@
 services:
-  db:
-    image: postgres:17-alpine
+  cloud-sql-proxy:
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.23.0
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_PORT}:5432"
+
+    command:
+      - "--address=0.0.0.0"
+      - "--port=5432"
+      - "--credentials-file=/secrets/gcloud/application_default_credentials.json"
+      - "${CLOUD_SQL_INSTANCE}"
+
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      - "${GOOGLE_APPLICATION_CREDENTIALS_HOST}:/secrets/gcloud/application_default_credentials.json:ro"
 
   api:
     build: .
     restart: unless-stopped
+
     depends_on:
-      db:
-        condition: service_healthy
+      - cloud-sql-proxy
+
     environment:
-      DB_HOST: db
+      DB_HOST: cloud-sql-proxy
       DB_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB}
+
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      FLYWAY_USER: ${FLYWAY_USER}
+      FLYWAY_PASSWORD: ${FLYWAY_PASSWORD}
+
+      APP_PORT: 8080
+
     ports:
       - "${APP_PORT}:8080"
-
-# Volumen nombrado normal (persistente): sobrevive a 'docker compose down' y
-# 'restart'. Docker no impone un limite de tamaño real en volumenes de este tipo
-# sobre un filesystem comun; para una API de prueba nunca se va a acercar a 500MB.
-# Se borra explicitamente con 'docker compose down -v'.
-volumes:
-  postgres_data:
