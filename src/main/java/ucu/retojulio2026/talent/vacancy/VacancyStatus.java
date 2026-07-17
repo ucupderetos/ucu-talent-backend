@@ -1,8 +1,7 @@
 package ucu.retojulio2026.talent.vacancy;
 
-public enum JobStatus {
+public enum VacancyStatus {
     PENDIENTE,
     PUBLICADO,
-    RECHAZADO,
     FINALIZADO
 }

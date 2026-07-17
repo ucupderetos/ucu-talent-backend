@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import ucu.retojulio2026.talent.vacancy.Departamento;
-import ucu.retojulio2026.talent.vacancy.JobStatus;
+import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.Modality;
 
 import java.time.LocalDate;
@@ -18,14 +18,14 @@ public record CreateVacancyRequest (
 
     @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
     @NotNull(message = "La localidad es obligatoria")
-    Departamento locality,
+    Departamento location,
 
     @Schema(description = "Modalidad de trabajo", example = "REMOTO")
     @NotNull(message = "La modalidad es obligatoria")
     Modality modality,
 
     @Schema(description = "Estado del puesto", example = "PENDIENTE")
-    JobStatus status,
+    VacancyStatus status,
 
     @Schema(description = "Nombre del puesto", example = "Java Backend Developer")
     @NotBlank(message = "El nombre es obligatorio")

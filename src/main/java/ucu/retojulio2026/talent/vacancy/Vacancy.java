@@ -37,7 +37,7 @@ public class Vacancy {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
-    private Departamento locality;
+    private Departamento location;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -45,7 +45,7 @@ public class Vacancy {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private JobStatus status;
+    private VacancyStatus status;
 
     @Column(nullable = false, length = 120)
     private String name;
