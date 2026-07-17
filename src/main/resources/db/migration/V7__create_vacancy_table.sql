@@ -2,7 +2,7 @@ CREATE TABLE "vacancy" (
        vacancy_id VARCHAR(12) PRIMARY KEY NOT NULL,
        publication_date DATE NOT NULL,
        closing_date DATE,
-       location VARCHAR(30),
+       locality VARCHAR(30),
        modality VARCHAR(20) NOT NULL,
        status VARCHAR(20) NOT NULL,
        name VARCHAR(120) NOT NULL,
