@@ -75,4 +75,9 @@ public class VacancyServiceImpl implements VacancyService {
 
         vacancyRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsById(String id) {
+        return vacancyRepository.existsById(id);
+    }
 }
