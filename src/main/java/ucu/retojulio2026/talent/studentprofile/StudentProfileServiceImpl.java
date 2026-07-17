@@ -6,23 +6,25 @@ import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.UserRepository;
+import ucu.retojulio2026.talent.user.UserService;
 
 @Service
 public class StudentProfileServiceImpl implements StudentProfileService {
 
     private final StudentProfileRepository studentProfileRepository;
     private final StudentProfileMapper studentProfileMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public StudentProfileServiceImpl(StudentProfileRepository studentProfileRepository, StudentProfileMapper studentProfileMapper, UserRepository userRepository) {
+    public StudentProfileServiceImpl(StudentProfileRepository studentProfileRepository,
+                                     StudentProfileMapper studentProfileMapper, UserService userService) {
         this.studentProfileRepository = studentProfileRepository;
         this.studentProfileMapper = studentProfileMapper;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Override
     public StudentProfile create(CreateStudentProfileRequest request) {
-        if (!userRepository.existsById(request.userId())) {
+        if (!userService.existsById(request.userId())) {
             throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
         }
         StudentProfile studentProfile = studentProfileMapper.toEntity(request);
@@ -47,5 +49,10 @@ public class StudentProfileServiceImpl implements StudentProfileService {
             throw new ResourceNotFoundException("StudentProfile con id '" + id + "' no encontrado");
         }
         studentProfileRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(String id) {
+        return studentProfileRepository.existsById(id);
     }
 }
