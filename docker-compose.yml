@@ -1,39 +1,92 @@
+# Dos modos de trabajo, seleccionados con COMPOSE_PROFILES en el .env:
+#
+#   local  -> Postgres en Docker, descartable. Es el modo por defecto y el que
+#             usa todo el equipo. Las migraciones se aplican sobre esta base.
+#   hosted -> Cloud SQL a traves del proxy. Solo para quien administra la base
+#             de dev; una migracion aplicada aca impacta a todo el equipo.
+
+x-api-base: &api-base
+  build: .
+  restart: unless-stopped
+  ports:
+    - "${APP_PORT}:8080"
+
+x-api-env: &api-env
+  DB_PORT: 5432
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  FLYWAY_USER: ${FLYWAY_USER}
+  FLYWAY_PASSWORD: ${FLYWAY_PASSWORD}
+  APP_PORT: 8080
+
 services:
   db:
     image: postgres:17-alpine
+    profiles: ["local"]
     restart: unless-stopped
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    # No alcanza con pg_isready: solo pregunta si el servidor responde, y devuelve
+    # OK aunque la base no exista (pasa si el volumen quedo de una config vieja).
+    # Este consulta la base de verdad, asi "healthy" significa healthy.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c 'SELECT 1' > /dev/null 2>&1 || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  api:
-    build: .
+  cloud-sql-proxy:
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.23.0
+    profiles: ["hosted"]
     restart: unless-stopped
+
+    # Los defaults solo existen para que el archivo interpole en modo local, donde
+    # este servicio no se levanta. En modo hosted las dos variables son obligatorias.
+    command:
+      - "--address=0.0.0.0"
+      - "--port=5432"
+      - "--credentials-file=/secrets/gcloud/application_default_credentials.json"
+      - "${CLOUD_SQL_INSTANCE:-unset}"
+
+    volumes:
+      - "${GOOGLE_APPLICATION_CREDENTIALS_HOST:-/tmp/gcloud-credentials-unset}:/secrets/gcloud/application_default_credentials.json:ro"
+
+  api-local:
+    <<: *api-base
+    profiles: ["local"]
+
     depends_on:
       db:
         condition: service_healthy
+
     environment:
+      <<: *api-env
       DB_HOST: db
-      DB_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${APP_PORT}:8080"
+
+  api-hosted:
+    <<: *api-base
+    profiles: ["hosted"]
+
+    depends_on:
+      - cloud-sql-proxy
+
+    environment:
+      <<: *api-env
+      DB_HOST: cloud-sql-proxy
 
 # Volumen nombrado normal (persistente): sobrevive a 'docker compose down' y
-# 'restart'. Docker no impone un limite de tamaño real en volumenes de este tipo
-# sobre un filesystem comun; para una API de prueba nunca se va a acercar a 500MB.
-# Se borra explicitamente con 'docker compose down -v'.
+# 'restart'. Se borra explicitamente con 'docker compose down -v', que fuerza a
+# Flyway a reconstruir el schema desde V1.
 volumes:
   postgres_data:

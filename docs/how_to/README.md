@@ -32,6 +32,10 @@ Si es tu primer día, seguí este orden:
 7. **[Cómo funcionan las migraciones de Flyway](migracion-basedatos-flyway.md)**
    Cómo se crean y cambian las tablas de la base de datos sin romper nada.
 
+8. **[Cómo trabajar con la base de datos local (y por qué)](base-de-datos-local.md)**
+   Cada uno levanta su propia base con Docker. Por qué lo hacemos así y los pasos
+   para dejarla andando.
+
 ## Para cuando tengas más base
 
 Cuando quieras profundizar en el *porqué* técnico de las decisiones del proyecto,

@@ -38,6 +38,9 @@ public class Company {
     @Column(name = "location", nullable = false)
     private Department location;
 
+    @Column(name = "approved", nullable = false)
+    private Boolean approved;
+
     @PrePersist
     protected void assignId() {
         if (this.companyId == null) {
