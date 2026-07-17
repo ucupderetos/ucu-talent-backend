@@ -6,7 +6,7 @@ import ucu.retojulio2026.talent.universityregistry.DocumentType;
 public record UniversityRegistryResponse(
 
         @Schema(description = "Id del registro (NanoID)", example = "V1StGXR8_Z5j")
-        String id,
+        String universityRegistryId,
 
         @Schema(description = "Tipo de documento", example = "CEDULA")
         DocumentType documentType,

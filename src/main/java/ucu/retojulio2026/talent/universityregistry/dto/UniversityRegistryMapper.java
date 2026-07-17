@@ -8,7 +8,7 @@ import ucu.retojulio2026.talent.universityregistry.UniversityRegistry;
 @Mapper(componentModel = "spring")
 public interface UniversityRegistryMapper {
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "universityRegistryId", ignore = true)
     UniversityRegistry toEntity(CreateUniversityRegistryRequest request);
 
     UniversityRegistryResponse toResponse(UniversityRegistry universityRegistry);

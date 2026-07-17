@@ -16,7 +16,7 @@ public class UniversityRegistry {
 
     @Id
     @Column(name = "university_registry_id", length = 12, updatable = false, nullable = false)
-    private String id;
+    private String universityRegistryId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "document_type", length = 20, nullable = false)
@@ -33,8 +33,8 @@ public class UniversityRegistry {
 
     @PrePersist
     protected void assignId() {
-        if (this.id == null) {
-            this.id = NanoIdGenerator.generate();
+        if (this.universityRegistryId == null) {
+            this.universityRegistryId = NanoIdGenerator.generate();
         }
     }
 
