@@ -7,26 +7,28 @@ import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.UserRepository;
+import ucu.retojulio2026.talent.user.UserService;
 
 @Service
 public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public CompanyServiceImpl(CompanyRepository companyRepository, CompanyMapper companyMapper, UserRepository userRepository) {
+    public CompanyServiceImpl(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService) {
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Override
     public Company create(CreateCompanyRequest request) {
-        if (!userRepository.existsById(request.userId())) {
+        if (!userService.existsById(request.userId())) {
             throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
         }
         Company company = companyMapper.toEntity(request);
+        company.setApproved(false);
         return companyRepository.save(company);
     }
 
@@ -60,4 +62,11 @@ public class CompanyServiceImpl implements CompanyService {
         }
         companyRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsById(String id) {
+        return companyRepository.existsById(id);
+    }
+
 }
+

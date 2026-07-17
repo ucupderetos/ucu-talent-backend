@@ -23,7 +23,8 @@ public class OpenApiConfig {
             "Empresas",             // 3 - Company
             "Educacion",            // 4 - Education
             "Experiencia laboral",  // 5 - WorkExperience
-            "Autenticacion"
+            "Autenticacion",
+            "Puestos"
     );
 
     @Bean

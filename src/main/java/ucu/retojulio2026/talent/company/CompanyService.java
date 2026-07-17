@@ -14,4 +14,6 @@ public interface CompanyService {
     Company update(String id, UpdateCompanyRequest request);
 
     void delete(String id);
+
+    boolean existsById(String id);
 }
