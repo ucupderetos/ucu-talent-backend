@@ -27,6 +27,7 @@ public class CompanyServiceImpl implements CompanyService {
             throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
         }
         Company company = companyMapper.toEntity(request);
+        company.setApproved(false);
         return companyRepository.save(company);
     }
 

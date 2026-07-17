@@ -18,7 +18,7 @@ import ucu.retojulio2026.talent.company.dto.CompanyResponse;
 
 @RestController
 @RequestMapping("/company")
-@Tag(name = "Empresas", description = "Alta, consulta y baja de empresas") // agrupa los endpoints en Swagger UI
+@Tag(name = "Empresas", description = "Alta, consulta y baja de empresas")
 public class CompanyController {
 
     private final CompanyService companyService;
@@ -49,7 +49,7 @@ public class CompanyController {
     })
     @GetMapping(params = "userId")
     public ResponseEntity<CompanyResponse> getByUserId(
-            @Parameter(description = "Id del usuario dueño de la empresa (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")
+            @Parameter(description = "Id del usuario dueño de la empresa", example = "V1StGXR8_Z5j")
             @RequestParam
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
@@ -76,7 +76,7 @@ public class CompanyController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<CompanyResponse> update(
-            @Parameter(description = "Id de la empresa (NanoID de 12 caracteres)") @PathVariable String id,
+            @Parameter(description = "Id de la empresa") @PathVariable String id,
             @Valid @RequestBody UpdateCompanyRequest request) {
         Company updated = companyService.update(id, request);
         return ResponseEntity.ok(companyMapper.toResponse(updated));
@@ -89,7 +89,7 @@ public class CompanyController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "Id de la empresa (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id de la empresa") @PathVariable String id) {
         companyService.delete(id);
         return ResponseEntity.noContent().build();
     }
