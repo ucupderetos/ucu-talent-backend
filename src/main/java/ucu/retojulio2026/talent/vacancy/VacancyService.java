@@ -15,4 +15,6 @@ public interface VacancyService {
     Vacancy updateVacancy(String id, CreateVacancyRequest vacancy);
 
     void deleteVacancy(String id);
+
+    boolean existsById(String id);
 }
