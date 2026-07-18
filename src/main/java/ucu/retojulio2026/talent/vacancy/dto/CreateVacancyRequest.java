@@ -8,6 +8,7 @@ import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.Modality;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record CreateVacancyRequest (
 
@@ -26,6 +27,9 @@ public record CreateVacancyRequest (
     @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
     @NotNull(message = "La localidad es obligatoria")
     Departamento location,
+
+    @Schema(description = "Comentario del administrador", example = "Comentario o null")
+    String adminComment,
 
     @Schema(description = "Modalidad de trabajo", example = "REMOTO")
     @NotNull(message = "La modalidad es obligatoria")

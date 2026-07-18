@@ -1,0 +1,7 @@
+ALTER TABLE "vacancy"
+    ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN reviewed_at TIMESTAMP,
+    ADD COLUMN admin_comment TEXT;
+
+ALTER TABLE "vacancy"
+    ALTER COLUMN closing_date SET NOT NULL;
