@@ -83,6 +83,7 @@ public class VacancyServiceImpl implements VacancyService {
             throw new ResourceNotFoundException("Area not found.");
         }
         Vacancy vacancy = vacancyMapper.toEntity(request);
+        vacancy.setCreatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
         return vacancyRepository.save(vacancy);
     }
 
@@ -113,7 +114,7 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setCompanyId(updated.getCompanyId());
         existing.setAreaId(updated.getAreaId());
         existing.setAdminComment(updated.getAdminComment());
-        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
+        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
 
         return vacancyRepository.save(existing);
     }
