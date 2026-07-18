@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileRepository;
+import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
@@ -16,19 +17,23 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     private final VacancyApplicationRepository vacancyApplicationRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final VacancyApplicationMapper vacancyApplicationMapper;
-
+    private final VacancyServiceImpl vacancyService;
     @PersistenceContext
     private EntityManager entityManager;
 
     public VacancyApplicationServiceImpl(VacancyApplicationRepository vacancyApplicationRepository,
-                                         StudentProfileRepository studentProfileRepository, VacancyApplicationMapper vacancyApplicationMapper) {
+                                         StudentProfileRepository studentProfileRepository, VacancyApplicationMapper vacancyApplicationMapper, VacancyServiceImpl vacancyService) {
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
+        this.vacancyService = vacancyService;
     }
 
     @Override
     public VacancyApplication create(CreateVacancyApplicationRequest request) {
+        if (!vacancyExists(request.vacancyId())) {
+            throw new ResourceNotFoundException("Vacancy con id '" + request.vacancyId() + "' no encontrada");
+        }
         VacancyApplication vacancyApplication = vacancyApplicationMapper.toEntity(request);
         return vacancyApplicationRepository.save(vacancyApplication);
     }
@@ -54,10 +59,7 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         vacancyApplicationRepository.deleteById(id);
     }
     private boolean vacancyExists(String vacancyId) {
-        return !entityManager.createNativeQuery("SELECT 1 FROM vacancy WHERE vacancy_id = :vacancyId LIMIT 1")
-                .setParameter("vacancyId", vacancyId)
-                .getResultList()
-                .isEmpty();
+        return vacancyService.existsById(vacancyId);
     }
 
 }
