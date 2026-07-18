@@ -8,7 +8,7 @@ import ucu.retojulio2026.talent.vacancy.Vacancy;
 public interface VacancyMapper {
 
     @Mapping(target = "vacancyId", ignore = true)
-    //Luego agregar CompanyId y AreaId
+
     Vacancy toEntity(CreateVacancyRequest request);
 
     VacancyResponse toResponse(Vacancy vacancy);
