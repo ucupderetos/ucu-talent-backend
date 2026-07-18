@@ -1,8 +1,10 @@
 package ucu.retojulio2026.talent.vacancyapplication;
 
+import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+
 public interface VacancyApplicationService {
 
-    VacancyApplication create(VacancyApplication vacancyApplication);
+    VacancyApplication create(CreateVacancyApplicationRequest vacancyApplication);
 
     VacancyApplication getById(String id);
 

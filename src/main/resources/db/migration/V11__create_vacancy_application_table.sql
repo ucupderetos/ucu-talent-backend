@@ -1,11 +1,11 @@
 CREATE TABLE vacancy_application (
-    id                  VARCHAR(12)  NOT NULL,
+    vacancy_application_id VARCHAR(12)  NOT NULL,
     vacancy_id          VARCHAR(12)  NOT NULL,
     student_profile_id  VARCHAR(12)  NOT NULL,
     status              VARCHAR(20)  NOT NULL,
     applied_at          DATE         NOT NULL,
 
-    CONSTRAINT pk_vacancy_application PRIMARY KEY (id),
+    CONSTRAINT pk_vacancy_application PRIMARY KEY (vacancy_application_id),
 
     CONSTRAINT fk_vacancy_application_vacancy
         FOREIGN KEY (vacancy_id) REFERENCES vacancy(vacancy_id),

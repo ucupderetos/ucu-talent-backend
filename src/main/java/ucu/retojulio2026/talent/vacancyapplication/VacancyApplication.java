@@ -16,7 +16,7 @@ import java.time.LocalDate;
 public class VacancyApplication {
 
     @Id
-    @Column(name = "id", length = 12, updatable = false, nullable = false)
+    @Column(name = "vacancy_application_id", length = 12, updatable = false, nullable = false)
     private String id;
 
     @Column(name = "vacancy_id", length = 12, nullable = false)

@@ -75,4 +75,5 @@ public class VacancyServiceImpl implements VacancyService {
 
         vacancyRepository.deleteById(id);
     }
+
 }

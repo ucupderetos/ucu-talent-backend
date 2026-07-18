@@ -5,6 +5,8 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileRepository;
+import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
 import java.time.LocalDate;
 
@@ -13,42 +15,21 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
 
     private final VacancyApplicationRepository vacancyApplicationRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final VacancyApplicationMapper vacancyApplicationMapper;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public VacancyApplicationServiceImpl(VacancyApplicationRepository vacancyApplicationRepository,
-                                         StudentProfileRepository studentProfileRepository) {
+                                         StudentProfileRepository studentProfileRepository, VacancyApplicationMapper vacancyApplicationMapper) {
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.studentProfileRepository = studentProfileRepository;
+        this.vacancyApplicationMapper = vacancyApplicationMapper;
     }
 
     @Override
-    public VacancyApplication create(VacancyApplication vacancyApplication) {
-        if (vacancyApplication == null) {
-            throw new IllegalArgumentException("La vacancyApplication es obligatoria");
-        }
-        if (vacancyApplication.getVacancyId() == null || vacancyApplication.getVacancyId().isBlank()) {
-            throw new IllegalArgumentException("El vacancyId es obligatorio");
-        }
-        if (vacancyApplication.getStudentProfileId() == null || vacancyApplication.getStudentProfileId().isBlank()) {
-            throw new IllegalArgumentException("El studentProfileId es obligatorio");
-        }
-
-        if (!vacancyExists(vacancyApplication.getVacancyId())) {
-            throw new ResourceNotFoundException("Vacancy con id '" + vacancyApplication.getVacancyId() + "' no encontrada");
-        }
-        if (!studentProfileRepository.existsById(vacancyApplication.getStudentProfileId())) {
-            throw new ResourceNotFoundException("StudentProfile con id '" + vacancyApplication.getStudentProfileId() + "' no encontrado");
-        }
-
-        if (vacancyApplication.getStatus() == null) {
-            vacancyApplication.setStatus(VacancyApplicationStatus.PENDIENTE);
-        }
-        if (vacancyApplication.getAppliedAt() == null) {
-            vacancyApplication.setAppliedAt(LocalDate.now());
-        }
-
+    public VacancyApplication create(CreateVacancyApplicationRequest request) {
+        VacancyApplication vacancyApplication = vacancyApplicationMapper.toEntity(request);
         return vacancyApplicationRepository.save(vacancyApplication);
     }
 
@@ -60,9 +41,6 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
 
     @Override
     public VacancyApplication update(String id, VacancyApplicationStatus status) {
-        if (status == null) {
-            throw new IllegalArgumentException("El status es obligatorio");
-        }
         VacancyApplication vacancyApplication = getById(id);
         vacancyApplication.setStatus(status);
         return vacancyApplicationRepository.save(vacancyApplication);
@@ -75,11 +53,11 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         }
         vacancyApplicationRepository.deleteById(id);
     }
-
     private boolean vacancyExists(String vacancyId) {
         return !entityManager.createNativeQuery("SELECT 1 FROM vacancy WHERE vacancy_id = :vacancyId LIMIT 1")
                 .setParameter("vacancyId", vacancyId)
                 .getResultList()
                 .isEmpty();
     }
+
 }
