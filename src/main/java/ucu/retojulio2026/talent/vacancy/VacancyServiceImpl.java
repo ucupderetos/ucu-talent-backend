@@ -1,5 +1,9 @@
 package ucu.retojulio2026.talent.vacancy;
 
+import ucu.retojulio2026.talent.area.Area;
+import ucu.retojulio2026.talent.area.AreaService;
+import ucu.retojulio2026.talent.company.Company;
+import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
@@ -12,10 +16,14 @@ import java.util.List;
 public class VacancyServiceImpl implements VacancyService {
     private final IVacancyRepository vacancyRepository;
     private final VacancyMapper vacancyMapper;
+    private final CompanyService companyService;
+    private final AreaService areaService;
 
-    public VacancyServiceImpl(IVacancyRepository vacancyRepository, VacancyMapper vacancyMapper) {
+    public VacancyServiceImpl(IVacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
+        this.companyService = companyService;
+        this.areaService = areaService;
     }
 
     @Override
@@ -35,6 +43,12 @@ public class VacancyServiceImpl implements VacancyService {
     @Override
     @Transactional
     public Vacancy create(CreateVacancyRequest request) {
+        if (!companyService.existsById(request.companyId())) {
+            throw new ResourceNotFoundException("Company not found.");
+        }
+        if (!areaService.existsById(request.areaId())) {
+            throw new ResourceNotFoundException("Area not found.");
+        }
         Vacancy vacancy = vacancyMapper.toEntity(request);
         vacancy.setStatus(VacancyStatus.PENDIENTE);
         return vacancyRepository.save(vacancy);
@@ -43,6 +57,12 @@ public class VacancyServiceImpl implements VacancyService {
     @Override
     @Transactional
     public Vacancy updateVacancy(String id, CreateVacancyRequest request) {
+        if (!companyService.existsById(request.companyId())) {
+            throw new ResourceNotFoundException("Company not found.");
+        }
+        if (!areaService.existsById(request.areaId())) {
+            throw new ResourceNotFoundException("Area not found.");
+        }
         Vacancy existing = vacancyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
 
@@ -58,10 +78,8 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setRequirements(updated.getRequirements());
         existing.setContractType(updated.getContractType());
         existing.setSalaryRange(updated.getSalaryRange());
-
-        // luego
-        // existing.setCompany(updated.getCompany());
-        // existing.setArea(updated.getArea());
+        existing.setCompanyId(updated.getCompanyId());
+        existing.setAreaId(updated.getAreaId());
 
         return vacancyRepository.save(existing);
     }

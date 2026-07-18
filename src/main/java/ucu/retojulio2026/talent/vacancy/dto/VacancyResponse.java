@@ -11,6 +11,12 @@ public record VacancyResponse (
         @Schema(description = "Id del puesto (NanoID)", example = "V1StGXR8_Z5j")
         String vacancyId,
 
+        @Schema(description = "Id de la compañia (NanoID)", example = "V1StGXR8_Z5j")
+        String companyId,
+
+        @Schema(description = "Id del area (NanoID)", example = "V1StGXR8_Z5j")
+        String areaId,
+
         @Schema(description = "Fecha de publicación", example = "2026-07-15")
         LocalDate publicationDate,
 

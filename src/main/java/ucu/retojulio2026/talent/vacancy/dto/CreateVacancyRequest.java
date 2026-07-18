@@ -10,6 +10,13 @@ import ucu.retojulio2026.talent.vacancy.Modality;
 import java.time.LocalDate;
 
 public record CreateVacancyRequest (
+
+    @NotBlank(message = "La empresa es obligatoria")
+    String companyId,
+
+    @NotBlank(message = "El área es obligatoria")
+    String areaId,
+
     @Schema(description = "Fecha de publicación del puesto", example = "2026-08-15")
     LocalDate publicationDate,
 

@@ -66,4 +66,9 @@ public class AreaServiceImpl implements AreaService {
         }
         areaRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsById(String id) {
+        return areaRepository.existsById(id);
+    }
 }

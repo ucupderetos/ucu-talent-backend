@@ -16,4 +16,6 @@ public interface AreaService {
     Area update(String id, UpdateAreaRequest request);
 
     void delete(String id);
+
+    boolean existsById(String id);
 }

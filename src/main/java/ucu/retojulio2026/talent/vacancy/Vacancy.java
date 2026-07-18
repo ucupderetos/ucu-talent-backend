@@ -3,7 +3,9 @@ package ucu.retojulio2026.talent.vacancy;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import ucu.retojulio2026.talent.area.Area;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
+import ucu.retojulio2026.talent.company.Company;
 
 import java.time.LocalDate;
 
@@ -20,13 +22,11 @@ public class Vacancy {
     @Column(name = "vacancy_id", length = 12, updatable = false, nullable = false)
     private String vacancyId;
 
-    //@ManyToOne(fetch = FetchType.LAZY, optional = false)
-    //@JoinColumn(name = "company_id", nullable = false)
-    //private Company company;
+    @Column(name = "company_id", length = 12, updatable = false, nullable = false)
+    private String companyId;
 
-    //@ManyToOne(fetch = FetchType.LAZY, optional = false)
-    //@JoinColumn(name = "area_id", nullable = false)
-    //private Area area;
+    @Column(name = "area_id", length = 12, updatable = false, nullable = true)
+    private String areaId;
 
     @CreationTimestamp
     @Column(name = "publication_date", updatable = false, nullable = false)
