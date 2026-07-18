@@ -14,4 +14,6 @@ public interface UserService {
     User update(String id, UpdateUserRequest request);
 
     void delete(String id);
+
+    boolean existsById(String id);
 }

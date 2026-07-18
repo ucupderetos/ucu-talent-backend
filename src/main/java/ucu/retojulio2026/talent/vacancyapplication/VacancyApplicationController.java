@@ -31,10 +31,11 @@ public class VacancyApplicationController {
     private final VacancyApplicationService vacancyApplicationService;
     private final VacancyApplicationMapper vacancyApplicationMapper;
 
-    public VacancyApplicationController(VacancyApplicationService vacancyApplicationService,
-                                        VacancyApplicationMapper vacancyApplicationMapper) {
+    public VacancyApplicationController(VacancyApplicationService vacancyApplicationService, VacancyApplicationMapper vacancyApplicationMapper, CreateVacancyApplicationRequest createVacancyApplicationRequest
+                                        ) {
         this.vacancyApplicationService = vacancyApplicationService;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
+
     }
 
     @Operation(summary = "Obtener una postulación por id")
@@ -58,7 +59,7 @@ public class VacancyApplicationController {
     @PostMapping
     public ResponseEntity<VacancyApplicationResponse> create(
             @Valid @RequestBody CreateVacancyApplicationRequest request) {
-        VacancyApplication created = vacancyApplicationService.create(vacancyApplicationMapper.toEntity(request));
+        VacancyApplication created = vacancyApplicationService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyApplicationMapper.toResponse(created));
     }
 
