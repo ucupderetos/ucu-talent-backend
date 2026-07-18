@@ -25,8 +25,8 @@ import java.time.LocalDate;
 public class WorkExperience {
 
     @Id
-    @Column(name = "id", length = 12, updatable = false, nullable = false)
-    private String id;
+    @Column(name = "work_experience_id", length = 12, updatable = false, nullable = false)
+    private String workExperienceId;
 
     @NotBlank(message = "El studentProfileId es obligatorio")
     @Column(name = "student_profile_id", nullable = false)
@@ -49,8 +49,8 @@ public class WorkExperience {
 
     @PrePersist
     protected void assignId() {
-        if (this.id == null) {
-            this.id = NanoIdGenerator.generate();
+        if (this.workExperienceId == null) {
+            this.workExperienceId = NanoIdGenerator.generate();
         }
     }
 }

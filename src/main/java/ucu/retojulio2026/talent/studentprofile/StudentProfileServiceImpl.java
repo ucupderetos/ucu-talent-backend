@@ -8,6 +8,8 @@ import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.UserRepository;
 import ucu.retojulio2026.talent.user.UserService;
 
+import java.util.List;
+
 @Service
 public class StudentProfileServiceImpl implements StudentProfileService {
 
@@ -35,6 +37,11 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     public StudentProfile getById(String id) {
         return studentProfileRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("StudentProfile con id '" + id + "' no encontrado"));
+    }
+
+    @Override
+    public List<StudentProfile> getAll() {
+        return studentProfileRepository.findAll();
     }
 
     @Override

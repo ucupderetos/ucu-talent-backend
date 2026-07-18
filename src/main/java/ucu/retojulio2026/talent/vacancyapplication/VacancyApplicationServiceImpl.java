@@ -9,7 +9,7 @@ import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
-import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class VacancyApplicationServiceImpl implements VacancyApplicationService {
@@ -42,6 +42,26 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     public VacancyApplication getById(String id) {
         return vacancyApplicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("VacancyApplication con id '" + id + "' no encontrada"));
+    }
+
+    @Override
+    public List<VacancyApplication> getAll() {
+        return vacancyApplicationRepository.findAll();
+    }
+
+    @Override
+    public List<VacancyApplication> getByVacancyId(String vacancyId) {
+        return vacancyApplicationRepository.findByVacancyId(vacancyId);
+    }
+
+    @Override
+    public List<VacancyApplication> getByStudentProfileId(String studentProfileId) {
+        return vacancyApplicationRepository.findByStudentProfileId(studentProfileId);
+    }
+
+    @Override
+    public List<VacancyApplication> getByStatus(VacancyApplicationStatus status) {
+        return vacancyApplicationRepository.findByStatus(status);
     }
 
     @Override

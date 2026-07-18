@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.user;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 import java.time.LocalDate;

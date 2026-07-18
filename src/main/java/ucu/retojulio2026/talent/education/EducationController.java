@@ -20,7 +20,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import ucu.retojulio2026.talent.education.dto.CreateEducationRequest;
+import ucu.retojulio2026.talent.education.dto.EducationMapper;
+import ucu.retojulio2026.talent.education.dto.EducationResponse;
 import ucu.retojulio2026.talent.education.dto.GetEducationByIdRequest;
+import ucu.retojulio2026.talent.education.dto.UpdateEducationRequest;
 
 import java.util.List;
 
@@ -31,21 +36,27 @@ import java.util.List;
 public class EducationController {
 
     private final EducationService educationService;
+    private final EducationMapper educationMapper;
 
-    public EducationController(EducationService educationService) {
+    public EducationController(EducationService educationService, EducationMapper educationMapper) {
         this.educationService = educationService;
+        this.educationMapper = educationMapper;
     }
+
+    // ===== CREATE =====
 
     @Operation(summary = "Crear un registro de educacion")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Registro creado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
     })
     @PostMapping
-    public ResponseEntity<Education> create(@Valid @RequestBody Education education) {
-        Education created = educationService.create(education);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<EducationResponse> create(@Valid @RequestBody CreateEducationRequest request) {
+        Education created = educationService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(educationMapper.toResponse(created));
     }
+
+    // ===== READ =====
 
     @Operation(summary = "Obtener un registro de educacion por id")
     @ApiResponses({
@@ -53,9 +64,9 @@ public class EducationController {
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Education> getByEducationId(
-            @Parameter(description = "Id de education") @PathVariable("id") String education_id) {
-        return ResponseEntity.ok(educationService.getByEducationId(education_id));
+    public ResponseEntity<EducationResponse> getByEducationId(
+            @Parameter(description = "Id de education") @PathVariable("id") String educationId) {
+        return ResponseEntity.ok(educationMapper.toResponse(educationService.getByEducationId(educationId)));
     }
 
     @Operation(summary = "Obtener un registro de educacion por id (DTO request)")
@@ -65,8 +76,8 @@ public class EducationController {
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @GetMapping("/by-id")
-    public ResponseEntity<Education> getByEducationIdRequest(@Valid @ModelAttribute GetEducationByIdRequest request) {
-        return ResponseEntity.ok(educationService.getByEducationId(request.education_id()));
+    public ResponseEntity<EducationResponse> getByEducationIdRequest(@Valid @ModelAttribute GetEducationByIdRequest request) {
+        return ResponseEntity.ok(educationMapper.toResponse(educationService.getByEducationId(request.educationId())));
     }
 
     @Operation(summary = "Listar educacion por studentProfileId")
@@ -75,26 +86,35 @@ public class EducationController {
             @ApiResponse(responseCode = "400", description = "Parametro invalido")
     })
     @GetMapping(params = "studentProfileId")
-    public ResponseEntity<List<Education>> getByStudentProfileId(
+    public ResponseEntity<List<EducationResponse>> getByStudentProfileId(
             @Parameter(description = "Id del perfil alumno")
             @RequestParam
             @NotBlank(message = "studentProfileId es obligatorio")
             String studentProfileId) {
-        return ResponseEntity.ok(educationService.getByStudentProfileId(studentProfileId));
+        List<EducationResponse> response = educationService.getByStudentProfileId(studentProfileId)
+                .stream()
+                .map(educationMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
     }
+
+    // ===== UPDATE =====
 
     @Operation(summary = "Actualizar un registro de educacion por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro actualizado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Education> update(
-            @Parameter(description = "Id de education") @PathVariable("id") String education_id,
-            @Valid @RequestBody Education education) {
-        return ResponseEntity.ok(educationService.update(education_id, education));
+    public ResponseEntity<EducationResponse> update(
+            @Parameter(description = "Id de education") @PathVariable("id") String educationId,
+            @Valid @RequestBody UpdateEducationRequest request) {
+        Education updated = educationService.update(educationId, request);
+        return ResponseEntity.ok(educationMapper.toResponse(updated));
     }
+
+    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un registro de educacion por id")
     @ApiResponses({
@@ -103,8 +123,8 @@ public class EducationController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "Id de education") @PathVariable("id") String education_id) {
-        educationService.delete(education_id);
+            @Parameter(description = "Id de education") @PathVariable("id") String educationId) {
+        educationService.delete(educationId);
         return ResponseEntity.noContent().build();
     }
 }

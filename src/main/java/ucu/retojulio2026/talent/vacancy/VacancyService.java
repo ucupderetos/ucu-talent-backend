@@ -10,6 +10,16 @@ public interface VacancyService {
 
     Vacancy getVacancyById(String id);
 
+    List<Vacancy> getByStatus(VacancyStatus status);
+
+    List<Vacancy> getByCompanyId(String companyId);
+
+    List<Vacancy> getByAreaId(String areaId);
+
+    List<Vacancy> getByModality(Modality modality);
+
+    List<Vacancy> getByLocation(Departamento location);
+
     public Vacancy create(CreateVacancyRequest request);
 
     Vacancy updateVacancy(String id, CreateVacancyRequest vacancy);

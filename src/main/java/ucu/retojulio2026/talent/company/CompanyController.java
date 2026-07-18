@@ -16,6 +16,8 @@ import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.company.dto.CompanyResponse;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/company")
 @Tag(name = "Empresas", description = "Alta, consulta y baja de empresas")
@@ -29,6 +31,32 @@ public class CompanyController {
         this.companyMapper = companyMapper;
     }
 
+    // ===== CREATE =====
+
+    @Operation(summary = "Crear una empresa")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Empresa creada"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+    })
+    @PostMapping
+    public ResponseEntity<CompanyResponse> create(@Valid @RequestBody CreateCompanyRequest request) {
+        Company created = companyService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyMapper.toResponse(created));
+    }
+
+    // ===== READ =====
+
+    @Operation(summary = "Listar todas las empresas")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido")
+    @GetMapping
+    public ResponseEntity<List<CompanyResponse>> getAll() {
+        List<CompanyResponse> response = companyService.getAll()
+                .stream()
+                .map(companyMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Obtener una empresa por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empresa encontrada"),
@@ -36,7 +64,7 @@ public class CompanyController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<CompanyResponse> getById(
-            @Parameter(description = "Id de la empresa (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id de la empresa") @PathVariable String id) {
         Company company = companyService.getById(id);
         return ResponseEntity.ok(companyMapper.toResponse(company));
     }
@@ -57,16 +85,7 @@ public class CompanyController {
         return ResponseEntity.ok(companyMapper.toResponse(company));
     }
 
-    @Operation(summary = "Crear una empresa")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Empresa creada"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
-    })
-    @PostMapping
-    public ResponseEntity<CompanyResponse> create(@Valid @RequestBody CreateCompanyRequest request) {
-        Company created = companyService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(companyMapper.toResponse(created));
-    }
+    // ===== UPDATE =====
 
     @Operation(summary = "Actualizar una empresa por id")
     @ApiResponses({
@@ -81,6 +100,8 @@ public class CompanyController {
         Company updated = companyService.update(id, request);
         return ResponseEntity.ok(companyMapper.toResponse(updated));
     }
+
+    // ===== DELETE =====
 
     @Operation(summary = "Eliminar una empresa por id")
     @ApiResponses({

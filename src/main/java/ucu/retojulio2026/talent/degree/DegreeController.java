@@ -33,6 +33,25 @@ public class DegreeController {
         this.degreeMapper = degreeMapper;
     }
 
+    // ===== CREATE =====
+
+    //PostMapping indica que usa el verbo HTTP POST para guardar un recurso.
+    //@Valid dispara las validaciones del CreateDegreeRequest (@NotBlank, @NotNull, etc)
+    @Operation(summary = "Crear una carrera")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Carrera creada"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+    })
+    @PostMapping
+    public ResponseEntity<DegreeResponse> create(@Valid @RequestBody CreateDegreeRequest request) {
+        Degree created = degreeService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(degreeMapper.toResponse(created));
+
+        //Devuelve el DegreeResponse mas codigo HTTP 201 (Created)
+    }
+
+    // ===== READ =====
+
     //GetMapping indica que usa el verbo HTTP GET para obtener un recurso
     @Operation(summary = "Obtener una carrera por id")
     @ApiResponses({
@@ -41,7 +60,7 @@ public class DegreeController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<DegreeResponse> getById(
-            @Parameter(description = "Id de la carrera (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id de la carrera") @PathVariable String id) {
         Degree degree = degreeService.getById(id);
         return ResponseEntity.ok(degreeMapper.toResponse(degree));
 
@@ -98,20 +117,7 @@ public class DegreeController {
         return ResponseEntity.ok(response);
     }
 
-    //PostMapping indica que usa el verbo HTTP POST para guardar un recurso.
-    //@Valid dispara las validaciones del CreateDegreeRequest (@NotBlank, @NotNull, etc)
-    @Operation(summary = "Crear una carrera")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Carrera creada"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
-    })
-    @PostMapping
-    public ResponseEntity<DegreeResponse> create(@Valid @RequestBody CreateDegreeRequest request) {
-        Degree created = degreeService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(degreeMapper.toResponse(created));
-
-        //Devuelve el DegreeResponse mas codigo HTTP 201 (Created)
-    }
+    // ===== UPDATE =====
 
     //PutMapping indica que usa el verbo HTTP PUT para actualizar un recurso existente.
     @Operation(summary = "Actualizar una carrera por id")
@@ -122,11 +128,13 @@ public class DegreeController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<DegreeResponse> update(
-            @Parameter(description = "Id de la carrera (NanoID de 12 caracteres)") @PathVariable String id,
+            @Parameter(description = "Id de la carrera") @PathVariable String id,
             @Valid @RequestBody UpdateDegreeRequest request) {
         Degree updated = degreeService.update(id, request);
         return ResponseEntity.ok(degreeMapper.toResponse(updated));
     }
+
+    // ===== DELETE =====
 
     //Lo mismo que los otros con DELETE
     @Operation(summary = "Eliminar una carrera por id")
@@ -136,7 +144,7 @@ public class DegreeController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "Id de la carrera (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id de la carrera") @PathVariable String id) {
         degreeService.delete(id);
         return ResponseEntity.noContent().build();
 

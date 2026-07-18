@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import ucu.retojulio2026.talent.common.validation.PublicSignupRole;
-import ucu.retojulio2026.talent.user.DocumentType;
+import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.user.Role;
 
 //Datos que la API RECIBE para crear un usuario.
@@ -39,10 +39,12 @@ public record CreateUserRequest(
         @Schema(description = "Numero de telefono (opcional)", example = "+59899123456")
         String phoneNumber,
 
-        @Schema(description = "Tipo de documento (opcional)", example = "CEDULA_IDENTIDAD")
+        @Schema(description = "Tipo de documento", example = "CEDULA_IDENTIDAD")
+        @NotNull(message = "El tipo de documento es obligatorio")
         DocumentType documentType,
 
-        @Schema(description = "Numero de documento (opcional)", example = "1.234.567-8")
+        @Schema(description = "Numero de documento", example = "1.234.567-8")
+        @NotBlank(message = "El numero de documento es obligatorio")
         String documentNumber,
 
         @Schema(description = "URL de LinkedIn (opcional)", example = "https://linkedin.com/in/nicolas-gonzalez")

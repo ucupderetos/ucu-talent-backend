@@ -2,7 +2,7 @@ package ucu.retojulio2026.talent.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import ucu.retojulio2026.talent.user.DocumentType;
+import ucu.retojulio2026.talent.common.DocumentType;
 
 //Datos EDITABLES de un usuario (PUT). No incluye email, password ni role (se cambian por flujos aparte).
 public record UpdateUserRequest(

@@ -30,6 +30,22 @@ public class AreaController {
         this.areaMapper = areaMapper;
     }
 
+    // ===== CREATE =====
+
+    @Operation(summary = "Crear un area")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Area creada"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "404", description = "El area padre no existe")
+    })
+    @PostMapping
+    public ResponseEntity<AreaResponse> create(@Valid @RequestBody CreateAreaRequest request) {
+        Area created = areaService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(areaMapper.toResponse(created));
+    }
+
+    // ===== READ =====
+
     @Operation(summary = "Obtener todas las areas")
     @ApiResponse(responseCode = "200", description = "Areas encontradas")
     @GetMapping
@@ -48,22 +64,12 @@ public class AreaController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<AreaResponse> getById(
-            @Parameter(description = "Id del area (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id del area") @PathVariable String id) {
         Area area = areaService.getById(id);
         return ResponseEntity.ok(areaMapper.toResponse(area));
     }
 
-    @Operation(summary = "Crear un area")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Area creada"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-            @ApiResponse(responseCode = "404", description = "El area padre no existe")
-    })
-    @PostMapping
-    public ResponseEntity<AreaResponse> create(@Valid @RequestBody CreateAreaRequest request) {
-        Area created = areaService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(areaMapper.toResponse(created));
-    }
+    // ===== UPDATE =====
 
     @Operation(summary = "Actualizar un area por id")
     @ApiResponses({
@@ -73,11 +79,13 @@ public class AreaController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<AreaResponse> update(
-            @Parameter(description = "Id del area (NanoID de 12 caracteres)") @PathVariable String id,
+            @Parameter(description = "Id del area") @PathVariable String id,
             @Valid @RequestBody UpdateAreaRequest request) {
         Area updated = areaService.update(id, request);
         return ResponseEntity.ok(areaMapper.toResponse(updated));
     }
+
+    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un area por id")
     @ApiResponses({
@@ -86,7 +94,7 @@ public class AreaController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "Id del area (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id del area") @PathVariable String id) {
         areaService.delete(id);
         return ResponseEntity.noContent().build();
     }
