@@ -5,7 +5,7 @@ import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus;
 import java.time.LocalDate;
 
 public record VacancyApplicationResponse(
-        String id,
+        String vacancyApplicationId,
         String vacancyId,
         String studentProfileId,
         VacancyApplicationStatus status,

@@ -8,7 +8,7 @@ import ucu.retojulio2026.talent.vacancyapplication.VacancyApplication;
 @Mapper(componentModel = "spring")
 public interface VacancyApplicationMapper {
 
-    @Mapping(target = "vacancy_application_id", ignore = true)
+    @Mapping(target = "vacancyApplicationId", ignore = true)
     VacancyApplication toEntity(CreateVacancyApplicationRequest request);
 
     VacancyApplicationResponse toResponse(VacancyApplication vacancyApplication);

@@ -17,7 +17,7 @@ public class VacancyApplication {
 
     @Id
     @Column(name = "vacancy_application_id", length = 12, updatable = false, nullable = false)
-    private String id;
+    private String vacancyApplicationId;
 
     @Column(name = "vacancy_id", length = 12, nullable = false)
     private String vacancyId;
@@ -34,8 +34,8 @@ public class VacancyApplication {
 
     @PrePersist
     protected void assignId() {
-        if (this.id == null) {
-            this.id = NanoIdGenerator.generate();
+        if (this.vacancyApplicationId == null) {
+            this.vacancyApplicationId = NanoIdGenerator.generate();
         }
     }
 }
