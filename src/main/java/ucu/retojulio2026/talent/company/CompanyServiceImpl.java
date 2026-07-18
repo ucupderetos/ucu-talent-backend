@@ -9,6 +9,8 @@ import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.UserRepository;
 import ucu.retojulio2026.talent.user.UserService;
 
+import java.util.List;
+
 @Service
 public class CompanyServiceImpl implements CompanyService {
 
@@ -36,6 +38,11 @@ public class CompanyServiceImpl implements CompanyService {
     public Company getById(String id) {
         return companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company con id '" + id + "' no encontrada"));
+    }
+
+    @Override
+    public List<Company> getAll() {
+        return companyRepository.findAll();
     }
 
     @Override

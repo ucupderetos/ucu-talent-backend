@@ -4,19 +4,27 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import ucu.retojulio2026.talent.workexperience.dto.CreateWorkExperienceRequest;
+import ucu.retojulio2026.talent.workexperience.dto.UpdateWorkExperienceRequest;
+import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceMapper;
+
 import java.util.List;
 
 @Service
 public class WorkExperienceServiceImpl implements WorkExperienceService {
 
     private final WorkExperienceRepository workExperienceRepository;
+    private final WorkExperienceMapper workExperienceMapper;
 
-    public WorkExperienceServiceImpl(WorkExperienceRepository workExperienceRepository) {
+    public WorkExperienceServiceImpl(WorkExperienceRepository workExperienceRepository,
+                                     WorkExperienceMapper workExperienceMapper) {
         this.workExperienceRepository = workExperienceRepository;
+        this.workExperienceMapper = workExperienceMapper;
     }
 
     @Override
-    public WorkExperience create(WorkExperience workExperience) {
+    public WorkExperience create(CreateWorkExperienceRequest request) {
+        WorkExperience workExperience = workExperienceMapper.toEntity(request);
         return workExperienceRepository.save(workExperience);
     }
 
@@ -33,15 +41,15 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     }
 
     @Override
-    public WorkExperience update(String id, WorkExperience workExperience) {
+    public WorkExperience update(String id, UpdateWorkExperienceRequest request) {
         WorkExperience existing = getById(id);
 
-        existing.setStudentProfileId(workExperience.getStudentProfileId());
-        existing.setCompany(workExperience.getCompany());
-        existing.setPosition(workExperience.getPosition());
-        existing.setStartDate(workExperience.getStartDate());
-        existing.setEndDate(workExperience.getEndDate());
-        existing.setDescription(workExperience.getDescription());
+        existing.setStudentProfileId(request.studentProfileId());
+        existing.setCompany(request.company());
+        existing.setPosition(request.position());
+        existing.setStartDate(request.startDate());
+        existing.setEndDate(request.endDate());
+        existing.setDescription(request.description());
 
         return workExperienceRepository.save(existing);
     }

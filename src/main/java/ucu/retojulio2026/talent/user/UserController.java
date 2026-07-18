@@ -17,6 +17,8 @@ import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.user.dto.UserResponse;
 
+import java.util.List;
+
 //Bean que indica que  es un Controller cuyos returns se serializan directo a JSON
 @RestController
 // Da el path de la url a donde llamar al Endpoint, ej: localhost:8080/user/{id} para obtener un usuario
@@ -32,16 +34,44 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
+    // ===== CREATE =====
+
+    //PostMapping indica que usa el verbo HTTP POST para guardar un recurso.
+    //@Valid dispara las validaciones del CreateUserRequest (@NotBlank, @Email, etc)
+    @Operation(summary = "Crear un usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Usuario creado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+    })
+    @PostMapping
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
+        User created = userService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(created));
+        //Devuelve el UserResponse (sin passwordHash) mas código HTTP 201 (Created)
+    }
+
+    // ===== READ =====
+
+    @Operation(summary = "Listar todos los usuarios")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido")
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAll() {
+        List<UserResponse> response = userService.getAll()
+                .stream()
+                .map(userMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     //GetMapping indica que usa el verbo HTTP GET para obtener un recurso
     @Operation(summary = "Obtener un usuario por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
     })
-
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getById(
-            @Parameter(description = "Id del usuario (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id del usuario") @PathVariable String id) {
         User user = userService.getById(id);
         return ResponseEntity.ok(userMapper.toResponse(user));
         //Devuelve un UserResponse (Json, sin passwordHash) mas código HTTP 200 (OK)
@@ -65,19 +95,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
-    //PostMapping indica que usa el verbo HTTP POST para guardar un recurso.
-    //@Valid dispara las validaciones del CreateUserRequest (@NotBlank, @Email, etc)
-    @Operation(summary = "Crear un usuario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Usuario creado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
-    })
-    @PostMapping
-    public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
-        User created = userService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(created));
-        //Devuelve el UserResponse (sin passwordHash) mas código HTTP 201 (Created)
-    }
+    // ===== UPDATE =====
 
     //PutMapping indica que usa el verbo HTTP PUT para actualizar un recurso existente.
     @Operation(summary = "Actualizar los datos editables de un usuario por id")
@@ -88,11 +106,13 @@ public class UserController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
-            @Parameter(description = "Id del usuario (NanoID de 12 caracteres)") @PathVariable String id,
+            @Parameter(description = "Id del usuario") @PathVariable String id,
             @Valid @RequestBody UpdateUserRequest request) {
         User updated = userService.update(id, request);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }
+
+    // ===== DELETE =====
 
     //Lo mismo que los otros con DELETE
     @Operation(summary = "Eliminar un usuario por id")
@@ -102,7 +122,7 @@ public class UserController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @Parameter(description = "Id del usuario (NanoID de 12 caracteres)") @PathVariable String id) {
+            @Parameter(description = "Id del usuario") @PathVariable String id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
         //devuelve sólo el código 204 No Content -  No siempre hay que devolver un JSON al front

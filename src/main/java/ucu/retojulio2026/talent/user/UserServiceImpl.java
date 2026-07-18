@@ -8,6 +8,8 @@ import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
+import java.util.List;
+
 //Implementacion concreta del contrato UserService. Es el bean que Spring inyecta.
 @Service
 public class UserServiceImpl implements UserService {
@@ -35,6 +37,11 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User con id '" + id + "' no encontrado"));
         // Si no hay usuario, lanza la excepcion. Spring la rutea al GlobalExceptionHandler
         // clase global con @RestControllerAdvice, que la traduce a un 404 en el metodo handleNotFound.
+    }
+
+    @Override
+    public List<User> getAll() {
+        return userRepository.findAll();
     }
 
     @Override

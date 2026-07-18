@@ -3,11 +3,11 @@ package ucu.retojulio2026.talent.universityregistry.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import ucu.retojulio2026.talent.universityregistry.DocumentType;
+import ucu.retojulio2026.talent.common.DocumentType;
 
 public record UpdateUniversityRegistryRequest(
 
-        @Schema(description = "Tipo de documento", example = "CEDULA")
+        @Schema(description = "Tipo de documento", example = "CEDULA_IDENTIDAD")
         @NotNull(message = "El tipo de documento es obligatorio")
         DocumentType documentType,
 

@@ -29,7 +29,7 @@ public class Education {
 
     @Id
     @Column(name = "education_id", length = 12, updatable = false, nullable = false)
-    private String education_id;
+    private String educationId;
 
     @NotNull(message = "El perfilAlumnoId es obligatorio")
     @Column(name = "student_profile_id", nullable = false)
@@ -64,8 +64,8 @@ public class Education {
 
     @PrePersist
     protected void assignEducationId() {
-        if (this.education_id == null) {
-            this.education_id = NanoIdGenerator.generate();
+        if (this.educationId == null) {
+            this.educationId = NanoIdGenerator.generate();
         }
     }
 }

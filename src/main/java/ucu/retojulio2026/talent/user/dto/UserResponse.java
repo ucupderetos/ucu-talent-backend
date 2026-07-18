@@ -3,7 +3,7 @@ package ucu.retojulio2026.talent.user.dto;
 import java.time.LocalDate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ucu.retojulio2026.talent.user.DocumentType;
+import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.user.Role;
 
 //Datos que la API DEVUELVE de un usuario.

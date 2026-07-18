@@ -7,6 +7,8 @@ import ucu.retojulio2026.talent.universityregistry.dto.CreateUniversityRegistryR
 import ucu.retojulio2026.talent.universityregistry.dto.UniversityRegistryMapper;
 import ucu.retojulio2026.talent.universityregistry.dto.UpdateUniversityRegistryRequest;
 
+import java.util.List;
+
 @Service
 public class UniversityRegistryServiceImpl implements UniversityRegistryService {
 
@@ -29,6 +31,11 @@ public class UniversityRegistryServiceImpl implements UniversityRegistryService 
     public UniversityRegistry getById(String id) {
         return universityRegistryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("UniversityRegistry con id '" + id + "' no encontrado"));
+    }
+
+    @Override
+    public List<UniversityRegistry> getAll() {
+        return universityRegistryRepository.findAll();
     }
 
     @Override

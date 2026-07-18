@@ -2,6 +2,7 @@ package ucu.retojulio2026.talent.universityregistry;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 @Getter

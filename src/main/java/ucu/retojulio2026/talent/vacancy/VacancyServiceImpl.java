@@ -41,6 +41,36 @@ public class VacancyServiceImpl implements VacancyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Vacancy> getByStatus(VacancyStatus status) {
+        return vacancyRepository.findByStatus(status);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vacancy> getByCompanyId(String companyId) {
+        return vacancyRepository.findByCompanyId(companyId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vacancy> getByAreaId(String areaId) {
+        return vacancyRepository.findByAreaId(areaId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vacancy> getByModality(Modality modality) {
+        return vacancyRepository.findByModality(modality);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vacancy> getByLocation(Departamento location) {
+        return vacancyRepository.findByLocation(location);
+    }
+
+    @Override
     @Transactional
     public Vacancy create(CreateVacancyRequest request) {
         if (!companyService.existsById(request.companyId())) {

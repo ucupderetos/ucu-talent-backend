@@ -2,6 +2,9 @@ package ucu.retojulio2026.talent.education;
 
 import org.springframework.stereotype.Service;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
+import ucu.retojulio2026.talent.education.dto.CreateEducationRequest;
+import ucu.retojulio2026.talent.education.dto.EducationMapper;
+import ucu.retojulio2026.talent.education.dto.UpdateEducationRequest;
 
 import java.util.List;
 
@@ -9,22 +12,24 @@ import java.util.List;
 public class EducationServiceImpl implements EducationService {
 
     private final EducationRepository educationRepository;
+    private final EducationMapper educationMapper;
 
-    public EducationServiceImpl(EducationRepository educationRepository) {
+    public EducationServiceImpl(EducationRepository educationRepository, EducationMapper educationMapper) {
         this.educationRepository = educationRepository;
+        this.educationMapper = educationMapper;
     }
 
     @Override
-    public Education create(Education education) {
-        education.setEducation_id(null);
+    public Education create(CreateEducationRequest request) {
+        Education education = educationMapper.toEntity(request);
         return educationRepository.save(education);
     }
 
     @Override
-    public Education getByEducationId(String education_id) {
-        return educationRepository.findById(education_id)
+    public Education getByEducationId(String educationId) {
+        return educationRepository.findById(educationId)
             .orElseThrow(() -> new ResourceNotFoundException(
-                        "Education con id '" + education_id + "' no encontrada"));
+                        "Education con id '" + educationId + "' no encontrada"));
     }
 
     @Override
@@ -33,22 +38,22 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
-    public Education update(String education_id, Education education) {
-        Education existing = getByEducationId(education_id);
+    public Education update(String educationId, UpdateEducationRequest request) {
+        Education existing = getByEducationId(educationId);
 
-        existing.setStudentProfileId(education.getStudentProfileId());
-        existing.setDegreeLevel(education.getDegreeLevel());
-        existing.setDegreeId(education.getDegreeId());
-        existing.setDescription(education.getDescription());
-        existing.setStartDate(education.getStartDate());
-        existing.setEndDate(education.getEndDate());
+        existing.setStudentProfileId(request.studentProfileId());
+        existing.setDegreeLevel(request.degreeLevel());
+        existing.setDegreeId(request.degreeId());
+        existing.setDescription(request.description());
+        existing.setStartDate(request.startDate());
+        existing.setEndDate(request.endDate());
 
         return educationRepository.save(existing);
     }
 
     @Override
-    public void delete(String education_id) {
-        Education existing = getByEducationId(education_id);
+    public void delete(String educationId) {
+        Education existing = getByEducationId(educationId);
         educationRepository.delete(existing);
     }
 }
