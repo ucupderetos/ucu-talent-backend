@@ -31,11 +31,10 @@ public class VacancyApplicationController {
     private final VacancyApplicationService vacancyApplicationService;
     private final VacancyApplicationMapper vacancyApplicationMapper;
 
-    public VacancyApplicationController(VacancyApplicationService vacancyApplicationService, VacancyApplicationMapper vacancyApplicationMapper, CreateVacancyApplicationRequest createVacancyApplicationRequest
-                                        ) {
+    public VacancyApplicationController(VacancyApplicationService vacancyApplicationService,
+                                        VacancyApplicationMapper vacancyApplicationMapper) {
         this.vacancyApplicationService = vacancyApplicationService;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
-
     }
 
     @Operation(summary = "Obtener una postulación por id")
