@@ -6,6 +6,7 @@ import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.Modality;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record VacancyResponse (
         @Schema(description = "Id del puesto (NanoID)", example = "V1StGXR8_Z5j")
@@ -22,6 +23,15 @@ public record VacancyResponse (
 
         @Schema(description = "Fecha de cierre del puesto", example = "2026-08-15")
         LocalDate closingDate,
+
+        @Schema(description = "Fecha de creación", example = "2026-07-16T14:30:15")
+        LocalDateTime createdAt,
+
+        @Schema(description = "Fecha de revisión", example = "2026-07-16T16:45:00")
+        LocalDateTime reviewedAt,
+
+        @Schema(description = "Comentario del administrador", example = "Comentario o null")
+        String adminComment,
 
         @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
         Departamento location,

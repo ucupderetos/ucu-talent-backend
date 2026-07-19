@@ -8,6 +8,7 @@ import ucu.retojulio2026.talent.common.NanoIdGenerator;
 import ucu.retojulio2026.talent.company.Company;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "\"vacancy\"") // Puesto
@@ -28,16 +29,25 @@ public class Vacancy {
     @Column(name = "area_id", length = 12, updatable = false, nullable = true)
     private String areaId;
 
-    @CreationTimestamp
-    @Column(name = "publication_date", updatable = false, nullable = false)
+    @Column(name = "publication_date", updatable = true, nullable = false)
     private LocalDate publicationDate;
 
-    @Column(name = "closing_date")
+    @Column(name = "closing_date", updatable = true, nullable = false)
     private LocalDate closingDate;
+
+    //@CreationTimestamp // No tiene en cuenta la zona horaria real con esa anotación.
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "reviewed_at", updatable = true, nullable = true)
+    private LocalDateTime reviewedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
     private Departamento location;
+
+    @Column(name = "admin_comment", columnDefinition = "TEXT", nullable = true)
+    private String adminComment;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
