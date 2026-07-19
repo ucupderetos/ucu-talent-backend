@@ -10,6 +10,9 @@ import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -80,7 +83,7 @@ public class VacancyServiceImpl implements VacancyService {
             throw new ResourceNotFoundException("Area not found.");
         }
         Vacancy vacancy = vacancyMapper.toEntity(request);
-        vacancy.setStatus(VacancyStatus.PENDIENTE);
+        vacancy.setCreatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
         return vacancyRepository.save(vacancy);
     }
 
@@ -110,6 +113,8 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setSalaryRange(updated.getSalaryRange());
         existing.setCompanyId(updated.getCompanyId());
         existing.setAreaId(updated.getAreaId());
+        existing.setAdminComment(updated.getAdminComment());
+        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
 
         return vacancyRepository.save(existing);
     }
