@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import ucu.retojulio2026.talent.common.ResourceNotFoundException;
+import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 import ucu.retojulio2026.talent.workexperience.dto.CreateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.UpdateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceMapper;
@@ -15,16 +17,23 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
 
     private final WorkExperienceRepository workExperienceRepository;
     private final WorkExperienceMapper workExperienceMapper;
+    private final StudentProfileService studentProfileService;
 
     public WorkExperienceServiceImpl(WorkExperienceRepository workExperienceRepository,
-                                     WorkExperienceMapper workExperienceMapper) {
+                                     WorkExperienceMapper workExperienceMapper,
+                                     StudentProfileService studentProfileService) {
         this.workExperienceRepository = workExperienceRepository;
         this.workExperienceMapper = workExperienceMapper;
+        this.studentProfileService = studentProfileService;
     }
 
     @Override
     public WorkExperience create(CreateWorkExperienceRequest request) {
+        validateStudentProfileExists(request.studentProfileId());
+
         WorkExperience workExperience = workExperienceMapper.toEntity(request);
+        // Forzamos creacion: el id siempre lo asigna la entidad en @PrePersist.
+        workExperience.setWorkExperienceId(null);
         return workExperienceRepository.save(workExperience);
     }
 
@@ -43,6 +52,7 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     @Override
     public WorkExperience update(String id, UpdateWorkExperienceRequest request) {
         WorkExperience existing = getById(id);
+        validateStudentProfileExists(request.studentProfileId());
 
         existing.setStudentProfileId(request.studentProfileId());
         existing.setCompany(request.company());
@@ -58,5 +68,12 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     public void delete(String id) {
         WorkExperience existing = getById(id);
         workExperienceRepository.delete(existing);
+    }
+
+    private void validateStudentProfileExists(String studentProfileId) {
+        if (!studentProfileService.existsById(studentProfileId)) {
+            throw new ResourceNotFoundException(
+                    "StudentProfile con id '" + studentProfileId + "' no encontrado");
+        }
     }
 }
