@@ -10,8 +10,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
@@ -19,33 +22,38 @@ import ucu.retojulio2026.talent.user.dto.UserResponse;
 
 import java.util.List;
 
-//Bean que indica que  es un Controller cuyos returns se serializan directo a JSON
 @RestController
-// Da el path de la url a donde llamar al Endpoint, ej: localhost:8080/user/{id} para obtener un usuario
 @RequestMapping("/user")
-@Tag(name = "Usuarios", description = "Alta, consulta y baja de usuarios") // agrupa los endpoints en Swagger UI
+@Tag(name = "Usuarios", description = "Alta, consulta y baja de usuarios")
 public class UserController {
 
     private final UserService userService;
+    private final UserRegistrationService userRegistrationService;
+    private final UserDeletionService userDeletionService;
     private final UserMapper userMapper;
 
-    public UserController(UserService userService, UserMapper userMapper) {
+    public UserController(UserService userService, UserRegistrationService userRegistrationService,
+            UserDeletionService userDeletionService, UserMapper userMapper) {
         this.userService = userService;
+        this.userRegistrationService = userRegistrationService;
+        this.userDeletionService = userDeletionService;
         this.userMapper = userMapper;
     }
 
     // ===== CREATE =====
 
-    //PostMapping indica que usa el verbo HTTP POST para guardar un recurso.
-    //@Valid dispara las validaciones del CreateUserRequest (@NotBlank, @Email, etc)
+
     @Operation(summary = "Crear un usuario")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuario creado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+
     })
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
-        User created = userService.create(request);
+        // Crea el User y, segun su rol, el StudentProfile/Company asociado en el mismo paso
+        // (PK compartida: ver UserRegistrationServiceImpl).
+        User created = userRegistrationService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(created));
         //Devuelve el UserResponse (sin passwordHash) mas código HTTP 201 (Created)
     }
@@ -53,7 +61,9 @@ public class UserController {
     // ===== READ =====
 
     @Operation(summary = "Listar todos los usuarios")
-    @ApiResponse(responseCode = "200", description = "Listado obtenido")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),})
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAll() {
         List<UserResponse> response = userService.getAll()
@@ -63,10 +73,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    //GetMapping indica que usa el verbo HTTP GET para obtener un recurso
     @Operation(summary = "Obtener un usuario por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
     })
     @GetMapping("/{id}")
@@ -74,14 +84,13 @@ public class UserController {
             @Parameter(description = "Id del usuario") @PathVariable String id) {
         User user = userService.getById(id);
         return ResponseEntity.ok(userMapper.toResponse(user));
-        //Devuelve un UserResponse (Json, sin passwordHash) mas código HTTP 200 (OK)
-        //Si no existe lanza 404 NotFound en GlobalExceptionHandler
     }
 
     @Operation(summary = "Buscar un usuario por email")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
             @ApiResponse(responseCode = "400", description = "El email tiene un formato invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese email")
     })
     @GetMapping(params = "email")
@@ -97,36 +106,42 @@ public class UserController {
 
     // ===== UPDATE =====
 
-    //PutMapping indica que usa el verbo HTTP PUT para actualizar un recurso existente.
     @Operation(summary = "Actualizar los datos editables de un usuario por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuario actualizado"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para modificar esta recurso."),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
     })
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id del usuario") @PathVariable String id,
-            @Valid @RequestBody UpdateUserRequest request) {
+            @Valid @RequestBody UpdateUserRequest request)
+    {
+        AuthorizationGuard.requireOwnership(jwt, id);
         User updated = userService.update(id, request);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }
 
+
     // ===== DELETE =====
 
-    //Lo mismo que los otros con DELETE
     @Operation(summary = "Eliminar un usuario por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Usuario eliminado (sin contenido)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para eliminar esta cuenta."),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id del usuario") @PathVariable String id) {
-        userService.delete(id);
+        AuthorizationGuard.requireOwnership(jwt, id);
+        userDeletionService.delete(id);
         return ResponseEntity.noContent().build();
-        //devuelve sólo el código 204 No Content -  No siempre hay que devolver un JSON al front
-        //pero siempre un código HTTP para que sepan si salio bien (200s) o hubo algun fallo
-        // (400s cliente) (500s servidor)
     }
+
 }

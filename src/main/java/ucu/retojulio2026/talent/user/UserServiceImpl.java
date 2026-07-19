@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
+import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
 import java.util.List;
@@ -26,6 +27,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User create(CreateUserRequest request) {
+        // Chequeo previo para el caso comun (falla rapido, mensaje claro). No reemplaza la
+        // constraint uq_user_email de la base (V1__create_user_table.sql): ante una carrera
+        // real (dos signups simultaneos con el mismo email), la base sigue siendo la unica
+        // garantia real de unicidad -> DataIntegrityViolationException, atrapada en
+        // GlobalExceptionHandler igual que este caso.
+        if (userRepository.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("Ya existe un usuario con el email '" + request.email() + "'");
+        }
         User user = userMapper.toEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         return userRepository.save(user);

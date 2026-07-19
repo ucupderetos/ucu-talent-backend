@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -36,6 +38,45 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    //Autenticado, pero intentando operar sobre un recurso que no es suyo (y no es ADMIN). Codigo HTTP 403 Forbidden.
+    @ExceptionHandler(ForbiddenOperationException.class)
+    public ProblemDetail handleForbidden(ForbiddenOperationException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    //Ya existe un recurso con ese id/relacion unica (ej: un usuario que ya tiene Company/StudentProfile). Codigo HTTP 409 Conflict.
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ProblemDetail handleDuplicate(DuplicateResourceException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    //Empresa con rol correcto, pero todavia no aprobada por un ADMIN. Codigo HTTP 403 Forbidden.
+    @ExceptionHandler(CompanyNotApprovedException.class)
+    public ProblemDetail handleCompanyNotApproved(CompanyNotApprovedException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    //Constraint de la base violada, sin chequeo propio previo (ej: email duplicado en "user",
+    //que solo la base detecta). El SQLState distingue el tipo real de violacion:
+    //23505 = UNIQUE (algo "ya existe" -> 409 Conflict), cualquier otra (23502 NOT NULL,
+    //23503 FK) es un dato invalido/faltante del cliente -> 400 Bad Request, no un conflicto.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String sqlState = null;
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (t instanceof ConstraintViolationException cve) {
+                sqlState = cve.getSQLState();
+                break;
+            }
+        }
+        if ("23505".equals(sqlState)) {
+            return ProblemDetail.forStatusAndDetail(
+                    HttpStatus.CONFLICT, "El recurso ya existe o viola una restriccion de unicidad (ej: email duplicado)");
+        }
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Uno o mas campos son invalidos, faltan datos obligatorios, o hay una referencia invalida");
     }
 
     //Se lanza cuando falla la validacion de un @Valid (ej: email invalido, pass corta).

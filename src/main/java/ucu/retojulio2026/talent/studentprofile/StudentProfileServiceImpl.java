@@ -4,8 +4,8 @@ import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
+import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
-import ucu.retojulio2026.talent.user.UserRepository;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
@@ -28,6 +28,11 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     public StudentProfile create(CreateStudentProfileRequest request) {
         if (!userService.existsById(request.userId())) {
             throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
+        }
+        // studentProfileId es siempre igual a userId (PK compartida): si ya existe, repository.save(...)
+        // haria un UPDATE silencioso (merge) en vez de fallar, porque el id ya viene seteado.
+        if (studentProfileRepository.existsById(request.userId())) {
+            throw new DuplicateResourceException("El usuario '" + request.userId() + "' ya tiene un perfil de alumno asociado");
         }
         StudentProfile studentProfile = studentProfileMapper.toEntity(request);
         return studentProfileRepository.save(studentProfile);

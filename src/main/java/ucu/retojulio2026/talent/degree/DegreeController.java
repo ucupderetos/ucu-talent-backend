@@ -40,7 +40,8 @@ public class DegreeController {
     @Operation(summary = "Crear una carrera")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Carrera creada"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @PostMapping
     public ResponseEntity<DegreeResponse> create(@Valid @RequestBody CreateDegreeRequest request) {
@@ -56,6 +57,7 @@ public class DegreeController {
     @Operation(summary = "Obtener una carrera por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Carrera encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe una carrera con ese id")
     })
     @GetMapping("/{id}")
@@ -70,7 +72,8 @@ public class DegreeController {
 
     @Operation(summary = "Listar todas las carreras")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Listado obtenido")
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @GetMapping
     public ResponseEntity<List<DegreeResponse>> getAll() {
@@ -86,6 +89,7 @@ public class DegreeController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Carrera encontrada"),
             @ApiResponse(responseCode = "400", description = "El nombre es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe una carrera con ese nombre")
     })
     @GetMapping(params = "name")
@@ -101,7 +105,8 @@ public class DegreeController {
     @Operation(summary = "Listar carreras por areaId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "El areaId es invalido")
+            @ApiResponse(responseCode = "400", description = "El areaId es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @GetMapping(params = "areaId")
     public ResponseEntity<List<DegreeResponse>> getByAreaId(
@@ -124,6 +129,7 @@ public class DegreeController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Carrera actualizada"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe una carrera con ese id")
     })
     @PutMapping("/{id}")
@@ -140,6 +146,7 @@ public class DegreeController {
     @Operation(summary = "Eliminar una carrera por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Carrera eliminada (sin contenido)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe una carrera con ese id")
     })
     @DeleteMapping("/{id}")

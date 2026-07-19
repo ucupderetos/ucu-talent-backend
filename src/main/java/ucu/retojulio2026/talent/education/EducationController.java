@@ -48,7 +48,8 @@ public class EducationController {
     @Operation(summary = "Crear un registro de educacion")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Registro creado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @PostMapping
     public ResponseEntity<EducationResponse> create(@Valid @RequestBody CreateEducationRequest request) {
@@ -61,6 +62,7 @@ public class EducationController {
     @Operation(summary = "Obtener un registro de educacion por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @GetMapping("/{id}")
@@ -73,6 +75,7 @@ public class EducationController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro encontrado"),
             @ApiResponse(responseCode = "400", description = "Parametro invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @GetMapping("/by-id")
@@ -83,7 +86,8 @@ public class EducationController {
     @Operation(summary = "Listar educacion por studentProfileId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "Parametro invalido")
+            @ApiResponse(responseCode = "400", description = "Parametro invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @GetMapping(params = "studentProfileId")
     public ResponseEntity<List<EducationResponse>> getByStudentProfileId(
@@ -104,6 +108,7 @@ public class EducationController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro actualizado"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @PutMapping("/{id}")
@@ -119,6 +124,7 @@ public class EducationController {
     @Operation(summary = "Eliminar un registro de educacion por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Registro eliminado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @DeleteMapping("/{id}")

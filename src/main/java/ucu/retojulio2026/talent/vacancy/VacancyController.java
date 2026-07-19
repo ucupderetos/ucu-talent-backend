@@ -35,11 +35,12 @@ public class VacancyController {
     @Operation(summary = "Crear Puesto")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Puesto creado"),
-            @ApiResponse(responseCode = "400", description = "Puesto inválido")
+            @ApiResponse(responseCode = "400", description = "Puesto inválido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol EMPRESA, o la empresa no esta aprobada")
     })
     @PostMapping
     public ResponseEntity<VacancyResponse> create(@Valid @RequestBody CreateVacancyRequest request) {
-
         Vacancy created = vacancyService.create(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyMapper.toResponse(created));
@@ -63,6 +64,7 @@ public class VacancyController {
     @Operation(summary = "Obtener el Puesto por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Puesto encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
     @GetMapping("/{id}")
@@ -77,6 +79,7 @@ public class VacancyController {
     @Operation(summary = "Listar Puestos por estado")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "400", description = "Estado invalido")
     })
     @GetMapping(params = "status")
@@ -93,7 +96,8 @@ public class VacancyController {
     @Operation(summary = "Listar Puestos por empresa")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "El companyId es invalido")
+            @ApiResponse(responseCode = "400", description = "El companyId es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @GetMapping(params = "companyId")
     public ResponseEntity<List<VacancyResponse>> getByCompanyId(
@@ -111,7 +115,8 @@ public class VacancyController {
     @Operation(summary = "Listar Puestos por area")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "El areaId es invalido")
+            @ApiResponse(responseCode = "400", description = "El areaId es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @GetMapping(params = "areaId")
     public ResponseEntity<List<VacancyResponse>> getByAreaId(
@@ -129,7 +134,8 @@ public class VacancyController {
     @Operation(summary = "Listar Puestos por modalidad")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "Modalidad invalida")
+            @ApiResponse(responseCode = "400", description = "Modalidad invalida"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @GetMapping(params = "modality")
     public ResponseEntity<List<VacancyResponse>> getByModality(
@@ -145,7 +151,8 @@ public class VacancyController {
     @Operation(summary = "Listar Puestos por localidad")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "Localidad invalida")
+            @ApiResponse(responseCode = "400", description = "Localidad invalida"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
     @GetMapping(params = "location")
     public ResponseEntity<List<VacancyResponse>> getByLocation(
@@ -163,13 +170,14 @@ public class VacancyController {
     @Operation(summary = "Actualizar Puesto")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Puesto actualizado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "La empresa ya no esta aprobada"),
             @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
     @PutMapping("/{id}")
     public ResponseEntity<VacancyResponse> updateVacancy(
             @PathVariable String id,
             @Valid @RequestBody CreateVacancyRequest vacancy) {
-
         Vacancy updated = vacancyService.updateVacancy(id, vacancy);
 
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
@@ -180,14 +188,36 @@ public class VacancyController {
     @Operation(summary = "Borrar Puesto")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Puesto borrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol EMPRESA"),
             @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVacancy(
             @Parameter(description = "Vacancy id")
             @PathVariable String id) {
-
         vacancyService.deleteVacancy(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Sin usar por ahora: derivaba companyId del token en vez del body (fix BOLA/IDOR, ver
+    // learning/JWT-step-by-step/08 y 11). Se dejo el metodo listo para reactivarlo despues -
+    // para volver a usarlo, agregar "@AuthenticationPrincipal Jwt jwt" a create()/updateVacancy()
+    // y llamar a withCompanyId(request, jwt.getSubject()) antes de vacancyService.create(...).
+    private CreateVacancyRequest withCompanyId(CreateVacancyRequest request, String companyId) {
+        return new CreateVacancyRequest(
+                companyId,
+                request.areaId(),
+                request.publicationDate(),
+                request.closingDate(),
+                request.location(),
+                request.modality(),
+                request.status(),
+                request.name(),
+                request.description(),
+                request.requirements(),
+                request.contractType(),
+                request.salaryRange()
+        );
     }
 }

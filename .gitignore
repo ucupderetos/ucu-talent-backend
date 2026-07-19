@@ -41,5 +41,6 @@ build/
 !.env.example
 
 learning/
+TODO.md
 
 docker-compose.override.yml

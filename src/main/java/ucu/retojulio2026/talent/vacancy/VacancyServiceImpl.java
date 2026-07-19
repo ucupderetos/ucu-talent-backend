@@ -6,6 +6,7 @@ import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
+import ucu.retojulio2026.talent.common.CompanyNotApprovedException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -70,12 +71,23 @@ public class VacancyServiceImpl implements VacancyService {
         return vacancyRepository.findByLocation(location);
     }
 
+    // Fresco de la base en cada llamada, nunca del JWT: approved es estado mutable (un ADMIN
+    // puede pasarlo a false en cualquier momento) y el token puede seguir siendo valido hasta
+    // 60 min despues de ese cambio. Ver learning/Auth/2026-07-18-jwt-stateless-auth-design.md, seccion 10.
+    private void requireApprovedCompany(String companyId) {
+        Company company = companyService.getById(companyId);
+        if (!company.getApproved()) {
+            throw new CompanyNotApprovedException();
+        }
+    }
+
     @Override
     @Transactional
     public Vacancy create(CreateVacancyRequest request) {
         if (!companyService.existsById(request.companyId())) {
             throw new ResourceNotFoundException("Company not found.");
         }
+        requireApprovedCompany(request.companyId());
         if (!areaService.existsById(request.areaId())) {
             throw new ResourceNotFoundException("Area not found.");
         }
@@ -90,6 +102,7 @@ public class VacancyServiceImpl implements VacancyService {
         if (!companyService.existsById(request.companyId())) {
             throw new ResourceNotFoundException("Company not found.");
         }
+        requireApprovedCompany(request.companyId());
         if (!areaService.existsById(request.areaId())) {
             throw new ResourceNotFoundException("Area not found.");
         }
@@ -98,11 +111,16 @@ public class VacancyServiceImpl implements VacancyService {
 
         Vacancy updated = vacancyMapper.toEntity(request);
 
-        existing.setPublicationDate(updated.getPublicationDate());
+        // publicationDate no se toca: se asigna una sola vez al crear (@CreationTimestamp,
+        // updatable = false en la entidad) - no es un campo editable via PUT.
         existing.setClosingDate(updated.getClosingDate());
         existing.setLocation(updated.getLocation());
         existing.setModality(updated.getModality());
-        existing.setStatus(updated.getStatus());
+        // status es opcional en el DTO: si no vino en el request, no se pisa el valor actual
+        // (evita el NOT NULL de la columna si el cliente no lo manda).
+        if (updated.getStatus() != null) {
+            existing.setStatus(updated.getStatus());
+        }
         existing.setName(updated.getName());
         existing.setDescription(updated.getDescription());
         existing.setRequirements(updated.getRequirements());

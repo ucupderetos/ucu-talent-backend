@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ucu.retojulio2026.talent.common.ForbiddenOperationException;
 import ucu.retojulio2026.talent.workexperience.dto.CreateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.UpdateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceMapper;
@@ -47,10 +50,15 @@ public class WorkExperienceController {
     @Operation(summary = "Crear una experiencia laboral")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Experiencia creada"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para modificar esta recurso.")
     })
     @PostMapping
-    public ResponseEntity<WorkExperienceResponse> create(@Valid @RequestBody CreateWorkExperienceRequest request) {
+    public ResponseEntity<WorkExperienceResponse> create(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CreateWorkExperienceRequest request) {
+        requireOwnership(jwt, request.studentProfileId());
         WorkExperience created = workExperienceService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(workExperienceMapper.toResponse(created));
     }
@@ -60,7 +68,8 @@ public class WorkExperienceController {
     @Operation(summary = "Obtener una experiencia laboral por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Experiencia encontrada"),
-            @ApiResponse(responseCode = "404", description = "No existe una experiencia con ese id")
+            @ApiResponse(responseCode = "404", description = "No existe una experiencia con ese id"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @GetMapping("/{id}")
     public ResponseEntity<WorkExperienceResponse> getById(
@@ -71,7 +80,9 @@ public class WorkExperienceController {
     @Operation(summary = "Listar experiencia laboral por studentProfileId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "400", description = "Parametro invalido")
+            @ApiResponse(responseCode = "400", description = "Parametro invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @GetMapping(params = "studentProfileId")
     public ResponseEntity<List<WorkExperienceResponse>> getByStudentProfileId(
@@ -92,12 +103,16 @@ public class WorkExperienceController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Experiencia actualizada"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para modificar esta recurso."),
             @ApiResponse(responseCode = "404", description = "No existe una experiencia con ese id")
     })
     @PutMapping("/{id}")
     public ResponseEntity<WorkExperienceResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id,
             @Valid @RequestBody UpdateWorkExperienceRequest request) {
+        requireOwnership(jwt, request.studentProfileId());
         WorkExperience updated = workExperienceService.update(id, request);
         return ResponseEntity.ok(workExperienceMapper.toResponse(updated));
     }
@@ -107,12 +122,23 @@ public class WorkExperienceController {
     @Operation(summary = "Eliminar una experiencia laboral por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Experiencia eliminada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para modificar esta recurso."),
             @ApiResponse(responseCode = "404", description = "No existe una experiencia con ese id")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id) {
+        requireOwnership(jwt, id);
         workExperienceService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private void requireOwnership(Jwt jwt, String targetUserId) {
+        boolean isSelf = jwt.getSubject().equals(targetUserId);
+        if (!isSelf) {
+            throw new ForbiddenOperationException("Usuario autenticado no tiene permisos para modificar esta recurso.");
+        }
     }
 }

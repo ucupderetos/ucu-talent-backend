@@ -5,24 +5,29 @@ import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.auth.dto.LoginRequest;
 import ucu.retojulio2026.talent.user.User;
-import ucu.retojulio2026.talent.user.UserRepository;
+import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.common.InvalidCredentialsException;
+import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
+    public AuthServiceImpl(UserService userService, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public User login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(InvalidCredentialsException::new);
+        User user;
+        try {
+            user = userService.getByEmail(request.email());
+        } catch (ResourceNotFoundException e) {
+            throw new InvalidCredentialsException();
+        }
 
         boolean passwordOk = passwordEncoder.matches(request.password(), user.getPasswordHash());
         if (!passwordOk) {

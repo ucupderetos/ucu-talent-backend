@@ -9,8 +9,8 @@ import ucu.retojulio2026.talent.studentprofile.StudentProfile;
 @Mapper(componentModel = "spring")
 public interface StudentProfileMapper {
 
-    // studentProfileId lo genera la entidad (@PrePersist), no viene en el request.
-    @Mapping(target = "studentProfileId", ignore = true)
+    // PK compartida: studentProfileId siempre es el mismo valor que userId (no se genera aparte).
+    @Mapping(target = "studentProfileId", source = "userId")
     StudentProfile toEntity(CreateStudentProfileRequest request);
 
     // studentProfileId, userId y skills tienen el mismo nombre en la entidad y el response - mapeo automatico.
