@@ -1,14 +1,22 @@
 package ucu.retojulio2026.talent.vacancy;
 
-import ucu.retojulio2026.talent.area.Area;
+import org.apache.coyote.BadRequestException;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.area.AreaService;
+import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.common.ForbiddenOperationException;
 import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
+import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusRequest;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
-import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.common.AccountNotApprovedException;
+import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +33,12 @@ public class VacancyServiceImpl implements VacancyService {
     private final UserService userService;
     private final AreaService areaService;
 
-    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, UserService userService, AreaService areaService) {
+    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
-        this.userService = userService;
         this.areaService = areaService;
+        this.userService = userService;
     }
 
     @Override
@@ -73,16 +81,10 @@ public class VacancyServiceImpl implements VacancyService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Vacancy> getByLocation(Departamento location) {
+    public List<Vacancy> getByLocation(Department location) {
         return vacancyRepository.findByLocation(location);
     }
 
-    // Fresco de la base en cada llamada, nunca del JWT: approved es estado mutable (un ADMIN
-    // puede pasarlo a false en cualquier momento) y el token puede seguir siendo valido hasta
-    // 60 min despues de ese cambio. Ver learning/Auth/2026-07-18-jwt-stateless-auth-design.md, seccion 10.
-    // El estado se lee fresco de la base, nunca del JWT: cambia por accion del Admin
-    // dentro de la vida del token (4h) y no hay revocacion.
-    // companyId == userId (PK compartida), asi que se consulta directo el User.
     private void requireApprovedCompany(String companyId) {
         if (userService.getById(companyId).getStatus() != AccountStatus.APROBADO) {
             throw new AccountNotApprovedException();
@@ -95,49 +97,63 @@ public class VacancyServiceImpl implements VacancyService {
         if (!companyService.existsById(request.companyId())) {
             throw new ResourceNotFoundException("Company not found.");
         }
-        requireApprovedCompany(request.companyId());
         if (!areaService.existsById(request.areaId())) {
             throw new ResourceNotFoundException("Area not found.");
+        }
+        if (request.publicationDate().isAfter(request.closingDate())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
+            );
         }
         Vacancy vacancy = vacancyMapper.toEntity(request);
         vacancy.setCreatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
         return vacancyRepository.save(vacancy);
     }
 
+    @Scheduled(cron = "0 0 0 * * *", zone = "America/Montevideo")
+    @Transactional
+    public void finalizeExpiredVacancies() {
+        LocalDate today = LocalDate.now(ZoneId.of("America/Montevideo"));
+
+        List<Vacancy> expired = vacancyRepository
+                .findByStatusAndClosingDateLessThanEqual((VacancyStatus.PUBLICADO), today);
+
+        for (Vacancy vacancy : expired) {
+            vacancy.setStatus(VacancyStatus.FINALIZADO);
+        }
+    }
+
     @Override
     @Transactional
-    public Vacancy updateVacancy(String id, CreateVacancyRequest request) {
-        if (!companyService.existsById(request.companyId())) {
-            throw new ResourceNotFoundException("Company not found.");
-        }
-        requireApprovedCompany(request.companyId());
-        if (!areaService.existsById(request.areaId())) {
-            throw new ResourceNotFoundException("Area not found.");
-        }
+    public Vacancy updateVacancy(String id, UpdateVacancyRequest request) {
+
         Vacancy existing = vacancyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
 
-        Vacancy updated = vacancyMapper.toEntity(request);
-
-        // publicationDate no se toca: se asigna una sola vez al crear (@CreationTimestamp,
-        // updatable = false en la entidad) - no es un campo editable via PUT.
-        existing.setClosingDate(updated.getClosingDate());
-        existing.setLocation(updated.getLocation());
-        existing.setModality(updated.getModality());
-        // status es opcional en el DTO: si no vino en el request, no se pisa el valor actual
-        // (evita el NOT NULL de la columna si el cliente no lo manda).
-        if (updated.getStatus() != null) {
-            existing.setStatus(updated.getStatus());
+        if (!companyService.existsById(existing.getCompanyId())) {
+            throw new ResourceNotFoundException("Company not found.");
         }
-        existing.setName(updated.getName());
-        existing.setDescription(updated.getDescription());
-        existing.setRequirements(updated.getRequirements());
-        existing.setContractType(updated.getContractType());
-        existing.setSalaryRange(updated.getSalaryRange());
-        existing.setCompanyId(updated.getCompanyId());
-        existing.setAreaId(updated.getAreaId());
-        existing.setAdminComment(updated.getAdminComment());
-        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
+
+        if (!areaService.existsById(existing.getAreaId())) {
+            throw new ResourceNotFoundException("Area not found.");
+        }
+
+        if (request.publicationDate().isAfter(request.closingDate())) {
+            throw new ForbiddenOperationException(
+                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
+            );
+        }
+
+        existing.setPublicationDate(request.publicationDate());
+        existing.setClosingDate(request.closingDate());
+        existing.setLocation(request.location());
+        existing.setModality(request.modality());
+        existing.setName(request.name());
+        existing.setDescription(request.description());
+        existing.setRequirements(request.requirements());
+        existing.setContractType(request.contractType());
+        existing.setSalaryRange(request.salaryRange());
 
         return vacancyRepository.save(existing);
     }
@@ -155,5 +171,18 @@ public class VacancyServiceImpl implements VacancyService {
     @Override
     public boolean existsById(String id) {
         return vacancyRepository.existsById(id);
+    }
+
+    @Override
+    @Transactional
+    public Vacancy updateVacancyStatus(String id, String adminId, UpdateVacancyStatusRequest request) {
+        Vacancy existing = vacancyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
+        existing.setReviewedBy(adminId);
+        existing.setStatus(request.status());
+        existing.setAdminComment(request.adminComment()); // Si no queda un comentario de otro, da igual si manda null
+        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
+
+        return vacancyRepository.save(existing);
     }
 }
