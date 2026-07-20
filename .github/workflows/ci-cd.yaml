@@ -74,6 +74,7 @@ jobs:
          image: ${{ env.IMAGE }}:${{ github.sha }}
          env_vars: |
            SPRING_PROFILES_ACTIVE=cloud
+           POSTGRES_URL=${{ vars.POSTGRES_URL }}
            APP_PORT=${{ vars.APP_PORT }}
            POSTGRES_DB=${{ vars.POSTGRES_DB }}
            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
