@@ -120,7 +120,9 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/error"),
             PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user"),
             // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
-            PathPatternRequestMatcher.pathPattern("/dev/**")
+            PathPatternRequestMatcher.pathPattern("/dev/**"),
+            // Carreras: consulta publica, alta/baja/modificacion requieren usuario autenticado.
+            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/degree/**")
     );
 
     // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
@@ -160,6 +162,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
+                        // University Registry: exclusivo de ADMIN, incluidos los GET.
+                        .requestMatchers("/university-registry/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(new CookieBearerTokenResolver())
