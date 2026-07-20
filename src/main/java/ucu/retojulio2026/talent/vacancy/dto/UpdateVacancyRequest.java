@@ -4,19 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import ucu.retojulio2026.talent.common.Department;
-import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.Modality;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-public record CreateVacancyRequest (
-
-    @NotBlank(message = "La empresa es obligatoria")
-    String companyId,
-
-    @Schema(description = "El Area para el puesto")
-    String areaId,
+public record UpdateVacancyRequest(
 
     @Schema(description = "Fecha de publicación del puesto", example = "2026-08-15")
     @NotNull(message = "La fecha de publicación es obligatoria")
