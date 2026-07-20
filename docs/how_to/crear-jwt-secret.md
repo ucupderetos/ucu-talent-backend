@@ -100,3 +100,14 @@ docker compose up --build
 
 > Cada uno genera el suyo, en su compu, con el comando de su sistema. No se lo
 > pasás a nadie, no le pedís el de nadie, y no importa que sean todos distintos.
+
+**6.** Flujo para obtener el Token:
+
+```
+POST /user   → 201, usuario creado, SIN sesión
+POST /auth/login → 200 + Set-Cookie: access_token (4h)
+```
+
+El token esta seteado para que dure 4 horas mientras estemos desarrollando
+para no tener que estar haciendo login cada 60 mintuos. Luego de las 4 horas
+se vence y hay que repetir el login nuevamente,
