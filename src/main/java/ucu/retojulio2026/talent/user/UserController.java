@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
-import ucu.retojulio2026.talent.user.dto.UpdateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.user.dto.UserResponse;
 
@@ -47,7 +46,6 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuario creado"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
-
     })
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
@@ -105,25 +103,6 @@ public class UserController {
     }
 
     // ===== UPDATE =====
-
-    @Operation(summary = "Actualizar los datos editables de un usuario por id")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuario actualizado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
-            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
-            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para modificar esta recurso."),
-            @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
-    })
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> update(
-            @AuthenticationPrincipal Jwt jwt,
-            @Parameter(description = "Id del usuario") @PathVariable String id,
-            @Valid @RequestBody UpdateUserRequest request)
-    {
-        AuthorizationGuard.requireOwnership(jwt, id);
-        User updated = userService.update(id, request);
-        return ResponseEntity.ok(userMapper.toResponse(updated));
-    }
 
 
     // ===== DELETE =====

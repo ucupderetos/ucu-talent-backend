@@ -3,7 +3,6 @@ package ucu.retojulio2026.talent.user;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 import java.time.LocalDate;
@@ -24,12 +23,6 @@ public class User {
     //Indica que es una calumna a mapear en la base de datos y sus restricciones.
     private String userId;
 
-    @Column(nullable = false, length = 50)
-    private String name;
-
-    @Column(nullable = false, length = 50)
-    private String surname;
-
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -41,19 +34,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
 
-    // Tipo y numero de documento. Nullable (ej: los usuarios EMPRESA pueden no tenerlo).
     @Enumerated(EnumType.STRING)
-    @Column(name = "document_type", length = 20)
-    private DocumentType documentType;
-
-    @Column(name = "document_number", length = 20)
-    private String documentNumber;
-
-    @Column(name = "linkedin_url", length = 255)
-    private String linkedinUrl;
+    @Column(nullable = false, length = 20)
+    private AccountStatus status;
 
     // Hibernate setea la fecha de alta automaticamente en el insert.
     @CreationTimestamp

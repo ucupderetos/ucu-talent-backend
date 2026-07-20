@@ -29,8 +29,6 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         if (!userService.existsById(request.userId())) {
             throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
         }
-        // studentProfileId es siempre igual a userId (PK compartida): si ya existe, repository.save(...)
-        // haria un UPDATE silencioso (merge) en vez de fallar, porque el id ya viene seteado.
         if (studentProfileRepository.existsById(request.userId())) {
             throw new DuplicateResourceException("El usuario '" + request.userId() + "' ya tiene un perfil de alumno asociado");
         }
@@ -49,11 +47,6 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         return studentProfileRepository.findAll();
     }
 
-    @Override
-    public StudentProfile getByUserId(String userId) {
-        return studentProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("StudentProfile con userId '" + userId + "' no encontrado"));
-    }
 
     @Override
     public void delete(String id) {

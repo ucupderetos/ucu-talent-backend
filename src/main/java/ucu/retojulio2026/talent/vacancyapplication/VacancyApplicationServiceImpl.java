@@ -3,9 +3,13 @@ package ucu.retojulio2026.talent.vacancyapplication;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
+import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
+import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
-import ucu.retojulio2026.talent.studentprofile.StudentProfileRepository;
+import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
+import ucu.retojulio2026.talent.user.AccountStatus;
+import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
@@ -16,18 +20,30 @@ import java.util.List;
 public class VacancyApplicationServiceImpl implements VacancyApplicationService {
 
     private final VacancyApplicationRepository vacancyApplicationRepository;
-    private final StudentProfileRepository studentProfileRepository;
+    private final StudentProfileService studentProfileService;
     private final VacancyApplicationMapper vacancyApplicationMapper;
     private final VacancyServiceImpl vacancyService;
+    private final UserService userService;
     @PersistenceContext
     private EntityManager entityManager;
 
     public VacancyApplicationServiceImpl(VacancyApplicationRepository vacancyApplicationRepository,
-                                         StudentProfileRepository studentProfileRepository, VacancyApplicationMapper vacancyApplicationMapper, VacancyServiceImpl vacancyService) {
+                                         StudentProfileService studentProfileService,
+                                         VacancyApplicationMapper vacancyApplicationMapper,
+                                         VacancyServiceImpl vacancyService,
+                                         UserService userService) {
         this.vacancyApplicationRepository = vacancyApplicationRepository;
-        this.studentProfileRepository = studentProfileRepository;
+        this.studentProfileService = studentProfileService;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
         this.vacancyService = vacancyService;
+        this.userService = userService;
+    }
+
+
+    private void requireApprovedStudent(String studentProfileId) {
+        if (userService.getById(studentProfileId).getStatus() != AccountStatus.APROBADO) {
+            throw new AccountNotApprovedException();
+        }
     }
 
     @Override
@@ -35,9 +51,10 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         if (!vacancyExists(request.vacancyId())) {
             throw new ResourceNotFoundException("Vacancy con id '" + request.vacancyId() + "' no encontrada");
         }
-        if (!studentProfileRepository.existsById(request.studentProfileId())) {
+        if (!studentProfileService.existsById(request.studentProfileId())) {
             throw new ResourceNotFoundException("StudentProfile con id '" + request.studentProfileId() + "' no encontrado");
         }
+        requireApprovedStudent(request.studentProfileId());
         if (vacancyApplicationRepository.existsByVacancyIdAndStudentProfileId(request.vacancyId(), request.studentProfileId())) {
             throw new DuplicateResourceException("El alumno '" + request.studentProfileId()
                     + "' ya se postuló a la vacante '" + request.vacancyId() + "'");
@@ -75,6 +92,10 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     @Override
     public VacancyApplication update(String id, VacancyApplicationStatus status) {
         VacancyApplication vacancyApplication = getById(id);
+        if (status.ordinal() < vacancyApplication.getStatus().ordinal()) {
+            throw new InvalidStatusTransitionException(
+                    "No se puede retroceder de '" + vacancyApplication.getStatus() + "' a '" + status + "'");
+        }
         vacancyApplication.setStatus(status);
         return vacancyApplicationRepository.save(vacancyApplication);
     }

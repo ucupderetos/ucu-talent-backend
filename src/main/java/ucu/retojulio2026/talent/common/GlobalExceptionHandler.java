@@ -52,16 +52,21 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    //Empresa con rol correcto, pero todavia no aprobada por un ADMIN. Codigo HTTP 403 Forbidden.
-    @ExceptionHandler(CompanyNotApprovedException.class)
-    public ProblemDetail handleCompanyNotApproved(CompanyNotApprovedException ex) {
+    //Cuenta con rol correcto, pero todavia no aprobada por un ADMIN (empresa o alumno).
+    //Codigo HTTP 403 Forbidden.
+    @ExceptionHandler(AccountNotApprovedException.class)
+    public ProblemDetail handleAccountNotApproved(AccountNotApprovedException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
-    //Constraint de la base violada, sin chequeo propio previo (ej: email duplicado en "user",
-    //que solo la base detecta). El SQLState distingue el tipo real de violacion:
-    //23505 = UNIQUE (algo "ya existe" -> 409 Conflict), cualquier otra (23502 NOT NULL,
-    //23503 FK) es un dato invalido/faltante del cliente -> 400 Bad Request, no un conflicto.
+    //El cliente pidio un cambio de estado que retrocede (ej: postulacion FINALIZADO ->
+    //PENDIENTE). Codigo HTTP 409 Conflict: la request choca contra el estado actual del recurso.
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ProblemDetail handleInvalidStatusTransition(InvalidStatusTransitionException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         String sqlState = null;
@@ -95,8 +100,6 @@ public class GlobalExceptionHandler {
 
     //Igual que el anterior pero para validaciones sobre parametros sueltos del metodo
     //(@RequestParam / @PathVariable con @Email, @NotBlank, etc), ej: GET /user?email=malo.
-    //Spring usa OTRA excepcion para estos, por eso hace falta este handler aparte;
-    //lo unificamos al mismo formato {campo: mensaje} para que la API responda igual.
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ProblemDetail handleParamValidation(HandlerMethodValidationException ex) {
         Map<String, String> errores = new LinkedHashMap<>();

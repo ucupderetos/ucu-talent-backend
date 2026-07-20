@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import ucu.retojulio2026.talent.common.DocumentType;
 
 import java.util.List;
 
@@ -18,14 +19,28 @@ import java.util.List;
 @Table(name = "student_profile")
 public class StudentProfile {
 
-    // PK compartida con el User dueño: siempre igual a userId, la asigna
-    // StudentProfileMapper al crear (nunca se genera un id nuevo para esta entidad).
     @Id
     @Column(name = "student_profile_id", length = 12, updatable = false, nullable = false)
     private String studentProfileId;
 
-    @Column(name = "user_id", length = 12, nullable = false, unique = true)
-    private String userId;
+    @Column(nullable = false, length = 50)
+    private String name;
+
+    @Column(nullable = false, length = 50)
+    private String surname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_type", length = 20, nullable = false)
+    private DocumentType documentType;
+
+    @Column(name = "document_number", length = 20, nullable = false)
+    private String documentNumber;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    @Column(name = "linkedin_url", length = 255)
+    private String linkedinUrl;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "skills", columnDefinition = "jsonb")

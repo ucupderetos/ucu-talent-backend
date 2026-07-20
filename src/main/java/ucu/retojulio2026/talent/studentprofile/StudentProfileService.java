@@ -12,8 +12,6 @@ public interface StudentProfileService {
 
     List<StudentProfile> getAll();
 
-    StudentProfile getByUserId(String userId);
-
     void delete(String id);
 
     boolean existsById(String id);

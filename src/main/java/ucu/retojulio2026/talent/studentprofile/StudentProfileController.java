@@ -47,7 +47,10 @@ public class StudentProfileController {
     public ResponseEntity<StudentProfileResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateStudentProfileRequest request) {
-        CreateStudentProfileRequest ownRequest = new CreateStudentProfileRequest(jwt.getSubject(), request.skills());
+
+        CreateStudentProfileRequest ownRequest = new CreateStudentProfileRequest(jwt.getSubject(),
+                request.name(), request.surname(), request.documentType(), request.documentNumber(),
+                request.phoneNumber(), request.linkedinUrl(), request.skills());
         StudentProfile created = studentProfileService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(studentProfileMapper.toResponse(created));
     }
@@ -91,7 +94,8 @@ public class StudentProfileController {
             @RequestParam
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
-        StudentProfile studentProfile = studentProfileService.getByUserId(userId);
+        // PK compartida: studentProfileId == userId, asi que buscar por userId es getById.
+        StudentProfile studentProfile = studentProfileService.getById(userId);
         return ResponseEntity.ok(studentProfileMapper.toResponse(studentProfile));
     }
 

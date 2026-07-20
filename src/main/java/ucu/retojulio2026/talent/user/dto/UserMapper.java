@@ -17,8 +17,8 @@ public interface UserMapper {
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "registeredAt", ignore = true)
+    @Mapping(target = "status", ignore = true)
     User toEntity(CreateUserRequest request);
 
-    // userId, name, email, role y registeredAt tienen el mismo nombre en User y UserResponse - mapeo automatico.
     UserResponse toResponse(User user);
 }

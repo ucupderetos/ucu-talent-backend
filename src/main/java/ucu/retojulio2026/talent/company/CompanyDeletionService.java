@@ -2,6 +2,6 @@ package ucu.retojulio2026.talent.company;
 
 public interface CompanyDeletionService {
 
-    // Borra la Company y, en cascada, todo lo que depende de ella (Vacancy -> Vacancy_Application).
+    // Borra la Company y, en cascada
     void delete(String companyId);
 }
