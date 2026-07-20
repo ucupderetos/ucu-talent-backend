@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.user;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
@@ -77,5 +78,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsById(String id) {
         return userRepository.existsById(id);
+    }
+
+    @Override
+    public void updateStatus(String userId, AccountStatus newStaus){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User con id '" + userId + "' no encontrado"));
+        if (user.getStatus() != AccountStatus.PENDIENTE) {
+            throw new InvalidStatusTransitionException(
+                    "Solo se puede aprobar o rechazar una cuenta pendiente");
+        }
+        if (newStaus == AccountStatus.PENDIENTE) {
+            throw new InvalidStatusTransitionException(
+                    "El nuevo estado debe ser APROBADO o RECHAZADO");
+        }
+        user.setStatus(newStaus);
+        userRepository.save(user);
     }
 }

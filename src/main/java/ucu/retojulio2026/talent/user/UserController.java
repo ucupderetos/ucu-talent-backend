@@ -15,7 +15,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
+import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
+import ucu.retojulio2026.talent.user.dto.UpdateUserStatusRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.user.dto.UserResponse;
 
@@ -104,6 +106,23 @@ public class UserController {
 
     // ===== UPDATE =====
 
+    @Operation(summary = "Aprobar o rechazar un usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Estado de cuenta actualizado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
+            @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id"),
+            @ApiResponse(responseCode = "409", description = "Transicion de estado invalida")
+    })
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserResponse> updateStatus(
+            @Parameter(description = "Id del usuario") @PathVariable String id,
+            @Valid @RequestBody UpdateUserStatusRequest request) {
+        userService.updateStatus(id, request.status());
+        User updated = userService.getById(id);
+        return ResponseEntity.ok(userMapper.toResponse(updated));
+    }
 
     // ===== DELETE =====
 
