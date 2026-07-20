@@ -117,8 +117,6 @@ public class AdminController {
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id del admin") @PathVariable String id,
             @Valid @RequestBody UpdateAdminRequest request) {
-        // adminId == userId, asi que el id de la ruta ES el dueño: comparar
-        // contra el token alcanza, no hace falta releer la fila.
         AuthorizationGuard.requireOwnership(jwt, id);
         Admin updated = adminService.update(id, request);
         return ResponseEntity.ok(adminMapper.toResponse(updated));
