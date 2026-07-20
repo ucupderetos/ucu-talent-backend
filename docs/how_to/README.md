@@ -36,6 +36,10 @@ Si es tu primer día, seguí este orden:
    Cada uno levanta su propia base con Docker. Por qué lo hacemos así y los pasos
    para dejarla andando.
 
+9. **[Cómo generar tu JWT_SECRET (Windows y Mac)](crear-jwt-secret.md)**
+   El paso que falta para que la app arranque: generar tu propia clave y
+   pegarla en tu `.env`. No hace falta que coincida con la de nadie más.
+
 ## Para cuando tengas más base
 
 Cuando quieras profundizar en el *porqué* técnico de las decisiones del proyecto,

@@ -9,8 +9,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
@@ -24,10 +27,13 @@ import java.util.List;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final CompanyDeletionService companyDeletionService;
     private final CompanyMapper companyMapper;
 
-    public CompanyController(CompanyService companyService, CompanyMapper companyMapper) {
+    public CompanyController(CompanyService companyService, CompanyDeletionService companyDeletionService,
+            CompanyMapper companyMapper) {
         this.companyService = companyService;
+        this.companyDeletionService = companyDeletionService;
         this.companyMapper = companyMapper;
     }
 
@@ -36,11 +42,17 @@ public class CompanyController {
     @Operation(summary = "Crear una empresa")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Empresa creada"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @PostMapping
-    public ResponseEntity<CompanyResponse> create(@Valid @RequestBody CreateCompanyRequest request) {
-        Company created = companyService.create(request);
+    public ResponseEntity<CompanyResponse> create(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CreateCompanyRequest request) {
+        // userId siempre sale del token, nunca del body (PK compartida: companyId == userId).
+        CreateCompanyRequest ownRequest = new CreateCompanyRequest(jwt.getSubject(), request.industry(),
+                request.description(), request.webUrl(), request.linkedinUrl(), request.location());
+        Company created = companyService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(companyMapper.toResponse(created));
     }
 
@@ -48,6 +60,7 @@ public class CompanyController {
 
     @Operation(summary = "Listar todas las empresas")
     @ApiResponse(responseCode = "200", description = "Listado obtenido")
+    @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     @GetMapping
     public ResponseEntity<List<CompanyResponse>> getAll() {
         List<CompanyResponse> response = companyService.getAll()
@@ -60,6 +73,7 @@ public class CompanyController {
     @Operation(summary = "Obtener una empresa por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empresa encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe una empresa con ese id")
     })
     @GetMapping("/{id}")
@@ -73,6 +87,7 @@ public class CompanyController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empresa encontrada"),
             @ApiResponse(responseCode = "400", description = "El userId es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe una empresa para ese usuario")
     })
     @GetMapping(params = "userId")
@@ -91,12 +106,17 @@ public class CompanyController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empresa actualizada"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para modificar esta recurso."),
             @ApiResponse(responseCode = "404", description = "No existe una empresa con ese id")
     })
     @PutMapping("/{id}")
     public ResponseEntity<CompanyResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de la empresa") @PathVariable String id,
-            @Valid @RequestBody UpdateCompanyRequest request) {
+            @Valid @RequestBody UpdateCompanyRequest request)
+    {
+        AuthorizationGuard.requireOwnership(jwt, id);
         Company updated = companyService.update(id, request);
         return ResponseEntity.ok(companyMapper.toResponse(updated));
     }
@@ -106,12 +126,16 @@ public class CompanyController {
     @Operation(summary = "Eliminar una empresa por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Empresa eliminada (sin contenido)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no tiene permisos para eliminar esta empresa."),
             @ApiResponse(responseCode = "404", description = "No existe una empresa con ese id")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de la empresa") @PathVariable String id) {
-        companyService.delete(id);
+        AuthorizationGuard.requireOwnership(jwt, id);
+        companyDeletionService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -12,4 +12,6 @@ public interface VacancyApplicationRepository extends JpaRepository<VacancyAppli
     List<VacancyApplication> findByStudentProfileId(String studentProfileId);
 
     List<VacancyApplication> findByStatus(VacancyApplicationStatus status);
+
+    boolean existsByVacancyIdAndStudentProfileId(String vacancyId, String studentProfileId);
 }

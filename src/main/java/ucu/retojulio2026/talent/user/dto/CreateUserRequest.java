@@ -9,8 +9,7 @@ import ucu.retojulio2026.talent.common.validation.PublicSignupRole;
 import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.user.Role;
 
-//Datos que la API RECIBE para crear un usuario.
-//Usar records garantiza inmutabilidad y evita boilerplate (getters, setters, equlas, etc)
+
 public record CreateUserRequest(
 
         @Schema(description = "Nombre del usuario", example = "Nicolas")
@@ -44,6 +43,7 @@ public record CreateUserRequest(
         DocumentType documentType,
 
         @Schema(description = "Numero de documento", example = "1.234.567-8")
+        @NotNull(message = "El numero de docuemento es olbigatorio")
         @NotBlank(message = "El numero de documento es obligatorio")
         String documentNumber,
 

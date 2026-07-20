@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 import java.util.List;
 
@@ -19,6 +18,8 @@ import java.util.List;
 @Table(name = "student_profile")
 public class StudentProfile {
 
+    // PK compartida con el User dueño: siempre igual a userId, la asigna
+    // StudentProfileMapper al crear (nunca se genera un id nuevo para esta entidad).
     @Id
     @Column(name = "student_profile_id", length = 12, updatable = false, nullable = false)
     private String studentProfileId;
@@ -29,12 +30,5 @@ public class StudentProfile {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "skills", columnDefinition = "jsonb")
     private List<String> skills;
-
-    @PrePersist
-    protected void assignId() {
-        if (this.studentProfileId == null) {
-            this.studentProfileId = NanoIdGenerator.generate();
-        }
-    }
 
 }

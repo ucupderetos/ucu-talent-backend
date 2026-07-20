@@ -12,7 +12,9 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "vacancy_application")
+@Table(name = "vacancy_application", uniqueConstraints = @UniqueConstraint(
+        name = "uq_vacancy_application_vacancy_student",
+        columnNames = {"vacancy_id", "student_profile_id"}))
 public class VacancyApplication {
 
     @Id

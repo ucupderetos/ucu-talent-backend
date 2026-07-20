@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.vacancyapplication;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
+import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileRepository;
 import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
@@ -33,6 +34,13 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     public VacancyApplication create(CreateVacancyApplicationRequest request) {
         if (!vacancyExists(request.vacancyId())) {
             throw new ResourceNotFoundException("Vacancy con id '" + request.vacancyId() + "' no encontrada");
+        }
+        if (!studentProfileRepository.existsById(request.studentProfileId())) {
+            throw new ResourceNotFoundException("StudentProfile con id '" + request.studentProfileId() + "' no encontrado");
+        }
+        if (vacancyApplicationRepository.existsByVacancyIdAndStudentProfileId(request.vacancyId(), request.studentProfileId())) {
+            throw new DuplicateResourceException("El alumno '" + request.studentProfileId()
+                    + "' ya se postuló a la vacante '" + request.vacancyId() + "'");
         }
         VacancyApplication vacancyApplication = vacancyApplicationMapper.toEntity(request);
         return vacancyApplicationRepository.save(vacancyApplication);

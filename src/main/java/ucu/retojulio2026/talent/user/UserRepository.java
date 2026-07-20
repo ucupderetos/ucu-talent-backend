@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     // Solo hacer  queries propias que no vienen por defecto, ejemplo:
     Optional<User> findByEmail(String email);
 
+    boolean existsByEmail(String email);
+
     //Optional es necesario porque hace explicito que la busqueda puede no tener resultado.
     //Asi el servico esta obligado a manejar el caso vacio, en vez de recibir
     //un null que despues tira NullPointerException.

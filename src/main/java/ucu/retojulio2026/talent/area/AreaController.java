@@ -36,6 +36,7 @@ public class AreaController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Area creada"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "El area padre no existe")
     })
     @PostMapping
@@ -60,6 +61,7 @@ public class AreaController {
     @Operation(summary = "Obtener un area por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Area encontrada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un area con ese id")
     })
     @GetMapping("/{id}")
@@ -75,6 +77,7 @@ public class AreaController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Area actualizada"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un area con ese id")
     })
     @PutMapping("/{id}")
@@ -90,6 +93,7 @@ public class AreaController {
     @Operation(summary = "Eliminar un area por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Area eliminada (sin contenido)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un area con ese id")
     })
     @DeleteMapping("/{id}")

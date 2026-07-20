@@ -7,9 +7,7 @@ import ucu.retojulio2026.talent.education.Education.DegreeLevel;
 
 import java.time.LocalDate;
 
-//Datos que la API RECIBE para crear un registro de educacion.
-//No incluye el id: lo genera el servidor (@PrePersist con NanoId). Al no estar
-//en el input, el cliente no puede setear la PK (se elimina el mass assignment).
+
 public record CreateEducationRequest(
 
         @Schema(description = "Id del perfil de alumno (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")
