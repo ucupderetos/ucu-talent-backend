@@ -211,6 +211,7 @@ public class VacancyController {
                 request.publicationDate(),
                 request.closingDate(),
                 request.location(),
+                request.adminComment(),
                 request.modality(),
                 request.status(),
                 request.name(),
