@@ -50,8 +50,9 @@ public class CompanyController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateCompanyRequest request) {
         // userId siempre sale del token, nunca del body (PK compartida: companyId == userId).
-        CreateCompanyRequest ownRequest = new CreateCompanyRequest(jwt.getSubject(), request.industry(),
-                request.description(), request.webUrl(), request.linkedinUrl(), request.location());
+        CreateCompanyRequest ownRequest = new CreateCompanyRequest(jwt.getSubject(), request.name(),
+                request.industry(), request.description(), request.webUrl(), request.linkedinUrl(),
+                request.location());
         Company created = companyService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(companyMapper.toResponse(created));
     }
@@ -96,7 +97,7 @@ public class CompanyController {
             @RequestParam
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
-        Company company = companyService.getByUserId(userId);
+        Company company = companyService.getById(userId);
         return ResponseEntity.ok(companyMapper.toResponse(company));
     }
 

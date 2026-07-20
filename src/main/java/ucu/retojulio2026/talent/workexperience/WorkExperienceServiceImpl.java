@@ -30,9 +30,7 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     @Override
     public WorkExperience create(CreateWorkExperienceRequest request) {
         validateStudentProfileExists(request.studentProfileId());
-
         WorkExperience workExperience = workExperienceMapper.toEntity(request);
-        // Forzamos creacion: el id siempre lo asigna la entidad en @PrePersist.
         workExperience.setWorkExperienceId(null);
         return workExperienceRepository.save(workExperience);
     }
@@ -52,9 +50,7 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     @Override
     public WorkExperience update(String id, UpdateWorkExperienceRequest request) {
         WorkExperience existing = getById(id);
-        validateStudentProfileExists(request.studentProfileId());
 
-        existing.setStudentProfileId(request.studentProfileId());
         existing.setCompany(request.company());
         existing.setPosition(request.position());
         existing.setStartDate(request.startDate());

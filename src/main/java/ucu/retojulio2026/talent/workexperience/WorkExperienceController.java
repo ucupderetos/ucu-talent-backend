@@ -23,10 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ucu.retojulio2026.talent.common.ForbiddenOperationException;
-import ucu.retojulio2026.talent.workexperience.dto.CreateWorkExperienceRequest;
-import ucu.retojulio2026.talent.workexperience.dto.UpdateWorkExperienceRequest;
-import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceMapper;
-import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceResponse;
+import ucu.retojulio2026.talent.workexperience.dto.*;
 
 import java.util.List;
 
@@ -112,7 +109,8 @@ public class WorkExperienceController {
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id,
             @Valid @RequestBody UpdateWorkExperienceRequest request) {
-        requireOwnership(jwt, request.studentProfileId());
+        WorkExperience existing = workExperienceService.getById(id); // 404 si no existe
+        requireOwnership(jwt, existing.getStudentProfileId());
         WorkExperience updated = workExperienceService.update(id, request);
         return ResponseEntity.ok(workExperienceMapper.toResponse(updated));
     }
@@ -130,7 +128,8 @@ public class WorkExperienceController {
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id) {
-        requireOwnership(jwt, id);
+        WorkExperience existing = workExperienceService.getById(id);
+        requireOwnership(jwt, existing.getStudentProfileId());
         workExperienceService.delete(id);
         return ResponseEntity.noContent().build();
     }

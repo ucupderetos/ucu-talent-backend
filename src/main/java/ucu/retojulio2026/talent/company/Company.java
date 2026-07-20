@@ -12,19 +12,16 @@ import ucu.retojulio2026.talent.common.Department;
 
 @Entity
 @Table(name = "company")
+
 public class Company {
 
-    // PK compartida con el User dueño: siempre igual a userId, la asigna CompanyMapper
-    // al crear (nunca se genera un id nuevo para esta entidad).
     @Id
     @Column(name = "company_id", length = 12, updatable = false, nullable = false)
     private String companyId;
 
-    @Column(name = "user_id", length = 12, nullable = false, unique = true)
-    private String userId;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    // Nullable: al crearse junto con el User (rol EMPRESA) todavia no hay estos datos;
-    // se completan despues con un PUT /company/{id}.
     @Column
     private String industry;
 
@@ -40,8 +37,5 @@ public class Company {
     @Enumerated(EnumType.STRING)
     @Column(name = "location")
     private Department location;
-
-    @Column(name = "approved", nullable = false)
-    private Boolean approved;
 
 }

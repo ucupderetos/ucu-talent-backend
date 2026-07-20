@@ -13,8 +13,6 @@ public interface CompanyService {
 
     List<Company> getAll();
 
-    Company getByUserId(String userId);
-
     Company update(String id, UpdateCompanyRequest request);
 
     void delete(String id);

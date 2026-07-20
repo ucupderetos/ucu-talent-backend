@@ -2,11 +2,12 @@ package ucu.retojulio2026.talent.vacancy;
 
 import ucu.retojulio2026.talent.area.Area;
 import ucu.retojulio2026.talent.area.AreaService;
-import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
+import ucu.retojulio2026.talent.user.AccountStatus;
+import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
-import ucu.retojulio2026.talent.common.CompanyNotApprovedException;
+import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -21,12 +22,14 @@ public class VacancyServiceImpl implements VacancyService {
     private final IVacancyRepository vacancyRepository;
     private final VacancyMapper vacancyMapper;
     private final CompanyService companyService;
+    private final UserService userService;
     private final AreaService areaService;
 
-    public VacancyServiceImpl(IVacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService) {
+    public VacancyServiceImpl(IVacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, UserService userService, AreaService areaService) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
+        this.userService = userService;
         this.areaService = areaService;
     }
 
@@ -77,10 +80,12 @@ public class VacancyServiceImpl implements VacancyService {
     // Fresco de la base en cada llamada, nunca del JWT: approved es estado mutable (un ADMIN
     // puede pasarlo a false en cualquier momento) y el token puede seguir siendo valido hasta
     // 60 min despues de ese cambio. Ver learning/Auth/2026-07-18-jwt-stateless-auth-design.md, seccion 10.
+    // El estado se lee fresco de la base, nunca del JWT: cambia por accion del Admin
+    // dentro de la vida del token (4h) y no hay revocacion.
+    // companyId == userId (PK compartida), asi que se consulta directo el User.
     private void requireApprovedCompany(String companyId) {
-        Company company = companyService.getById(companyId);
-        if (!company.getApproved()) {
-            throw new CompanyNotApprovedException();
+        if (userService.getById(companyId).getStatus() != AccountStatus.APROBADO) {
+            throw new AccountNotApprovedException();
         }
     }
 
