@@ -9,10 +9,14 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
-import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
-import ucu.retojulio2026.talent.vacancy.dto.VacancyResponse;
+import ucu.retojulio2026.talent.common.AuthorizationGuard;
+import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.company.Company;
+import ucu.retojulio2026.talent.company.CompanyService;
+import ucu.retojulio2026.talent.vacancy.dto.*;
 
 import java.util.List;
 
@@ -21,13 +25,16 @@ import java.util.List;
 @Tag(name = "Puestos", description = "CRUD (Gestión) de un Puesto")
 public class VacancyController {
 
-    private final VacancyService vacancyService;
+    private final VacancyService
+            vacancyService;
     private final VacancyMapper vacancyMapper;
+    private final CompanyService companyService;
 
     public VacancyController(VacancyService vacancyService,
-                             VacancyMapper vacancyMapper) {
+                             VacancyMapper vacancyMapper, CompanyService companyService) {
         this.vacancyService = vacancyService;
         this.vacancyMapper = vacancyMapper;
+        this.companyService = companyService;
     }
 
     // ===== CREATE =====
@@ -40,7 +47,9 @@ public class VacancyController {
             @ApiResponse(responseCode = "403", description = "No tiene rol EMPRESA, o la empresa no esta aprobada")
     })
     @PostMapping
-    public ResponseEntity<VacancyResponse> create(@Valid @RequestBody CreateVacancyRequest request) {
+    public ResponseEntity<VacancyResponse> create(@Valid @RequestBody CreateVacancyRequest request, @AuthenticationPrincipal Jwt jwt) {
+        Company existing = companyService.getById(request.companyId());
+        AuthorizationGuard.requireOwnership(jwt, request.companyId());
         Vacancy created = vacancyService.create(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyMapper.toResponse(created));
@@ -157,7 +166,7 @@ public class VacancyController {
     @GetMapping(params = "location")
     public ResponseEntity<List<VacancyResponse>> getByLocation(
             @Parameter(description = "Localidad (departamento)", example = "MONTEVIDEO")
-            @RequestParam Departamento location) {
+            @RequestParam Department location) {
         List<VacancyResponse> response = vacancyService.getByLocation(location)
                 .stream()
                 .map(vacancyMapper::toResponse)
@@ -174,12 +183,25 @@ public class VacancyController {
             @ApiResponse(responseCode = "403", description = "La empresa ya no esta aprobada"),
             @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
     })
+
     @PutMapping("/{id}")
     public ResponseEntity<VacancyResponse> updateVacancy(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable String id,
-            @Valid @RequestBody CreateVacancyRequest vacancy) {
+            @Valid @RequestBody UpdateVacancyRequest vacancy) {
+        Vacancy existing = vacancyService.getVacancyById(id);
+        AuthorizationGuard.requireOwnership(jwt, existing.getCompanyId());
         Vacancy updated = vacancyService.updateVacancy(id, vacancy);
+        return ResponseEntity.ok(vacancyMapper.toResponse(updated));
+    }
 
+    @PutMapping("vacancyStatus/{id}")
+    public ResponseEntity<VacancyResponse> updateVacancyStatus(
+            @AuthenticationPrincipal Jwt jwt, // Solo admin
+            @PathVariable String id,
+            @Valid @RequestBody UpdateVacancyStatusRequest vacancy) {
+        String adminId = jwt.getSubject();
+        Vacancy updated = vacancyService.updateVacancyStatus(id, adminId, vacancy);
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 
@@ -194,8 +216,11 @@ public class VacancyController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVacancy(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Vacancy id")
             @PathVariable String id) {
+        Vacancy existing = vacancyService.getVacancyById(id);
+        AuthorizationGuard.requireOwnership(jwt, existing.getCompanyId());
         vacancyService.deleteVacancy(id);
         return ResponseEntity.noContent().build();
     }
@@ -211,9 +236,7 @@ public class VacancyController {
                 request.publicationDate(),
                 request.closingDate(),
                 request.location(),
-                request.adminComment(),
                 request.modality(),
-                request.status(),
                 request.name(),
                 request.description(),
                 request.requirements(),

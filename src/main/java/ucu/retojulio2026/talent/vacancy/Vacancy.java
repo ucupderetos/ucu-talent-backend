@@ -3,9 +3,8 @@ package ucu.retojulio2026.talent.vacancy;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import ucu.retojulio2026.talent.area.Area;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
-import ucu.retojulio2026.talent.company.Company;
+import ucu.retojulio2026.talent.common.Department;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,6 +25,9 @@ public class Vacancy {
     @Column(name = "company_id", length = 12, updatable = false, nullable = false)
     private String companyId;
 
+    @Column(name = "reviewed_by", length = 12, updatable = true, nullable = true)
+    private String reviewedBy;
+
     @Column(name = "area_id", length = 12, updatable = false, nullable = true)
     private String areaId;
 
@@ -44,7 +46,7 @@ public class Vacancy {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
-    private Departamento location;
+    private Department location;
 
     @Column(name = "admin_comment", columnDefinition = "TEXT", nullable = true)
     private String adminComment;
@@ -73,9 +75,12 @@ public class Vacancy {
     private String salaryRange;
 
     @PrePersist
-    protected void assignId() {
+    protected void assignDefault() {
         if (this.vacancyId == null) {
             this.vacancyId = NanoIdGenerator.generate();
+        }
+        if (this.status == null) {
+            this.status = VacancyStatus.PUBLICADO;
         }
     }
 }

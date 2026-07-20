@@ -8,7 +8,6 @@ import ucu.retojulio2026.talent.vacancy.Vacancy;
 public interface VacancyMapper {
 
     @Mapping(target = "vacancyId", ignore = true)
-
     Vacancy toEntity(CreateVacancyRequest request);
 
     VacancyResponse toResponse(Vacancy vacancy);
