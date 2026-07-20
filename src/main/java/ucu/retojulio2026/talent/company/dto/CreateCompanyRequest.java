@@ -11,6 +11,10 @@ public record CreateCompanyRequest(
         @NotBlank(message = "El userId es obligatorio")
         String userId,
 
+        @Schema(description = "Razon social de la empresa", example = "ACME S.A.")
+        @NotBlank(message = "La razon social es obligatoria")
+        String name,
+
         @Schema(description = "Industria o rubro de la empresa", example = "Tecnologia")
         @NotBlank(message = "La industria es obligatoria")
         String industry,

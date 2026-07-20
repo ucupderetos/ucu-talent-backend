@@ -8,8 +8,8 @@ public record CompanyResponse(
         @Schema(description = "Id de la empresa (NanoID)", example = "V1StGXR8_Z5j")
         String companyId,
 
-        @Schema(description = "Id del usuario dueño de la empresa", example = "aB3dEfGhIjKl")
-        String userId,
+        @Schema(description = "Razon social de la empresa", example = "ACME S.A.")
+        String name,
 
         @Schema(description = "Industria o rubro de la empresa", example = "Tecnologia")
         String industry,
@@ -24,8 +24,5 @@ public record CompanyResponse(
         String linkedinUrl,
 
         @Schema(description = "Departamento donde esta ubicada la empresa", example = "MONTEVIDEO")
-        Department location,
-
-        @Schema(description = "Flag que indica si la Empresa fue aceptada por un ADMIN", example = "TRUE")
-        boolean approved
+        Department location
 ) {}

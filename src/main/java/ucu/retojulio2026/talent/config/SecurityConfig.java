@@ -118,7 +118,9 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/webjars/**"),
             PathPatternRequestMatcher.pathPattern("/actuator/**"),
             PathPatternRequestMatcher.pathPattern("/error"),
-            PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user")
+            PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user"),
+            // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
+            PathPatternRequestMatcher.pathPattern("/dev/**")
     );
 
     // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
@@ -138,8 +140,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Cadena 2: todo lo demas. Aca si corre el filtro de JWT, porque por default hace falta
-    // estar autenticado.
+
     @Bean
     @Order(2)
     public SecurityFilterChain apiFilterChain(HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter,
@@ -150,11 +151,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Company
+                        .requestMatchers(HttpMethod.POST, "/company").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.POST, "/vacancy").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.PUT, "/vacancy/**").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
+                        // Admin
+                        .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(new CookieBearerTokenResolver())

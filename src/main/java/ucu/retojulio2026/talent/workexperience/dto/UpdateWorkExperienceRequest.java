@@ -1,15 +1,11 @@
 package ucu.retojulio2026.talent.workexperience.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 
-public record UpdateWorkExperienceRequest(
 
-        @Schema(description = "Id del perfil de alumno", example = "V1StGXR8_Z5j")
-        @NotBlank(message = "El studentProfileId es obligatorio")
-        String studentProfileId,
+public record UpdateWorkExperienceRequest(
 
         @Schema(description = "Empresa donde se desempeño", example = "Acme S.A.")
         String company,
