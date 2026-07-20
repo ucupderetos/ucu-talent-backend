@@ -43,6 +43,7 @@ jobs:
     needs: [unit-test-backend, docker-build-check-backend]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: development
     permissions:
      contents: read
 
@@ -72,6 +73,7 @@ jobs:
          region: ${{ env.REGION }}
          image: ${{ env.IMAGE }}:${{ github.sha }}
          env_vars: |
+           SPRING_PROFILES_ACTIVE=cloud
            APP_PORT=${{ vars.APP_PORT }}
            POSTGRES_DB=${{ vars.POSTGRES_DB }}
            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
