@@ -81,7 +81,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(@Value("${cors.allowed-origin}") String allowedOrigin) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(allowedOrigin));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
@@ -162,6 +162,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
                         .requestMatchers("/university-registry/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
