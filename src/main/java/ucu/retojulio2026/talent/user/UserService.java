@@ -19,4 +19,6 @@ public interface UserService {
     void delete(String id);
 
     boolean existsById(String id);
+
+    void updateStatus(String userId, AccountStatus newStatus);
 }
