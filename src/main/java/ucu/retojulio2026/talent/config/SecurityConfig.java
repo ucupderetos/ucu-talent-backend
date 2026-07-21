@@ -122,7 +122,9 @@ public class SecurityConfig {
             // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
             PathPatternRequestMatcher.pathPattern("/dev/**"),
             // Carreras: consulta publica, alta/baja/modificacion requieren usuario autenticado.
-            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/degree/**")
+            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/degree/**"),
+            // WorkExperience: lectura publica por query param (ej: /work-experience?studentProfileId=...)
+            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/work-experience")
     );
 
     // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
