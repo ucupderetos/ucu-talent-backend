@@ -70,6 +70,22 @@ public class VacancyApplicationController {
 
     // ===== READ =====
 
+    @Operation(summary = "Listar mis postulaciones (alumno autenticado)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no es ALUMNO")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<List<VacancyApplicationResponse>> getMyApplications(
+            @AuthenticationPrincipal Jwt jwt) {
+        List<VacancyApplicationResponse> response = vacancyApplicationService.getByStudentProfileId(jwt.getSubject())
+                .stream()
+                .map(vacancyApplicationMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Obtener una postulación por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Postulación encontrada"),

@@ -162,6 +162,7 @@ public class SecurityConfig {
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
