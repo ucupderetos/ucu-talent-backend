@@ -195,11 +195,12 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 
-    @PutMapping("vacancyStatus/{id}")
+    @PutMapping("status/{id}")
     public ResponseEntity<VacancyResponse> updateVacancyStatus(
             @AuthenticationPrincipal Jwt jwt, // Solo admin
             @PathVariable String id,
             @Valid @RequestBody UpdateVacancyStatusRequest vacancy) {
+
         String adminId = jwt.getSubject();
         Vacancy updated = vacancyService.updateVacancyStatus(id, adminId, vacancy);
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));

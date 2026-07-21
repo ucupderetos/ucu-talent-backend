@@ -88,9 +88,12 @@ public class AuditAspect {
         } catch (Throwable ex) {
             String entityId = resolveEntityId(auditable, context);
             String message = "ERROR en " + joinPoint.getSignature().getName() + ": " + ex.getMessage();
-            String detail = truncatedStackTrace(ex);
+            System.out.println("Fallo auditado en " + joinPoint.getSignature().getName()
+                    + " (module=" + auditable.module() + " action=" + auditable.action()
+                    + " entityId=" + entityId + ")");
+            ex.printStackTrace();
             auditService.saveAuditLog(traceId, actor.getUserId(), actor.getEmail(), actor.getRole(),
-                    auditable.module(), auditable.action(), entityId, "ERROR", message, detail);
+                    auditable.module(), auditable.action(), entityId, "ERROR", message, null);
             throw ex;
         }
     }
