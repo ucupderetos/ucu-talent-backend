@@ -157,12 +157,15 @@ public class SecurityConfig {
                         // Company
                         .requestMatchers(HttpMethod.POST, "/company").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.POST, "/vacancy").hasRole("EMPRESA")
+                        // Admin primero así puede hacer el status y el usuario empresa no.
+                        .requestMatchers(HttpMethod.PUT, "/vacancy/status/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/vacancy/**").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         // Admin
+                        .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de usuarios: expone todos los emails, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
