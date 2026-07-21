@@ -81,7 +81,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(@Value("${cors.allowed-origin}") String allowedOrigin) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(allowedOrigin));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
@@ -120,7 +120,9 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/error"),
             PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user"),
             // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
-            PathPatternRequestMatcher.pathPattern("/dev/**")
+            PathPatternRequestMatcher.pathPattern("/dev/**"),
+            // Carreras: consulta publica, alta/baja/modificacion requieren usuario autenticado.
+            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/degree/**")
     );
 
     // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
@@ -160,7 +162,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
+                        // University Registry: exclusivo de ADMIN, incluidos los GET.
+                        .requestMatchers("/university-registry/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(new CookieBearerTokenResolver())

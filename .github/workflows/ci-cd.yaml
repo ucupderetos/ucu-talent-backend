@@ -43,6 +43,7 @@ jobs:
     needs: [unit-test-backend, docker-build-check-backend]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: development
     permissions:
      contents: read
 
@@ -71,7 +72,17 @@ jobs:
          service: ${{ env.SERVICE }}
          region: ${{ env.REGION }}
          image: ${{ env.IMAGE }}:${{ github.sha }}
-         flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated'
-
+         env_vars: |
+           SPRING_PROFILES_ACTIVE=cloud
+           POSTGRES_URL=${{ vars.POSTGRES_URL }}
+           APP_PORT=${{ vars.APP_PORT }}
+           POSTGRES_DB=${{ vars.POSTGRES_DB }}
+           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+           FLYWAY_USER=${{ secrets.FLYWAY_USER }}
+           FLYWAY_PASSWORD=${{ secrets.FLYWAY_PASSWORD }}
+           CLOUD_SQL_INSTANCE=${{ vars.CLOUD_SQL_INSTANCE }}
+           JWT_SECRET=${{ secrets.JWT_SECRET }}
+         flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
 
 

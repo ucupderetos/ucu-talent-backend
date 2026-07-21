@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.area.AreaService;
+import ucu.retojulio2026.talent.audit.Auditable;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.common.ForbiddenOperationException;
 import ucu.retojulio2026.talent.company.Company;
@@ -173,6 +174,7 @@ public class VacancyServiceImpl implements VacancyService {
         return vacancyRepository.existsById(id);
     }
 
+    @Auditable(module = "VACANCY", action = "VACANCY_STATUS_UPDATE", entityId = "#id")
     @Override
     @Transactional
     public Vacancy updateVacancyStatus(String id, String adminId, UpdateVacancyStatusRequest request) {
