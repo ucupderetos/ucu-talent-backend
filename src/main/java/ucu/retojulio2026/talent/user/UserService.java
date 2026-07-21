@@ -12,7 +12,7 @@ public interface UserService {
 
     User getById(String id);
 
-    List<User> getAll();
+    List<User> getAll(AccountStatus status, Role role);
 
     User getByEmail(String email);
 

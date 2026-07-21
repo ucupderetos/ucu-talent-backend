@@ -60,13 +60,18 @@ public class UserController {
 
     // ===== READ =====
 
-    @Operation(summary = "Listar todos los usuarios")
+    @Operation(summary = "Listar usuarios, opcionalmente filtrados por estado y/o rol")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),})
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),})
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAll() {
-        List<UserResponse> response = userService.getAll()
+    public ResponseEntity<List<UserResponse>> getAll(
+            @Parameter(description = "Filtrar por estado de la cuenta", example = "PENDIENTE")
+            @RequestParam(required = false) AccountStatus status,
+            @Parameter(description = "Filtrar por rol", example = "EMPRESA")
+            @RequestParam(required = false) Role role) {
+        List<UserResponse> response = userService.getAll(status, role)
                 .stream()
                 .map(userMapper::toResponse)
                 .toList();
