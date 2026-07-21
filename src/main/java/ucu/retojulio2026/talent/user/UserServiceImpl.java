@@ -57,7 +57,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAll() {
+    public List<User> getAll(AccountStatus status, Role role) {
+        if (status != null && role != null) {
+            return userRepository.findByStatusAndRole(status, role);
+        }
+        if (status != null) {
+            return userRepository.findByStatus(status);
+        }
+        if (role != null) {
+            return userRepository.findByRole(role);
+        }
         return userRepository.findAll();
     }
 
