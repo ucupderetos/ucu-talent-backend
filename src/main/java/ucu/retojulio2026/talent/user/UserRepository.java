@@ -9,8 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
-    // save, findById, deleteById, existsById, findAll, etc ya vienen de JpaRepository.
-    // Solo hacer  queries propias que no vienen por defecto, ejemplo:
+
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
