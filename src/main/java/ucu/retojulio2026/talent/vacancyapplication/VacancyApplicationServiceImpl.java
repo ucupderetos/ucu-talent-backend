@@ -60,6 +60,7 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
                     + "' ya se postuló a la vacante '" + request.vacancyId() + "'");
         }
         VacancyApplication vacancyApplication = vacancyApplicationMapper.toEntity(request);
+        vacancyApplication.setStatus(VacancyApplicationStatus.PENDIENTE);
         return vacancyApplicationRepository.save(vacancyApplication);
     }
 
