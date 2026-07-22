@@ -26,7 +26,9 @@ import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class VacancyServiceImpl implements VacancyService {
@@ -67,6 +69,16 @@ public class VacancyServiceImpl implements VacancyService {
     @Transactional(readOnly = true)
     public List<Vacancy> getByStatus(VacancyStatus status) {
         return vacancyRepository.findByStatus(status);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<VacancyStatus, Long> countByStatusSummary() {
+        Map<VacancyStatus, Long> counts = new EnumMap<>(VacancyStatus.class);
+        for (VacancyStatus status : VacancyStatus.values()) {
+            counts.put(status, vacancyRepository.countByStatus(status));
+        }
+        return counts;
     }
 
     @Override

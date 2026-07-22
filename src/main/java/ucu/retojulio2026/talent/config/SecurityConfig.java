@@ -83,7 +83,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(@Value("${cors.allowed-origin}") String allowedOrigin) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(allowedOrigin));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
@@ -175,9 +175,14 @@ public class SecurityConfig {
                         // Listado de usuarios: expone todos los emails, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
                         // Aprobar/rechazar cuenta: solo ADMIN.
-                        .requestMatchers(HttpMethod.PATCH, "/user/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
                         .requestMatchers("/university-registry/**").hasRole("ADMIN")
+                        // Consultas de admin: totales por estado, solo ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/company/status-summary").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/student-profile/status-summary").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/vacancy/status-summary").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/vacancy-application/status-summary").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(new CookieBearerTokenResolver())

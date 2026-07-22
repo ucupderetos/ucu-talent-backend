@@ -23,6 +23,9 @@ public record UpdateEducationRequest(
         @NotBlank(message = "La carrera es obligatoria")
         String degreeId,
 
+        @Schema(description = "Institucion (obligatoria si la carrera no es UCU)", example = "Universidad ORT Uruguay")
+        String institution,
+
         @Schema(description = "Descripcion", example = "Cursada completa, tesis en curso")
         String description,
 

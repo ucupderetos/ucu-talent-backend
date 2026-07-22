@@ -1,8 +1,11 @@
 package ucu.retojulio2026.talent.education;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.degree.DegreeRepository;
+import ucu.retojulio2026.talent.degree.Degree;
 import ucu.retojulio2026.talent.education.dto.CreateEducationRequest;
 import ucu.retojulio2026.talent.education.dto.EducationMapper;
 import ucu.retojulio2026.talent.education.dto.UpdateEducationRequest;
@@ -30,10 +33,16 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     public Education create(CreateEducationRequest request) {
-        validateRelatedIds(request.studentProfileId(), request.degreeId());
+        validateRelatedData(request.studentProfileId(), request.degreeId(), request.institution());
+        validateDateRange(request.startDate(), request.endDate());
 
         Education education = educationMapper.toEntity(request);
         return educationRepository.save(education);
+    }
+
+    @Override
+    public List<Education> getAll() {
+        return educationRepository.findAll();
     }
 
     @Override
@@ -51,11 +60,13 @@ public class EducationServiceImpl implements EducationService {
     @Override
     public Education update(String educationId, UpdateEducationRequest request) {
         Education existing = getByEducationId(educationId);
-        validateRelatedIds(request.studentProfileId(), request.degreeId());
+        validateRelatedData(request.studentProfileId(), request.degreeId(), request.institution());
+        validateDateRange(request.startDate(), request.endDate());
 
         existing.setStudentProfileId(request.studentProfileId());
         existing.setDegreeLevel(request.degreeLevel());
         existing.setDegreeId(request.degreeId());
+        existing.setInstitution(request.institution());
         existing.setDescription(request.description());
         existing.setStartDate(request.startDate());
         existing.setEndDate(request.endDate());
@@ -69,13 +80,28 @@ public class EducationServiceImpl implements EducationService {
         educationRepository.delete(existing);
     }
 
-    private void validateRelatedIds(String studentProfileId, String degreeId) {
+    private void validateRelatedData(String studentProfileId, String degreeId, String institution) {
         if (!studentProfileService.existsById(studentProfileId)) {
             throw new ResourceNotFoundException("StudentProfile con id '" + studentProfileId + "' no encontrado");
         }
 
-        if (!degreeRepository.existsById(degreeId)) {
-            throw new ResourceNotFoundException("Degree con id '" + degreeId + "' no encontrado");
+        Degree degree = degreeRepository.findById(degreeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Degree con id '" + degreeId + "' no encontrado"));
+
+        if (Boolean.FALSE.equals(degree.getIsUcu()) && (institution == null || institution.isBlank())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La institucion es obligatoria cuando la carrera no es de UCU"
+            );
+        }
+    }
+
+    private void validateDateRange(java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        if (endDate != null && endDate.isBefore(startDate)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de fin no puede ser anterior a la fecha de inicio"
+            );
         }
     }
 }

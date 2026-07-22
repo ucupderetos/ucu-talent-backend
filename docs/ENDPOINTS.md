@@ -77,6 +77,7 @@ token.
 | 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `404` no existe |
 | 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn y skills por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 6 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
+| 7 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -94,6 +95,9 @@ token.
 **`StudentProfileResponse`** (salida — no expone `userId`, la PK ya lo es)
 - `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber` · `phoneNumber` · `linkedinUrl` · `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño)
 
+**`StudentProfileStatusSummaryResponse`** (salida)
+- `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `ALUMNO`)
+
 ---
 
 ## 3. Empresas — `/company`
@@ -109,6 +113,7 @@ Controller: `company/CompanyController` · Tag: **Empresas**
 | 4 | GET | `/company?userId={userId}` | Empresa de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `CompanyResponse` | `200` | `400` · `404` no existe |
 | 5 | PUT | `/company/{id}` | Actualizar empresa por id | 🔒 + dueño | `UpdateCompanyRequest` | `CompanyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 6 | DELETE | `/company/{id}` | Eliminar empresa por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
+| 7 | GET | `/company/status-summary` | Totales de empresas por estado | 🔒 rol `ADMIN` | — | `CompanyStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -122,6 +127,9 @@ Controller: `company/CompanyController` · Tag: **Empresas**
 
 **`CompanyResponse`** (salida — no expone `userId`)
 - `companyId` (= `userId`) · `name` · `industry` · `description` · `webUrl` · `linkedinUrl` · `location` (`Department`) · `status` (`AccountStatus`, del `User` dueño)
+
+**`CompanyStatusSummaryResponse`** (salida)
+- `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `EMPRESA`)
 
 ---
 
@@ -299,6 +307,7 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 | 10 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 11 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
 | 12 | DELETE | `/vacancy/{id}` | Eliminar puesto por id | 🔒 rol `EMPRESA` + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` |
+| 13 | GET | `/vacancy/status-summary` | Totales de puestos por estado | 🔒 rol `ADMIN` | — | `VacancyStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -323,6 +332,9 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 **`VacancyResponse`** (salida)
 - `vacancyId` · `companyId` · `areaId` · `publicationDate` · `closingDate` · `location` (`Departamento`) · `modality` (`Modality`) · `status` (`VacancyStatus`) · `name` · `description` · `requirements` · `contractType` · `salaryRange`
 
+**`VacancyStatusSummaryResponse`** (salida)
+- `total` · `pendiente` · `publicado` · `finalizado` (todos `long`)
+
 ---
 
 ## 11. Postulaciones — `/vacancy-application`
@@ -336,11 +348,12 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 | 2 | GET | `/vacancy-application/me` | Listar mis postulaciones (alumno autenticado) | 🔒 rol `ALUMNO` | — | `List<VacancyApplicationResponse>` | `200` | `403` no es ALUMNO |
 | 3 | GET | `/vacancy-application/{id}` | Obtener postulación por id | 🔒 Autenticado | — (path `id`) | `VacancyApplicationResponse` | `200` | `404` |
 | 4 | GET | `/vacancy-application` | Listar todas las postulaciones | 🔒 Autenticado | — | `List<VacancyApplicationResponse>` | `200` | — |
-| 5 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 Autenticado | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` |
+| 5 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 + dueño (empresa dueña de la vacante) | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es la empresa dueña · `404` no existe la vacante |
 | 6 | GET | `/vacancy-application?studentProfileId={id}` | Listar por perfil de alumno | 🔒 rol `ADMIN` | — (query `studentProfileId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es ADMIN |
 | 7 | GET | `/vacancy-application?status={status}` | Listar por estado | 🔒 Autenticado | — (query `status`: `VacancyApplicationStatus`) | `List<VacancyApplicationResponse>` | `200` | `400` enum inválido |
 | 8 | PUT | `/vacancy-application/{id}` | Actualizar el estado por id | 🔒 + dueño (empresa dueña de la vacante) | `UpdateVacancyApplicationRequest` | `VacancyApplicationResponse` | `200` | `400` · `403` no es la empresa dueña · `404` no existe · `409` transición inválida (retrocede) |
 | 9 | DELETE | `/vacancy-application/{id}` | Eliminar postulación por id | 🔒 + dueño (alumno postulante) | — (path `id`) | — (vacío) | `204` | `403` no es el postulante · `404` no existe |
+| 10 | GET | `/vacancy-application/status-summary` | Totales de postulaciones por estado | 🔒 rol `ADMIN` | — | `VacancyApplicationStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -353,6 +366,9 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 
 **`VacancyApplicationResponse`** (salida)
 - `vacancyApplicationId` · `vacancyId` · `studentProfileId` · `status` (`VacancyApplicationStatus`) · `appliedAt` (date)
+
+**`VacancyApplicationStatusSummaryResponse`** (salida)
+- `total` · `pendiente` · `visto` · `finalizado` (todos `long`)
 
 ---
 

@@ -7,9 +7,12 @@ import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
+import ucu.retojulio2026.talent.user.AccountStatus;
+import ucu.retojulio2026.talent.user.Role;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StudentProfileServiceImpl implements StudentProfileService {
@@ -69,5 +72,10 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     @Override
     public boolean existsById(String id) {
         return studentProfileRepository.existsById(id);
+    }
+
+    @Override
+    public Map<AccountStatus, Long> getStatusSummary() {
+        return userService.countByRoleGroupedByStatus(Role.ALUMNO);
     }
 }

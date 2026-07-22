@@ -9,6 +9,8 @@ public interface EducationService {
 
     Education create(CreateEducationRequest request);
 
+    List<Education> getAll();
+
     Education getByEducationId(String educationId);
 
     List<Education> getByStudentProfileId(String studentProfileId);

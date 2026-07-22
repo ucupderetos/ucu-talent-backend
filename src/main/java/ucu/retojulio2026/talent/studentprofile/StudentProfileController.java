@@ -17,6 +17,7 @@ import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileResponse;
+import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileStatusSummaryResponse;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
 import ucu.retojulio2026.talent.user.UserService;
 
@@ -106,6 +107,17 @@ public class StudentProfileController {
         // PK compartida: studentProfileId == userId, asi que buscar por userId es getById.
         StudentProfile studentProfile = studentProfileService.getById(userId);
         return ResponseEntity.ok(toResponse(studentProfile));
+    }
+
+    @Operation(summary = "Totales de alumnos por estado (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Totales obtenidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
+    })
+    @GetMapping("/status-summary")
+    public ResponseEntity<StudentProfileStatusSummaryResponse> getStatusSummary() {
+        return ResponseEntity.ok(StudentProfileStatusSummaryResponse.from(studentProfileService.getStatusSummary()));
     }
 
     // ===== UPDATE =====

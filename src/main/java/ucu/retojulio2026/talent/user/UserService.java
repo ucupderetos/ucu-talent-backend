@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.user;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
 
@@ -13,6 +14,8 @@ public interface UserService {
     User getById(String id);
 
     List<User> getAll(AccountStatus status, Role role);
+
+    Map<AccountStatus, Long> countByRoleGroupedByStatus(Role role);
 
     User getByEmail(String email);
 

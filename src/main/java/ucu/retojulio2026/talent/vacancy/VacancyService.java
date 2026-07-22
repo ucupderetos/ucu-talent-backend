@@ -10,10 +10,13 @@ import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Map;
 
 public interface VacancyService {
 
     List<Vacancy> getAllVacancies();
+
+    Map<VacancyStatus, Long> countByStatusSummary();
 
     Vacancy getVacancyById(String id);
 
