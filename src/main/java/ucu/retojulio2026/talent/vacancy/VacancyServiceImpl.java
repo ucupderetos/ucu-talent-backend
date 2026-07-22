@@ -158,12 +158,6 @@ public class VacancyServiceImpl implements VacancyService {
             throw new ResourceNotFoundException("Area not found.");
         }
 
-        if (request.publicationDate().isAfter(request.closingDate())) {
-            throw new ForbiddenOperationException(
-                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
-            );
-        }
-
         if (vacancyApplicationRepository.existsByVacancyId(id)) {
             throw new ForbiddenOperationException(
                     "El Puesto ya tiene postulaciones."
@@ -176,15 +170,39 @@ public class VacancyServiceImpl implements VacancyService {
             );
         }
 
-        existing.setPublicationDate(request.publicationDate());
-        existing.setClosingDate(request.closingDate());
-        existing.setLocation(request.location());
-        existing.setModality(request.modality());
-        existing.setName(request.name());
-        existing.setDescription(request.description());
-        existing.setRequirements(request.requirements());
-        existing.setContractType(request.contractType());
-        existing.setSalaryRange(request.salaryRange());
+        if (request.publicationDate() != null) {
+            existing.setPublicationDate(request.publicationDate());
+        }
+        if (request.closingDate() != null) {
+            existing.setClosingDate(request.closingDate());
+        }
+        if (request.location() != null) {
+            existing.setLocation(request.location());
+        }
+        if (request.modality() != null) {
+            existing.setModality(request.modality());
+        }
+        if (request.name() != null) {
+            existing.setName(request.name());
+        }
+        if (request.description() != null) {
+            existing.setDescription(request.description());
+        }
+        if (request.requirements() != null) {
+            existing.setRequirements(request.requirements());
+        }
+        if (request.contractType() != null) {
+            existing.setContractType(request.contractType());
+        }
+        if (request.salaryRange() != null) {
+            existing.setSalaryRange(request.salaryRange());
+        }
+
+        if (existing.getPublicationDate().isAfter(existing.getClosingDate())) {
+            throw new ForbiddenOperationException(
+                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
+            );
+        }
 
         return vacancyRepository.save(existing);
     }

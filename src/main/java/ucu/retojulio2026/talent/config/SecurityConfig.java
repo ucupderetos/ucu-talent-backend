@@ -156,6 +156,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Company
                         .requestMatchers(HttpMethod.POST, "/company").hasRole("EMPRESA")
+                        // La busqueda pueda ser para todos los autenticados
+                        .requestMatchers(HttpMethod.GET, "/vacancy/search").authenticated()
+                        // Vacancy
                         .requestMatchers(HttpMethod.POST, "/vacancy").hasRole("EMPRESA")
                         // Admin primero así puede hacer el status y el usuario empresa no.
                         .requestMatchers(HttpMethod.PUT, "/vacancy/status/**").hasRole("ADMIN")
