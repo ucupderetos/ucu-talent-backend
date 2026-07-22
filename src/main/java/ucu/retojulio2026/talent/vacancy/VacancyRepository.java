@@ -13,4 +13,5 @@ public interface VacancyRepository extends JpaRepository<Vacancy, String> {
     List<Vacancy> findByModality(Modality modality);
     List<Vacancy> findByLocation(Department location);
     List<Vacancy> findByStatusAndClosingDateLessThanEqual(VacancyStatus status, LocalDate closingDateIsLessThan);
+    long countByStatus(VacancyStatus status);
 }

@@ -7,10 +7,13 @@ import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusAdminRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public interface VacancyService {
 
     List<Vacancy> getAllVacancies();
+
+    Map<VacancyStatus, Long> countByStatusSummary();
 
     Vacancy getVacancyById(String id);
 

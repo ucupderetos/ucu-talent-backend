@@ -14,7 +14,9 @@ import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class VacancyApplicationServiceImpl implements VacancyApplicationService {
@@ -87,6 +89,15 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     @Override
     public List<VacancyApplication> getByStatus(VacancyApplicationStatus status) {
         return vacancyApplicationRepository.findByStatus(status);
+    }
+
+    @Override
+    public Map<VacancyApplicationStatus, Long> countByStatusSummary() {
+        Map<VacancyApplicationStatus, Long> counts = new EnumMap<>(VacancyApplicationStatus.class);
+        for (VacancyApplicationStatus status : VacancyApplicationStatus.values()) {
+            counts.put(status, vacancyApplicationRepository.countByStatus(status));
+        }
+        return counts;
     }
 
     @Override

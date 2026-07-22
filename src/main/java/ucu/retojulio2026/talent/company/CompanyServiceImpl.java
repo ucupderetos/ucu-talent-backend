@@ -7,9 +7,12 @@ import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
+import ucu.retojulio2026.talent.user.AccountStatus;
+import ucu.retojulio2026.talent.user.Role;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CompanyServiceImpl implements CompanyService {
@@ -71,6 +74,11 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public boolean existsById(String id) {
         return companyRepository.existsById(id);
+    }
+
+    @Override
+    public Map<AccountStatus, Long> getStatusSummary() {
+        return userService.countByRoleGroupedByStatus(Role.EMPRESA);
     }
 
 }

@@ -174,6 +174,17 @@ public class VacancyController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Totales de puestos por estado (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Totales obtenidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
+    })
+    @GetMapping("/status-summary")
+    public ResponseEntity<VacancyStatusSummaryResponse> getStatusSummary() {
+        return ResponseEntity.ok(VacancyStatusSummaryResponse.from(vacancyService.countByStatusSummary()));
+    }
+
     // ===== UPDATE =====
 
     @Operation(summary = "Actualizar Puesto")

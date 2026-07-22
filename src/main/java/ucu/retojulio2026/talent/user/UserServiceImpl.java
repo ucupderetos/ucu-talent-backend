@@ -9,7 +9,9 @@ import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 //Implementacion concreta del contrato UserService. Es el bean que Spring inyecta.
 @Service
@@ -71,6 +73,15 @@ public class UserServiceImpl implements UserService {
             return userRepository.findByRole(role);
         }
         return userRepository.findAll();
+    }
+
+    @Override
+    public Map<AccountStatus, Long> countByRoleGroupedByStatus(Role role) {
+        Map<AccountStatus, Long> counts = new EnumMap<>(AccountStatus.class);
+        for (AccountStatus status : AccountStatus.values()) {
+            counts.put(status, userRepository.countByRoleAndStatus(role, status));
+        }
+        return counts;
     }
 
     @Override
