@@ -9,6 +9,7 @@ import ucu.retojulio2026.talent.area.AreaService;
 import ucu.retojulio2026.talent.audit.Auditable;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.common.ForbiddenOperationException;
+import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.User;
@@ -18,10 +19,8 @@ import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
-import ucu.retojulio2026.talent.vacancy.filter.VacancyFilterResolverImpl;
-import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
+import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 
-import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -34,15 +33,16 @@ public class VacancyServiceImpl implements VacancyService {
     private final CompanyService companyService;
     private final UserService userService;
     private final AreaService areaService;
-    private final VacancyFilterResolverImpl vacancyFilterResolverImpl;
+    private final VacancyApplicationRepository vacancyApplicationRepository;
 
-    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyFilterResolverImpl vacancyFilterResolverImpl) {
+
+    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
         this.areaService = areaService;
         this.userService = userService;
-        this.vacancyFilterResolverImpl = vacancyFilterResolverImpl;
+        this.vacancyApplicationRepository = vacancyApplicationRepository;
     }
 
     @Override
@@ -153,14 +153,11 @@ public class VacancyServiceImpl implements VacancyService {
             );
         }
 
-        // VER COMO HACER ESTO
-        //List<VacancyApplication> existingApp = vacancyApplicationService.getByVacancyId(id);
-        /*if (!existingApp.isEmpty()) {
+        if (vacancyApplicationRepository.existsByVacancyId(id)) {
             throw new ForbiddenOperationException(
                     "El Puesto ya tiene postulaciones."
             );
         }
-         */
 
         if (existing.getStatus() == VacancyStatus.FINALIZADO) {
             throw new ForbiddenOperationException(
@@ -196,27 +193,12 @@ public class VacancyServiceImpl implements VacancyService {
         return vacancyRepository.existsById(id);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable) {
-        Specification<Vacancy> specification = vacancyFilterResolverImpl.buildSpecification(criteria);
-        return vacancyRepository.findAll(specification, pageable);
-    }
-
     @Auditable(module = "VACANCY", action = "VACANCY_STATUS_UPDATE", entityId = "#id")
     @Override
     @Transactional
     public Vacancy updateVacancyStatusAdmin(String id, String adminId, UpdateVacancyStatusAdminRequest request) {
         Vacancy existing = vacancyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
-        // VER COMO HACER ESTO
-        //List<VacancyApplication> existingApp = vacancyApplicationService.getByVacancyId(id);
-        /*if (!existingApp.isEmpty()) {
-            throw new ForbiddenOperationException(
-                    "El Puesto ya tiene postulaciones."
-            );
-        }
-         */
         if (existing.getStatus() == VacancyStatus.FINALIZADO) {
             throw new ForbiddenOperationException(
                     "El Puesto ya finalizó."
@@ -240,14 +222,6 @@ public class VacancyServiceImpl implements VacancyService {
     public Vacancy updateVacancyStatus(String id, UpdateVacancyStatusRequest request) {
         Vacancy existing = vacancyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
-        // VER COMO HACER ESTO
-        //List<VacancyApplication> existingApp = vacancyApplicationService.getByVacancyId(id);
-        /*if (!existingApp.isEmpty()) {
-            throw new ForbiddenOperationException(
-                    "El Puesto ya tiene postulaciones."
-            );
-        }
-         */
         if (existing.getStatus() == VacancyStatus.FINALIZADO) {
             throw new ForbiddenOperationException(
                     "El Puesto ya finalizó."

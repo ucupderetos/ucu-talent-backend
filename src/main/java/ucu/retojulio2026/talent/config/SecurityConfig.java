@@ -121,8 +121,6 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user"),
             // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
             PathPatternRequestMatcher.pathPattern("/dev/**"),
-            // Carreras: consulta publica, alta/baja/modificacion requieren usuario autenticado.
-            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/degree/**"),
             // WorkExperience: lectura publica por query param (ej: /work-experience?studentProfileId=...)
             PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/work-experience")
     );

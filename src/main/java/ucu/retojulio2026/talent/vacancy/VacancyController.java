@@ -238,7 +238,6 @@ public class VacancyController {
             @AuthenticationPrincipal Jwt jwt, // Version ADMIN
             @PathVariable String id,
             @Valid @RequestBody UpdateVacancyStatusAdminRequest vacancy) {
-
         String adminId = jwt.getSubject();
         Vacancy updated = vacancyService.updateVacancyStatusAdmin(id, adminId, vacancy);
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
