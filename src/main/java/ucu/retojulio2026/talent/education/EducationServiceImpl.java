@@ -34,6 +34,7 @@ public class EducationServiceImpl implements EducationService {
     @Override
     public Education create(CreateEducationRequest request) {
         validateRelatedData(request.studentProfileId(), request.degreeId(), request.institution());
+        validateDateRange(request.startDate(), request.endDate());
 
         Education education = educationMapper.toEntity(request);
         return educationRepository.save(education);
@@ -60,6 +61,7 @@ public class EducationServiceImpl implements EducationService {
     public Education update(String educationId, UpdateEducationRequest request) {
         Education existing = getByEducationId(educationId);
         validateRelatedData(request.studentProfileId(), request.degreeId(), request.institution());
+        validateDateRange(request.startDate(), request.endDate());
 
         existing.setStudentProfileId(request.studentProfileId());
         existing.setDegreeLevel(request.degreeLevel());
@@ -90,6 +92,15 @@ public class EducationServiceImpl implements EducationService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "La institucion es obligatoria cuando la carrera no es de UCU"
+            );
+        }
+    }
+
+    private void validateDateRange(java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        if (endDate != null && endDate.isBefore(startDate)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de fin no puede ser anterior a la fecha de inicio"
             );
         }
     }
