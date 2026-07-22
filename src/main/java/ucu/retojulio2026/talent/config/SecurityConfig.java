@@ -171,6 +171,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de usuarios: expone todos los emails, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
