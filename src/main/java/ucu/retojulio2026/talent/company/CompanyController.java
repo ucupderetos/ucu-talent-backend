@@ -18,6 +18,7 @@ import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.company.dto.CompanyResponse;
+import ucu.retojulio2026.talent.company.dto.CompanyStatusSummaryResponse;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
@@ -106,6 +107,17 @@ public class CompanyController {
             String userId) {
         Company company = companyService.getById(userId);
         return ResponseEntity.ok(toResponse(company));
+    }
+
+    @Operation(summary = "Totales de empresas por estado (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Totales obtenidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
+    })
+    @GetMapping("/status-summary")
+    public ResponseEntity<CompanyStatusSummaryResponse> getStatusSummary() {
+        return ResponseEntity.ok(CompanyStatusSummaryResponse.from(companyService.getStatusSummary()));
     }
 
     // ===== UPDATE =====

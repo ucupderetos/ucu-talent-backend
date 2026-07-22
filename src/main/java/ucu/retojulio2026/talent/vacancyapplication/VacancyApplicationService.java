@@ -3,10 +3,13 @@ package ucu.retojulio2026.talent.vacancyapplication;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public interface VacancyApplicationService {
 
     VacancyApplication create(CreateVacancyApplicationRequest vacancyApplication);
+
+    Map<VacancyApplicationStatus, Long> countByStatusSummary();
 
     VacancyApplication getById(String id);
 

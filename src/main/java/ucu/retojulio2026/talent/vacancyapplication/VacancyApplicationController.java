@@ -28,6 +28,7 @@ import ucu.retojulio2026.talent.vacancy.VacancyService;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationResponse;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStatusSummaryResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.UpdateVacancyApplicationRequest;
 
 import java.util.List;
@@ -170,6 +171,17 @@ public class VacancyApplicationController {
                 .map(vacancyApplicationMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Totales de postulaciones por estado (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Totales obtenidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
+    })
+    @GetMapping("/status-summary")
+    public ResponseEntity<VacancyApplicationStatusSummaryResponse> getStatusSummary() {
+        return ResponseEntity.ok(VacancyApplicationStatusSummaryResponse.from(vacancyApplicationService.countByStatusSummary()));
     }
 
     // ===== UPDATE =====

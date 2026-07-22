@@ -2,8 +2,10 @@ package ucu.retojulio2026.talent.studentprofile;
 
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
+import ucu.retojulio2026.talent.user.AccountStatus;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StudentProfileService {
 
@@ -18,4 +20,6 @@ public interface StudentProfileService {
     void delete(String id);
 
     boolean existsById(String id);
+
+    Map<AccountStatus, Long> getStatusSummary();
 }
