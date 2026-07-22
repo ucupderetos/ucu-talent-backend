@@ -1,6 +1,7 @@
 package ucu.retojulio2026.talent.vacancy;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +20,7 @@ import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import ucu.retojulio2026.talent.vacancy.filter.VacancyFilterResolverImpl;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 
 import java.time.LocalDate;
@@ -34,15 +36,17 @@ public class VacancyServiceImpl implements VacancyService {
     private final UserService userService;
     private final AreaService areaService;
     private final VacancyApplicationRepository vacancyApplicationRepository;
+    private final VacancyFilterResolverImpl vacancyFilterResolverImpl;
 
 
-    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository) {
+    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
         this.areaService = areaService;
         this.userService = userService;
         this.vacancyApplicationRepository = vacancyApplicationRepository;
+        this.vacancyFilterResolverImpl = vacancyFilterResolverImpl;
     }
 
     @Override
@@ -130,6 +134,13 @@ public class VacancyServiceImpl implements VacancyService {
         for (Vacancy vacancy : expired) {
             vacancy.setStatus(VacancyStatus.FINALIZADO);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable) {
+        Specification<Vacancy> specification = vacancyFilterResolverImpl.buildSpecification(criteria);
+        return vacancyRepository.findAll(specification, pageable);
     }
 
     @Override
