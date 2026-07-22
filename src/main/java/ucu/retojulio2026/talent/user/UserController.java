@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -62,13 +63,15 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),})
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<UserResponse>> getAll(
             @Parameter(description = "Filtrar por estado de la cuenta", example = "PENDIENTE")
             @RequestParam(required = false) AccountStatus status,
             @Parameter(description = "Filtrar por rol", example = "EMPRESA")
-            @RequestParam(required = false) Role role) {
-        List<UserResponse> response = userService.getAll(status, role)
+            @RequestParam(required = false) Role role,
+            @Parameter(description = "Numero de pagina (0-indexed)") @RequestParam(required = false, defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de pagina") @RequestParam (required = false, defaultValue = "20") int size){
+        List<UserResponse> response = userService.getAll(status, role, PageRequest.of(page, size))
                 .stream()
                 .map(userMapper::toResponse)
                 .toList();
@@ -95,7 +98,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese email")
     })
-    @GetMapping(params = "email")
+    @GetMapping("/mail")
     public ResponseEntity<UserResponse> getByEmail(
             @Parameter(description = "Email exacto del usuario", example = "nicogon@ucu.edu.uy")
             @RequestParam

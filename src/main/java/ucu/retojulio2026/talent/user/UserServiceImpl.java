@@ -1,5 +1,7 @@
 package ucu.retojulio2026.talent.user;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -62,17 +64,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAll(AccountStatus status, Role role) {
+    public Page<User> getAll(AccountStatus status, Role role, Pageable pageable) {
         if (status != null && role != null) {
-            return userRepository.findByStatusAndRole(status, role);
+            return userRepository.findByStatusAndRole(status, role, pageable);
         }
         if (status != null) {
-            return userRepository.findByStatus(status);
+            return userRepository.findByStatus(status, pageable);
         }
         if (role != null) {
-            return userRepository.findByRole(role);
+            return userRepository.findByRole(role, pageable);
         }
-        return userRepository.findAll();
+        return userRepository.findAll(pageable);
     }
 
     @Override
