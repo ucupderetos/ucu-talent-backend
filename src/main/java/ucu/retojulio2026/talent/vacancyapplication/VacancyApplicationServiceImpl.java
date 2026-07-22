@@ -1,19 +1,23 @@
 package ucu.retojulio2026.talent.vacancyapplication;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
+import ucu.retojulio2026.talent.education.EducationService;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.UserService;
+import ucu.retojulio2026.talent.vacancy.Vacancy;
+import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
+import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -23,19 +27,20 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
 
     private final VacancyApplicationRepository vacancyApplicationRepository;
     private final StudentProfileService studentProfileService;
+    private final EducationService educationService;
     private final VacancyApplicationMapper vacancyApplicationMapper;
     private final VacancyServiceImpl vacancyService;
     private final UserService userService;
-    @PersistenceContext
-    private EntityManager entityManager;
 
     public VacancyApplicationServiceImpl(VacancyApplicationRepository vacancyApplicationRepository,
                                          StudentProfileService studentProfileService,
+                                         EducationService educationService,
                                          VacancyApplicationMapper vacancyApplicationMapper,
                                          VacancyServiceImpl vacancyService,
                                          UserService userService) {
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.studentProfileService = studentProfileService;
+        this.educationService = educationService;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
         this.vacancyService = vacancyService;
         this.userService = userService;
@@ -50,19 +55,36 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
 
     @Override
     public VacancyApplication create(CreateVacancyApplicationRequest request) {
-        if (!vacancyExists(request.vacancyId())) {
-            throw new ResourceNotFoundException("Vacancy con id '" + request.vacancyId() + "' no encontrada");
+        Vacancy vacancy = vacancyService.getVacancyById(request.vacancyId());
+
+        if (vacancy.getStatus() != VacancyStatus.PUBLICADO) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Solo se puede postular a vacantes en estado PUBLICADO"
+            );
         }
+
         if (!studentProfileService.existsById(request.studentProfileId())) {
             throw new ResourceNotFoundException("StudentProfile con id '" + request.studentProfileId() + "' no encontrado");
         }
+
         requireApprovedStudent(request.studentProfileId());
+
+        if (educationService.getByStudentProfileId(request.studentProfileId()).isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El alumno debe tener al menos un registro de educacion para postularse"
+            );
+        }
+
         if (vacancyApplicationRepository.existsByVacancyIdAndStudentProfileId(request.vacancyId(), request.studentProfileId())) {
             throw new DuplicateResourceException("El alumno '" + request.studentProfileId()
                     + "' ya se postuló a la vacante '" + request.vacancyId() + "'");
         }
+
         VacancyApplication vacancyApplication = vacancyApplicationMapper.toEntity(request);
         vacancyApplication.setStatus(VacancyApplicationStatus.PENDIENTE);
+        vacancyApplication.setAppliedAt(LocalDate.now());
         return vacancyApplicationRepository.save(vacancyApplication);
     }
 
@@ -119,8 +141,4 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         }
         vacancyApplicationRepository.deleteById(id);
     }
-    private boolean vacancyExists(String vacancyId) {
-        return vacancyService.existsById(vacancyId);
-    }
-
 }
