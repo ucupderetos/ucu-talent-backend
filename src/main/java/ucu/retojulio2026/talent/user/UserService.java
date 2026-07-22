@@ -1,5 +1,7 @@
 package ucu.retojulio2026.talent.user;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 
 import java.util.List;
@@ -13,7 +15,7 @@ public interface UserService {
 
     User getById(String id);
 
-    List<User> getAll(AccountStatus status, Role role);
+    Page<User> getAll(AccountStatus status, Role role, Pageable pageable);
 
     Map<AccountStatus, Long> countByRoleGroupedByStatus(Role role);
 
