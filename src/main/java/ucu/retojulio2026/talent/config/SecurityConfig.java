@@ -160,6 +160,7 @@ public class SecurityConfig {
                         // Admin primero así puede hacer el status y el usuario empresa no.
                         .requestMatchers(HttpMethod.PUT, "/vacancy/status/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/vacancy/**").hasRole("EMPRESA")
+                        .requestMatchers(HttpMethod.PATCH, "/vacancy/**").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
