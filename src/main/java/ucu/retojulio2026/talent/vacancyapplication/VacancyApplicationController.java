@@ -110,18 +110,23 @@ public class VacancyApplicationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Listar postulaciones por vacante")
+    @Operation(summary = "Listar postulaciones por vacante (solo la empresa dueña de la vacante)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "400", description = "El vacancyId es invalido"),
-            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no es la empresa dueña de la vacante"),
+            @ApiResponse(responseCode = "404", description = "No existe una vacante con ese id")
     })
     @GetMapping(params = "vacancyId")
     public ResponseEntity<List<VacancyApplicationResponse>> getByVacancyId(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de la vacante", example = "V1StGXR8_Z5j")
             @RequestParam
             @NotBlank(message = "El vacancyId es obligatorio")
             String vacancyId) {
+        Vacancy vacancy = vacancyService.getVacancyById(vacancyId);
+        AuthorizationGuard.requireOwnership(jwt, vacancy.getCompanyId());
         List<VacancyApplicationResponse> response = vacancyApplicationService.getByVacancyId(vacancyId)
                 .stream()
                 .map(vacancyApplicationMapper::toResponse)
