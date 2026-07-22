@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +18,11 @@ import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.vacancy.dto.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.filter.VacancySortField;
+
 
 import java.util.List;
 
@@ -83,6 +89,27 @@ public class VacancyController {
 
         Vacancy vacancy = vacancyService.getVacancyById(id);
         return ResponseEntity.ok(vacancyMapper.toResponse(vacancy));
+    }
+
+    @Operation(summary = "Busqueda combinada de Puestos",
+            description = "Filtros combinables (AND): area, tipo de contrato, modalidad, localidad y "
+                    + "keyword (busca en nombre y descripcion). Todos los filtros son opcionales.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<Page<VacancyResponse>> search(
+            @ModelAttribute SearchCriteriaVacancyRequest criteria,
+            @Parameter(description = "Campo de orden") @RequestParam(required = false, defaultValue = "PUBLICATION_DATE") VacancySortField sortBy,
+            @Parameter(description = "Direccion del orden") @RequestParam(required = false, defaultValue = "DESC") Sort.Direction sortDirection,
+            @Parameter(description = "Numero de pagina (0-indexed)") @RequestParam(required = false, defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de pagina") @RequestParam(required = false, defaultValue = "20") int size) {
+
+        Sort sort = Sort.by(sortDirection, sortBy.propertyName());
+        Page<VacancyResponse> response = vacancyService.search(criteria, PageRequest.of(page, size, sort))
+                .map(vacancyMapper::toResponse);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Listar Puestos por estado")
