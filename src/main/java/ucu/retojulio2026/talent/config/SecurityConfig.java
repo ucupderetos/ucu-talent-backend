@@ -123,8 +123,8 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user"),
             // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
             PathPatternRequestMatcher.pathPattern("/dev/**"),
-            // Carreras: consulta publica, alta/baja/modificacion requieren usuario autenticado.
-            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/degree/**")
+            // WorkExperience: lectura publica por query param (ej: /work-experience?studentProfileId=...)
+            PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/work-experience")
     );
 
     // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
@@ -157,14 +157,20 @@ public class SecurityConfig {
                         // Company
                         .requestMatchers(HttpMethod.POST, "/company").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.POST, "/vacancy").hasRole("EMPRESA")
+                        // Admin primero así puede hacer el status y el usuario empresa no.
+                        .requestMatchers(HttpMethod.PUT, "/vacancy/status/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/vacancy/**").hasRole("EMPRESA")
+                        .requestMatchers(HttpMethod.PATCH, "/vacancy/**").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
                         // Admin
+                        .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
+                        // Listado de usuarios: expone todos los emails, solo ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
                         .requestMatchers("/university-registry/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

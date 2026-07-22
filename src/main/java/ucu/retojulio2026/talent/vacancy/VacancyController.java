@@ -49,7 +49,7 @@ public class VacancyController {
     @PostMapping
     public ResponseEntity<VacancyResponse> create(@Valid @RequestBody CreateVacancyRequest request, @AuthenticationPrincipal Jwt jwt) {
         Company existing = companyService.getById(request.companyId());
-        AuthorizationGuard.requireOwnership(jwt, request.companyId());
+        AuthorizationGuard.requireOwnership(jwt, existing.getCompanyId());
         Vacancy created = vacancyService.create(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyMapper.toResponse(created));
@@ -195,13 +195,24 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 
-    @PutMapping("vacancyStatus/{id}")
-    public ResponseEntity<VacancyResponse> updateVacancyStatus(
-            @AuthenticationPrincipal Jwt jwt, // Solo admin
+    @PatchMapping("status/{id}")
+    public ResponseEntity<VacancyResponse> updateVacancyStatusCompany(
+            @AuthenticationPrincipal Jwt jwt, // Version NO ADMIN
             @PathVariable String id,
             @Valid @RequestBody UpdateVacancyStatusRequest vacancy) {
+        Vacancy existing = vacancyService.getVacancyById(id);
+        AuthorizationGuard.requireOwnership(jwt, existing.getCompanyId());
+        Vacancy updated = vacancyService.updateVacancyStatus(id, vacancy);
+        return ResponseEntity.ok(vacancyMapper.toResponse(updated));
+    }
+
+    @PutMapping("status/{id}")
+    public ResponseEntity<VacancyResponse> updateVacancyStatus(
+            @AuthenticationPrincipal Jwt jwt, // Version ADMIN
+            @PathVariable String id,
+            @Valid @RequestBody UpdateVacancyStatusAdminRequest vacancy) {
         String adminId = jwt.getSubject();
-        Vacancy updated = vacancyService.updateVacancyStatus(id, adminId, vacancy);
+        Vacancy updated = vacancyService.updateVacancyStatusAdmin(id, adminId, vacancy);
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 

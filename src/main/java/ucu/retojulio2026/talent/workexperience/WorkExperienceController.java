@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ucu.retojulio2026.talent.common.ForbiddenOperationException;
+import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.workexperience.dto.*;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public class WorkExperienceController {
     public ResponseEntity<WorkExperienceResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateWorkExperienceRequest request) {
-        requireOwnership(jwt, request.studentProfileId());
+        AuthorizationGuard.requireOwnership(jwt, request.studentProfileId());
         WorkExperience created = workExperienceService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(workExperienceMapper.toResponse(created));
     }
@@ -68,10 +68,14 @@ public class WorkExperienceController {
             @ApiResponse(responseCode = "404", description = "No existe una experiencia con ese id"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
-    @GetMapping("/{id}")
+    
+    @GetMapping("/me/{id}")
     public ResponseEntity<WorkExperienceResponse> getById(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id) {
-        return ResponseEntity.ok(workExperienceMapper.toResponse(workExperienceService.getById(id)));
+        WorkExperience existing = workExperienceService.getById(id);
+        AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
+        return ResponseEntity.ok(workExperienceMapper.toResponse(existing));
     }
 
     @Operation(summary = "Listar experiencia laboral por studentProfileId")
@@ -110,7 +114,7 @@ public class WorkExperienceController {
             @Parameter(description = "Id de workExperience") @PathVariable String id,
             @Valid @RequestBody UpdateWorkExperienceRequest request) {
         WorkExperience existing = workExperienceService.getById(id); // 404 si no existe
-        requireOwnership(jwt, existing.getStudentProfileId());
+        AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
         WorkExperience updated = workExperienceService.update(id, request);
         return ResponseEntity.ok(workExperienceMapper.toResponse(updated));
     }
@@ -129,15 +133,8 @@ public class WorkExperienceController {
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id) {
         WorkExperience existing = workExperienceService.getById(id);
-        requireOwnership(jwt, existing.getStudentProfileId());
+        AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
         workExperienceService.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private void requireOwnership(Jwt jwt, String targetUserId) {
-        boolean isSelf = jwt.getSubject().equals(targetUserId);
-        if (!isSelf) {
-            throw new ForbiddenOperationException("Usuario autenticado no tiene permisos para modificar esta recurso.");
-        }
     }
 }

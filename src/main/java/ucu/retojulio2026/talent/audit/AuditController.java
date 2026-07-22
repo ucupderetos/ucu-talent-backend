@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * TEMPORAL: solo para verificar en Swagger que AuditAspect esta escribiendo
+ * Solo para verificar en Swagger que AuditAspect esta escribiendo
  * filas, sin tener que entrar a psql/DBeaver a mano. Restringido a ADMIN en
  * SecurityConfig (ver matcher "/audit/**"). Si esto se vuelve algo que se
  * quiere dejar en produccion, conviene sumarle paginado real (Pageable) y
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/audit")
-@Tag(name = "Auditoria (temporal)", description = "Solo lectura, para verificar que se esta auditando. ADMIN unicamente.")
+@Tag(name = "Auditoria", description = "Solo lectura, para verificar que se esta auditando. ADMIN unicamente.")
 public class AuditController {
 
     private final AuditRepository auditRepository;
