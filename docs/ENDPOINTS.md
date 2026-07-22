@@ -336,7 +336,7 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 | 2 | GET | `/vacancy-application/me` | Listar mis postulaciones (alumno autenticado) | 🔒 rol `ALUMNO` | — | `List<VacancyApplicationResponse>` | `200` | `403` no es ALUMNO |
 | 3 | GET | `/vacancy-application/{id}` | Obtener postulación por id | 🔒 Autenticado | — (path `id`) | `VacancyApplicationResponse` | `200` | `404` |
 | 4 | GET | `/vacancy-application` | Listar todas las postulaciones | 🔒 Autenticado | — | `List<VacancyApplicationResponse>` | `200` | — |
-| 5 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 Autenticado | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` |
+| 5 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 + dueño (empresa dueña de la vacante) | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es la empresa dueña · `404` no existe la vacante |
 | 6 | GET | `/vacancy-application?studentProfileId={id}` | Listar por perfil de alumno | 🔒 rol `ADMIN` | — (query `studentProfileId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es ADMIN |
 | 7 | GET | `/vacancy-application?status={status}` | Listar por estado | 🔒 Autenticado | — (query `status`: `VacancyApplicationStatus`) | `List<VacancyApplicationResponse>` | `200` | `400` enum inválido |
 | 8 | PUT | `/vacancy-application/{id}` | Actualizar el estado por id | 🔒 + dueño (empresa dueña de la vacante) | `UpdateVacancyApplicationRequest` | `VacancyApplicationResponse` | `200` | `400` · `403` no es la empresa dueña · `404` no existe · `409` transición inválida (retrocede) |
