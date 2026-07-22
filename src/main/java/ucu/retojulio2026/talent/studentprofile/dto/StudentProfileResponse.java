@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.studentprofile.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import ucu.retojulio2026.talent.common.DocumentType;
+import ucu.retojulio2026.talent.user.AccountStatus;
 
 import java.util.List;
 
@@ -29,5 +30,8 @@ public record StudentProfileResponse(
         String linkedinUrl,
 
         @Schema(description = "Skills del alumno", example = "[\"Java\", \"Spring Boot\"]")
-        List<String> skills
+        List<String> skills,
+
+        @Schema(description = "Estado de la cuenta", example = "APROBADO")
+        AccountStatus status
 ) {}

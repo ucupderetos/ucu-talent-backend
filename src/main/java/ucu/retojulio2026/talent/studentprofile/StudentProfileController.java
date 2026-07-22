@@ -17,6 +17,8 @@ import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileResponse;
+import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
+import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
 
@@ -27,10 +29,17 @@ public class StudentProfileController {
 
     private final StudentProfileService studentProfileService;
     private final StudentProfileMapper studentProfileMapper;
+    private final UserService userService;
 
-    public StudentProfileController(StudentProfileService studentProfileService, StudentProfileMapper studentProfileMapper) {
+    public StudentProfileController(StudentProfileService studentProfileService, StudentProfileMapper studentProfileMapper,
+            UserService userService) {
         this.studentProfileService = studentProfileService;
         this.studentProfileMapper = studentProfileMapper;
+        this.userService = userService;
+    }
+
+    private StudentProfileResponse toResponse(StudentProfile studentProfile) {
+        return studentProfileMapper.toResponse(studentProfile, userService.getById(studentProfile.getStudentProfileId()).getStatus());
     }
 
     // ===== CREATE =====
@@ -52,7 +61,7 @@ public class StudentProfileController {
                 request.name(), request.surname(), request.documentType(), request.documentNumber(),
                 request.phoneNumber(), request.linkedinUrl(), request.skills());
         StudentProfile created = studentProfileService.create(ownRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(studentProfileMapper.toResponse(created));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
     // ===== READ =====
@@ -63,7 +72,7 @@ public class StudentProfileController {
     public ResponseEntity<List<StudentProfileResponse>> getAll() {
         List<StudentProfileResponse> response = studentProfileService.getAll()
                 .stream()
-                .map(studentProfileMapper::toResponse)
+                .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(response);
     }
@@ -78,7 +87,7 @@ public class StudentProfileController {
     public ResponseEntity<StudentProfileResponse> getById(
             @Parameter(description = "Id del perfil de alumno") @PathVariable String id) {
         StudentProfile studentProfile = studentProfileService.getById(id);
-        return ResponseEntity.ok(studentProfileMapper.toResponse(studentProfile));
+        return ResponseEntity.ok(toResponse(studentProfile));
     }
 
     @Operation(summary = "Buscar el perfil de alumno de un usuario")
@@ -96,11 +105,28 @@ public class StudentProfileController {
             String userId) {
         // PK compartida: studentProfileId == userId, asi que buscar por userId es getById.
         StudentProfile studentProfile = studentProfileService.getById(userId);
-        return ResponseEntity.ok(studentProfileMapper.toResponse(studentProfile));
+        return ResponseEntity.ok(toResponse(studentProfile));
     }
 
     // ===== UPDATE =====
 
+    @Operation(summary = "Actualizar el telefono, LinkedIn y skills de un perfil de alumno")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No es el dueño de este perfil"),
+            @ApiResponse(responseCode = "404", description = "No existe un perfil con ese id")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentProfileResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
+            @Parameter(description = "Id del perfil de alumno") @PathVariable String id,
+            @Valid @RequestBody UpdateStudentProfileRequest request) {
+        AuthorizationGuard.requireOwnership(jwt, id);
+        StudentProfile updated = studentProfileService.update(id, request);
+        return ResponseEntity.ok(toResponse(updated));
+    }
 
     // ===== DELETE =====
 

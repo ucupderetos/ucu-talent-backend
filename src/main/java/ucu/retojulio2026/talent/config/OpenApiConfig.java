@@ -1,6 +1,8 @@
 package ucu.retojulio2026.talent.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.springdoc.core.customizers.OpenApiCustomizer;
@@ -16,6 +18,10 @@ import java.util.Map;
 @Configuration
 public class OpenApiConfig {
 
+    // El tag "Actuator" lo genera solo springdoc (springdoc.show-actuator=true), no un @Tag nuestro.
+    // Lo renombramos a "Health" aca porque no hay forma de anotarlo directamente.
+    private static final String ACTUATOR_TAG = "Actuator";
+    private static final String HEALTH_TAG = "Health";
 
     private static final List<String> TAG_ORDER = List.of(
             "Usuarios",             // 1 - User
@@ -24,7 +30,8 @@ public class OpenApiConfig {
             "Educacion",            // 4 - Education
             "Experiencia laboral",  // 5 - WorkExperience
             "Autenticacion",
-            "Puestos"
+            "Puestos",
+            HEALTH_TAG
     );
 
     @Bean
@@ -42,6 +49,7 @@ public class OpenApiConfig {
     @Bean
     public OpenApiCustomizer tagOrderCustomizer() {
         return openApi -> {
+            renameActuatorTag(openApi);
             if (openApi.getTags() == null) {
                 return;
             }
@@ -59,5 +67,28 @@ public class OpenApiConfig {
             }));
             openApi.setTags(ordenados);
         };
+    }
+
+    private void renameActuatorTag(OpenAPI openApi) {
+        if (openApi.getTags() != null) {
+            for (Tag tag : openApi.getTags()) {
+                if (ACTUATOR_TAG.equals(tag.getName())) {
+                    tag.setName(HEALTH_TAG);
+                    tag.setDescription("Estado de salud de la aplicacion (Actuator)");
+                }
+            }
+        }
+        if (openApi.getPaths() == null) {
+            return;
+        }
+        for (PathItem pathItem : openApi.getPaths().values()) {
+            for (Operation operation : pathItem.readOperations()) {
+                if (operation.getTags() != null) {
+                    operation.setTags(operation.getTags().stream()
+                            .map(t -> ACTUATOR_TAG.equals(t) ? HEALTH_TAG : t)
+                            .toList());
+                }
+            }
+        }
     }
 }

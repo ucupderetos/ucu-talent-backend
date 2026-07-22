@@ -18,6 +18,7 @@ import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.company.dto.CompanyResponse;
+import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
 
@@ -29,12 +30,18 @@ public class CompanyController {
     private final CompanyService companyService;
     private final CompanyDeletionService companyDeletionService;
     private final CompanyMapper companyMapper;
+    private final UserService userService;
 
     public CompanyController(CompanyService companyService, CompanyDeletionService companyDeletionService,
-            CompanyMapper companyMapper) {
+            CompanyMapper companyMapper, UserService userService) {
         this.companyService = companyService;
         this.companyDeletionService = companyDeletionService;
         this.companyMapper = companyMapper;
+        this.userService = userService;
+    }
+
+    private CompanyResponse toResponse(Company company) {
+        return companyMapper.toResponse(company, userService.getById(company.getCompanyId()).getStatus());
     }
 
     // ===== CREATE =====
@@ -54,7 +61,7 @@ public class CompanyController {
                 request.industry(), request.description(), request.webUrl(), request.linkedinUrl(),
                 request.location());
         Company created = companyService.create(ownRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(companyMapper.toResponse(created));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 
     // ===== READ =====
@@ -66,7 +73,7 @@ public class CompanyController {
     public ResponseEntity<List<CompanyResponse>> getAll() {
         List<CompanyResponse> response = companyService.getAll()
                 .stream()
-                .map(companyMapper::toResponse)
+                .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(response);
     }
@@ -81,7 +88,7 @@ public class CompanyController {
     public ResponseEntity<CompanyResponse> getById(
             @Parameter(description = "Id de la empresa") @PathVariable String id) {
         Company company = companyService.getById(id);
-        return ResponseEntity.ok(companyMapper.toResponse(company));
+        return ResponseEntity.ok(toResponse(company));
     }
 
     @Operation(summary = "Buscar la empresa de un usuario")
@@ -98,7 +105,7 @@ public class CompanyController {
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
         Company company = companyService.getById(userId);
-        return ResponseEntity.ok(companyMapper.toResponse(company));
+        return ResponseEntity.ok(toResponse(company));
     }
 
     // ===== UPDATE =====
@@ -119,7 +126,7 @@ public class CompanyController {
     {
         AuthorizationGuard.requireOwnership(jwt, id);
         Company updated = companyService.update(id, request);
-        return ResponseEntity.ok(companyMapper.toResponse(updated));
+        return ResponseEntity.ok(toResponse(updated));
     }
 
     // ===== DELETE =====

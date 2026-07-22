@@ -32,7 +32,11 @@ public class UserServiceImpl implements UserService {
         }
         User user = userMapper.toEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setStatus(AccountStatus.PENDIENTE);
+        if (request.role() == Role.ALUMNO) {
+            user.setStatus(AccountStatus.APROBADO);
+        } else {
+            user.setStatus(AccountStatus.PENDIENTE);
+        }
         return userRepository.save(user);
     }
 
@@ -45,7 +49,6 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setRole(Role.ADMIN);
-        // Nace APROBADO: un ADMIN no pasa por moderacion, no hay quien lo apruebe.
         user.setStatus(AccountStatus.APROBADO);
         return userRepository.save(user);
     }
@@ -57,7 +60,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAll() {
+    public List<User> getAll(AccountStatus status, Role role) {
+        if (status != null && role != null) {
+            return userRepository.findByStatusAndRole(status, role);
+        }
+        if (status != null) {
+            return userRepository.findByStatus(status);
+        }
+        if (role != null) {
+            return userRepository.findByRole(role);
+        }
         return userRepository.findAll();
     }
 

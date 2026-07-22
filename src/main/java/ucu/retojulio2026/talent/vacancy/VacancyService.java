@@ -1,10 +1,14 @@
 package ucu.retojulio2026.talent.vacancy;
 
+import org.springframework.data.domain.Page;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusAdminRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusRequest;
+import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface VacancyService {
@@ -23,7 +27,7 @@ public interface VacancyService {
 
     List<Vacancy> getByLocation(Department location);
 
-    public Vacancy create(CreateVacancyRequest request);
+    Vacancy create(CreateVacancyRequest request);
 
     Vacancy updateVacancy(String id, UpdateVacancyRequest vacancy);
 
@@ -31,7 +35,11 @@ public interface VacancyService {
 
     boolean existsById(String id);
 
-    Vacancy updateVacancyStatus(String id, String adminId, UpdateVacancyStatusRequest vacancy);
+    Vacancy updateVacancyStatus(String id, UpdateVacancyStatusRequest request);
+
+    Vacancy updateVacancyStatusAdmin(String id, String adminId, UpdateVacancyStatusAdminRequest vacancy);
 
     void finalizeExpiredVacancies();
+
+    Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable);
 }

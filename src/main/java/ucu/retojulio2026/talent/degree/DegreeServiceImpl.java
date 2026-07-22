@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import ucu.retojulio2026.talent.area.AreaService;
 import ucu.retojulio2026.talent.degree.dto.CreateDegreeRequest;
 import ucu.retojulio2026.talent.degree.dto.UpdateDegreeRequest;
 import ucu.retojulio2026.talent.degree.dto.DegreeMapper;
@@ -15,14 +16,17 @@ public class DegreeServiceImpl implements DegreeService {
 
     private final DegreeRepository degreeRepository;
     private final DegreeMapper degreeMapper;
+    private final AreaService areaService;
 
-    public DegreeServiceImpl(DegreeRepository degreeRepository, DegreeMapper degreeMapper) {
+    public DegreeServiceImpl(DegreeRepository degreeRepository, DegreeMapper degreeMapper, AreaService areaService) {
         this.degreeRepository = degreeRepository;
         this.degreeMapper = degreeMapper;
+        this.areaService = areaService;
     }
 
     @Override
     public Degree create(CreateDegreeRequest request) {
+        areaService.getById(request.areaId());
         Degree degree = degreeMapper.toEntity(request);
         return degreeRepository.save(degree);
     }
