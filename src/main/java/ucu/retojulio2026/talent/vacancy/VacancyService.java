@@ -1,11 +1,14 @@
 package ucu.retojulio2026.talent.vacancy;
 
+import org.springframework.data.domain.Page;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusAdminRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusRequest;
+import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Map;
 
@@ -40,4 +43,6 @@ public interface VacancyService {
     Vacancy updateVacancyStatusAdmin(String id, String adminId, UpdateVacancyStatusAdminRequest vacancy);
 
     void finalizeExpiredVacancies();
+
+    Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable);
 }

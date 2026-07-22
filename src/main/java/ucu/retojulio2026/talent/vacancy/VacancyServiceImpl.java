@@ -1,5 +1,8 @@
 package ucu.retojulio2026.talent.vacancy;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,6 +20,7 @@ import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import ucu.retojulio2026.talent.vacancy.filter.VacancyFilterResolverImpl;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 
 import java.time.LocalDate;
@@ -34,15 +38,17 @@ public class VacancyServiceImpl implements VacancyService {
     private final UserService userService;
     private final AreaService areaService;
     private final VacancyApplicationRepository vacancyApplicationRepository;
+    private final VacancyFilterResolverImpl vacancyFilterResolverImpl;
 
 
-    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository) {
+    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
         this.areaService = areaService;
         this.userService = userService;
         this.vacancyApplicationRepository = vacancyApplicationRepository;
+        this.vacancyFilterResolverImpl = vacancyFilterResolverImpl;
     }
 
     @Override
@@ -143,6 +149,13 @@ public class VacancyServiceImpl implements VacancyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable) {
+        Specification<Vacancy> specification = vacancyFilterResolverImpl.buildSpecification(criteria);
+        return vacancyRepository.findAll(specification, pageable);
+    }
+
+    @Override
     @Transactional
     public Vacancy updateVacancy(String id, UpdateVacancyRequest request) {
 
@@ -157,12 +170,6 @@ public class VacancyServiceImpl implements VacancyService {
             throw new ResourceNotFoundException("Area not found.");
         }
 
-        if (request.publicationDate().isAfter(request.closingDate())) {
-            throw new ForbiddenOperationException(
-                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
-            );
-        }
-
         if (vacancyApplicationRepository.existsByVacancyId(id)) {
             throw new ForbiddenOperationException(
                     "El Puesto ya tiene postulaciones."
@@ -175,15 +182,39 @@ public class VacancyServiceImpl implements VacancyService {
             );
         }
 
-        existing.setPublicationDate(request.publicationDate());
-        existing.setClosingDate(request.closingDate());
-        existing.setLocation(request.location());
-        existing.setModality(request.modality());
-        existing.setName(request.name());
-        existing.setDescription(request.description());
-        existing.setRequirements(request.requirements());
-        existing.setContractType(request.contractType());
-        existing.setSalaryRange(request.salaryRange());
+        if (request.publicationDate() != null) {
+            existing.setPublicationDate(request.publicationDate());
+        }
+        if (request.closingDate() != null) {
+            existing.setClosingDate(request.closingDate());
+        }
+        if (request.location() != null) {
+            existing.setLocation(request.location());
+        }
+        if (request.modality() != null) {
+            existing.setModality(request.modality());
+        }
+        if (request.name() != null) {
+            existing.setName(request.name());
+        }
+        if (request.description() != null) {
+            existing.setDescription(request.description());
+        }
+        if (request.requirements() != null) {
+            existing.setRequirements(request.requirements());
+        }
+        if (request.contractType() != null) {
+            existing.setContractType(request.contractType());
+        }
+        if (request.salaryRange() != null) {
+            existing.setSalaryRange(request.salaryRange());
+        }
+
+        if (existing.getPublicationDate().isAfter(existing.getClosingDate())) {
+            throw new ForbiddenOperationException(
+                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
+            );
+        }
 
         return vacancyRepository.save(existing);
     }
