@@ -44,6 +44,9 @@ public class Education {
     @Column(nullable = false)
     private String degreeId;
 
+    @Column(length = 255)
+    private String institution;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
