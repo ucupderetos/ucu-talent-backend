@@ -26,6 +26,7 @@ import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.VacancyService;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicantResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.UpdateVacancyApplicationRequest;
@@ -110,7 +111,7 @@ public class VacancyApplicationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Listar postulaciones por vacante (solo la empresa dueña de la vacante)")
+    @Operation(summary = "Listar postulantes de una vacante propia, con perfil completo (solo la empresa dueña de la vacante)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "400", description = "El vacancyId es invalido"),
@@ -119,7 +120,7 @@ public class VacancyApplicationController {
             @ApiResponse(responseCode = "404", description = "No existe una vacante con ese id")
     })
     @GetMapping(params = "vacancyId")
-    public ResponseEntity<List<VacancyApplicationResponse>> getByVacancyId(
+    public ResponseEntity<List<VacancyApplicantResponse>> getByVacancyId(
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de la vacante", example = "V1StGXR8_Z5j")
             @RequestParam
@@ -127,11 +128,7 @@ public class VacancyApplicationController {
             String vacancyId) {
         Vacancy vacancy = vacancyService.getVacancyById(vacancyId);
         AuthorizationGuard.requireOwnership(jwt, vacancy.getCompanyId());
-        List<VacancyApplicationResponse> response = vacancyApplicationService.getByVacancyId(vacancyId)
-                .stream()
-                .map(vacancyApplicationMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(vacancyApplicationService.getApplicantsByVacancyId(vacancyId));
     }
 
     @Operation(summary = "Listar postulaciones por perfil de alumno")

@@ -12,6 +12,7 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicantResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
 import java.util.List;
@@ -77,6 +78,14 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     @Override
     public List<VacancyApplication> getByVacancyId(String vacancyId) {
         return vacancyApplicationRepository.findByVacancyId(vacancyId);
+    }
+
+    @Override
+    public List<VacancyApplicantResponse> getApplicantsByVacancyId(String vacancyId) {
+        return vacancyApplicationRepository.findByVacancyId(vacancyId).stream()
+                .map(application -> vacancyApplicationMapper.toApplicantResponse(
+                        application, studentProfileService.getById(application.getStudentProfileId())))
+                .toList();
     }
 
     @Override
