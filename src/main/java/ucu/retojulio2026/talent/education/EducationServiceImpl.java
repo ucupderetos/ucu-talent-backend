@@ -37,6 +37,11 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
+    public List<Education> getAll() {
+        return educationRepository.findAll();
+    }
+
+    @Override
     public Education getByEducationId(String educationId) {
         return educationRepository.findById(educationId)
             .orElseThrow(() -> new ResourceNotFoundException(

@@ -59,6 +59,20 @@ public class EducationController {
 
     // ===== READ =====
 
+    @Operation(summary = "Listar todos los registros de educacion")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
+    })
+    @GetMapping
+    public ResponseEntity<List<EducationResponse>> getAll() {
+        List<EducationResponse> response = educationService.getAll()
+                .stream()
+                .map(educationMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Obtener un registro de educacion por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro encontrado"),
