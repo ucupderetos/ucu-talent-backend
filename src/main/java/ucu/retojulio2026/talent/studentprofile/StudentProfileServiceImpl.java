@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
+import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.UserService;
@@ -33,6 +34,15 @@ public class StudentProfileServiceImpl implements StudentProfileService {
             throw new DuplicateResourceException("El usuario '" + request.userId() + "' ya tiene un perfil de alumno asociado");
         }
         StudentProfile studentProfile = studentProfileMapper.toEntity(request);
+        return studentProfileRepository.save(studentProfile);
+    }
+
+    @Override
+    public StudentProfile update(String id, UpdateStudentProfileRequest request) {
+        StudentProfile studentProfile = getById(id);
+        studentProfile.setPhoneNumber(request.phoneNumber());
+        studentProfile.setLinkedinUrl(request.linkedinUrl());
+        studentProfile.setSkills(request.skills());
         return studentProfileRepository.save(studentProfile);
     }
 
