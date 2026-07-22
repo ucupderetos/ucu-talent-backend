@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         if (request.role() == Role.ALUMNO) {
-            user.setStatus(AccountStatus.APROBADO);
+            user.setStatus(AccountStatus.PENDIENTE);
         } else {
             user.setStatus(AccountStatus.PENDIENTE);
         }
