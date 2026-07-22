@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import ucu.retojulio2026.talent.studentprofile.StudentProfile;
+import ucu.retojulio2026.talent.user.AccountStatus;
 
 //Mapea la entidad StudentProfile a sus DTOs y viceversa usando MapStruct.
 @Mapper(componentModel = "spring")
@@ -13,6 +14,7 @@ public interface StudentProfileMapper {
     @Mapping(target = "studentProfileId", source = "userId")
     StudentProfile toEntity(CreateStudentProfileRequest request);
 
-    // studentProfileId, userId y skills tienen el mismo nombre en la entidad y el response - mapeo automatico.
-    StudentProfileResponse toResponse(StudentProfile studentProfile);
+    // status vive en User, no en StudentProfile (PK compartida) - se pasa aparte.
+    @Mapping(target = "status", source = "status")
+    StudentProfileResponse toResponse(StudentProfile studentProfile, AccountStatus status);
 }

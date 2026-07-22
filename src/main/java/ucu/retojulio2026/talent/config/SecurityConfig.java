@@ -171,6 +171,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de usuarios: expone todos los emails, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
+                        // Aprobar/rechazar cuenta: solo ADMIN.
+                        .requestMatchers(HttpMethod.PATCH, "/user/{id}").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
                         .requestMatchers("/university-registry/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

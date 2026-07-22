@@ -51,11 +51,8 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
-        // Crea el User y, segun su rol, el StudentProfile/Company asociado en el mismo paso
-        // (PK compartida: ver UserRegistrationServiceImpl).
         User created = userRegistrationService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(created));
-        //Devuelve el UserResponse (sin passwordHash) mas código HTTP 201 (Created)
     }
 
     // ===== READ =====

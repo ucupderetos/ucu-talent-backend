@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.company.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.user.AccountStatus;
 
 public record CompanyResponse(
         @Schema(description = "Id de la empresa (NanoID)", example = "V1StGXR8_Z5j")
@@ -24,5 +25,9 @@ public record CompanyResponse(
         String linkedinUrl,
 
         @Schema(description = "Departamento donde esta ubicada la empresa", example = "MONTEVIDEO")
-        Department location
+        Department location,
+
+        @Schema(description = "Estado de usuario", example = "APROBADO")
+        AccountStatus status
+
 ) {}
