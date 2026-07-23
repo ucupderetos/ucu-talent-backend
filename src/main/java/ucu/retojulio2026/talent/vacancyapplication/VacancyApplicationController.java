@@ -57,7 +57,9 @@ public class VacancyApplicationController {
             @ApiResponse(responseCode = "201", description = "Postulación creada"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
-            @ApiResponse(responseCode = "404", description = "No existe la vacante o el perfil de alumno")
+            @ApiResponse(responseCode = "404", description = "No existe la vacante o el perfil de alumno"),
+            @ApiResponse(responseCode = "403", description = "No se puede postular porque la cuenta está RECHAZADA o no aprobada")
+
     })
     @PostMapping
     public ResponseEntity<VacancyApplicationResponse> create(

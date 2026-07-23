@@ -54,8 +54,11 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
 
 
     private void requireApprovedStudent(String studentProfileId) {
+        if (userService.getById(studentProfileId).getStatus() == AccountStatus.RECHAZADO) {
+            throw new AccountNotApprovedException("No se puede postular porque tu cuenta está en estado RECHAZADO");
+        }
         if (userService.getById(studentProfileId).getStatus() != AccountStatus.APROBADO) {
-            throw new AccountNotApprovedException();
+            throw new AccountNotApprovedException("No se puede postular porque tu cuenta no está aprobada");
         }
     }
 

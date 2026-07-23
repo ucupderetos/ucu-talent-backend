@@ -80,10 +80,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(@Value("${cors.allowed-origin}") String allowedOrigin) {
+    public CorsConfigurationSource corsConfigurationSource(@Value("${cors.allowed-origin}") List<String> allowedOrigins) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
@@ -157,7 +157,8 @@ public class SecurityConfig {
                         // Company
                         .requestMatchers(HttpMethod.POST, "/company").hasRole("EMPRESA")
                         // La busqueda pueda ser para todos los autenticados
-                        .requestMatchers(HttpMethod.GET, "/vacancy/search").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/vacancy/search").hasRole("ADMIN")
+                        //.requestMatchers(HttpMethod.GET, "/vacancy/student/search").authenticated() version ALUMNO WIP
                         // Vacancy
                         .requestMatchers(HttpMethod.POST, "/vacancy").hasRole("EMPRESA")
                         // Admin primero así puede hacer el status y el usuario empresa no.
@@ -171,6 +172,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de usuarios: expone todos los emails, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")

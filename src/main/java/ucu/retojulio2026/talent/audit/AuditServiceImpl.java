@@ -2,9 +2,12 @@ package ucu.retojulio2026.talent.audit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
 import ucu.retojulio2026.talent.user.Role;
 
 @Service
@@ -41,5 +44,10 @@ public class AuditServiceImpl implements AuditService {
             log.error("No se pudo persistir el audit log para module={} action={} entityId={}",
                     module, action, entityId, ex);
         }
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AuditLog> getRecent(Pageable pageable) {
+        return auditRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 }
