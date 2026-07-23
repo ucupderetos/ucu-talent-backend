@@ -8,8 +8,11 @@ import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.education.EducationService;
+import ucu.retojulio2026.talent.mail.MailService;
+import ucu.retojulio2026.talent.studentprofile.StudentProfile;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 import ucu.retojulio2026.talent.user.AccountStatus;
+import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.VacancyStatus;
@@ -31,19 +34,22 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     private final VacancyApplicationMapper vacancyApplicationMapper;
     private final VacancyServiceImpl vacancyService;
     private final UserService userService;
+    private final MailService mailService;
 
     public VacancyApplicationServiceImpl(VacancyApplicationRepository vacancyApplicationRepository,
                                          StudentProfileService studentProfileService,
                                          EducationService educationService,
                                          VacancyApplicationMapper vacancyApplicationMapper,
                                          VacancyServiceImpl vacancyService,
-                                         UserService userService) {
+                                         UserService userService,
+                                         MailService mailService) {
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.studentProfileService = studentProfileService;
         this.educationService = educationService;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
         this.vacancyService = vacancyService;
         this.userService = userService;
+        this.mailService = mailService;
     }
 
 
@@ -85,7 +91,14 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         VacancyApplication vacancyApplication = vacancyApplicationMapper.toEntity(request);
         vacancyApplication.setStatus(VacancyApplicationStatus.PENDIENTE);
         vacancyApplication.setAppliedAt(LocalDate.now());
-        return vacancyApplicationRepository.save(vacancyApplication);
+        VacancyApplication created = vacancyApplicationRepository.save(vacancyApplication);
+
+        StudentProfile applicant = studentProfileService.getById(request.studentProfileId());
+        User companyUser = userService.getById(vacancy.getCompanyId());
+        String applicantFullName = applicant.getName() + " " + applicant.getSurname();
+        mailService.sendCompanyNewApplicationEmail(companyUser.getEmail(), applicantFullName, vacancy.getName());
+
+        return created;
     }
 
     @Override
@@ -126,12 +139,21 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     @Override
     public VacancyApplication update(String id, VacancyApplicationStatus status) {
         VacancyApplication vacancyApplication = getById(id);
+        VacancyApplicationStatus previousStatus = vacancyApplication.getStatus();
         if (status.ordinal() < vacancyApplication.getStatus().ordinal()) {
             throw new InvalidStatusTransitionException(
                     "No se puede retroceder de '" + vacancyApplication.getStatus() + "' a '" + status + "'");
         }
         vacancyApplication.setStatus(status);
-        return vacancyApplicationRepository.save(vacancyApplication);
+        VacancyApplication updated = vacancyApplicationRepository.save(vacancyApplication);
+
+        if (previousStatus != status) {
+            Vacancy vacancy = vacancyService.getVacancyById(vacancyApplication.getVacancyId());
+            User applicantUser = userService.getById(vacancyApplication.getStudentProfileId());
+            mailService.sendApplicantStatusChangedEmail(applicantUser.getEmail(), vacancy.getName(), status);
+        }
+
+        return updated;
     }
 
     @Override
