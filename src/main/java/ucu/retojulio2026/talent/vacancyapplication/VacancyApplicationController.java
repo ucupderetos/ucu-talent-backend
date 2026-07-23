@@ -185,6 +185,7 @@ public class VacancyApplicationController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/status-summary")
     public ResponseEntity<VacancyApplicationStatusSummaryResponse> getStatusSummary() {
         return ResponseEntity.ok(VacancyApplicationStatusSummaryResponse.from(vacancyApplicationService.countByStatusSummary()));
