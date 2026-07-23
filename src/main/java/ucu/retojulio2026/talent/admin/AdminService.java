@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface AdminService {
 
-    Admin create(CreateAdminRequest request);
+    Admin create(String id, CreateAdminRequest request);
 
     Admin getById(String id);
 

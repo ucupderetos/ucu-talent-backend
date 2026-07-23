@@ -10,6 +10,9 @@ public record UpdateUserStatusRequest(
                 example = "APROBADO",
                 allowableValues = {"APROBADO", "RECHAZADO"})
         @NotNull(message = "El estado es obligatorio")
-        AccountStatus status
+        AccountStatus status,
+
+        @Schema(description = "Comentario del ADMIN", example = "Aprobado, o descripción del motivo de rechazo de aprobación")
+        String adminComment
 
 ) {}

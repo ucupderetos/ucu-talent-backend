@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import ucu.retojulio2026.talent.common.Department;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,5 +39,11 @@ public class Company {
     @Enumerated(EnumType.STRING)
     @Column(name = "location")
     private Department location;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @Column(name = "admin_comment")
+    private String adminComment;
 
 }

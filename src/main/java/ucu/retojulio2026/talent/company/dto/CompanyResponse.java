@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.user.AccountStatus;
 
+import java.time.LocalDateTime;
+
 public record CompanyResponse(
         @Schema(description = "Id de la empresa (NanoID)", example = "V1StGXR8_Z5j")
         String companyId,
@@ -28,6 +30,12 @@ public record CompanyResponse(
         Department location,
 
         @Schema(description = "Estado de usuario", example = "APROBADO")
-        AccountStatus status
+        AccountStatus status,
+
+        @Schema(description = "Fecha de aprobación/rechazo del ADMIN")
+        LocalDateTime reviewedAt,
+
+        @Schema(description = "Comentario del ADMIN sobre aprobación o rechazo de cuenta", example = "Aprobado")
+        String adminComment
 
 ) {}

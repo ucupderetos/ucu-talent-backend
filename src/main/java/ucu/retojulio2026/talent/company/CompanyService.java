@@ -4,12 +4,13 @@ import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.user.AccountStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 public interface CompanyService {
 
-    Company create(CreateCompanyRequest request);
+    Company create(String id, CreateCompanyRequest request);
 
     Company getById(String id);
 
@@ -22,4 +23,7 @@ public interface CompanyService {
     boolean existsById(String id);
 
     Map<AccountStatus, Long> getStatusSummary();
+
+    // Lo setea el Admin al aprobar/rechazar la cuenta -- ver AccountFacade.reviewAccount().
+    void review(String id, LocalDateTime reviewedAt, String adminComment);
 }

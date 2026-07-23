@@ -10,8 +10,9 @@ import ucu.retojulio2026.talent.admin.Admin;
 public interface AdminMapper {
 
     // PK compartida: adminId siempre es el mismo valor que userId (no se genera aparte).
-    @Mapping(target = "adminId", source = "userId")
-    Admin toEntity(CreateAdminRequest request);
+    // El id sale del JWT en el controller, nunca del body -- ver AdminController.create().
+    @Mapping(target = "adminId", source = "id")
+    Admin toEntity(String id, CreateAdminRequest request);
 
     // adminId, name y surname tienen el mismo nombre en la entidad y el response - mapeo automatico.
     AdminResponse toResponse(Admin admin);

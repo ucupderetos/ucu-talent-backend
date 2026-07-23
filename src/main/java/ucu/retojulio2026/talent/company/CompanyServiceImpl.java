@@ -11,6 +11,7 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
 import ucu.retojulio2026.talent.user.UserService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -28,14 +29,14 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Company create(CreateCompanyRequest request) {
-        if (!userService.existsById(request.userId())) {
-            throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
+    public Company create(String id, CreateCompanyRequest request) {
+        if (!userService.existsById(id)) {
+            throw new ResourceNotFoundException("User con id '" + id + "' no encontrado");
         }
-        if (companyRepository.existsById(request.userId())) {
-            throw new DuplicateResourceException("El usuario '" + request.userId() + "' ya tiene una empresa asociada");
+        if (companyRepository.existsById(id)) {
+            throw new DuplicateResourceException("El usuario '" + id + "' ya tiene una empresa asociada");
         }
-        Company company = companyMapper.toEntity(request);
+        Company company = companyMapper.toEntity(id, request);
         return companyRepository.save(company);
     }
 
@@ -79,6 +80,14 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Map<AccountStatus, Long> getStatusSummary() {
         return userService.countByRoleGroupedByStatus(Role.EMPRESA);
+    }
+
+    @Override
+    public void review(String id, LocalDateTime reviewedAt, String adminComment) {
+        Company company = getById(id);
+        company.setReviewedAt(reviewedAt);
+        company.setAdminComment(adminComment);
+        companyRepository.save(company);
     }
 
 }

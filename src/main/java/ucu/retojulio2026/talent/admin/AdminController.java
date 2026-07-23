@@ -48,10 +48,7 @@ public class AdminController {
     public ResponseEntity<AdminResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateAdminRequest request) {
-        // userId siempre sale del token, nunca del body (PK compartida: adminId == userId).
-        CreateAdminRequest ownRequest = new CreateAdminRequest(jwt.getSubject(),
-                request.name(), request.surname());
-        Admin created = adminService.create(ownRequest);
+        Admin created = adminService.create(jwt.getSubject(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(adminMapper.toResponse(created));
     }
 

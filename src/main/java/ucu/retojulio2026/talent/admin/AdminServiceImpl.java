@@ -25,17 +25,14 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Admin create(CreateAdminRequest request) {
-        if (!userService.existsById(request.userId())) {
-            throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
+    public Admin create(String id, CreateAdminRequest request) {
+        if (!userService.existsById(id)) {
+            throw new ResourceNotFoundException("User con id '" + id + "' no encontrado");
         }
-        // adminId es siempre igual a userId (PK compartida): si ya existe,
-        // repository.save(...) haria un UPDATE silencioso (merge) en vez de fallar,
-        // porque el id ya viene seteado.
-        if (adminRepository.existsById(request.userId())) {
-            throw new DuplicateResourceException("El usuario '" + request.userId() + "' ya tiene un admin asociado");
+        if (adminRepository.existsById(id)) {
+            throw new DuplicateResourceException("El usuario '" + id + "' ya tiene un admin asociado");
         }
-        Admin admin = adminMapper.toEntity(request);
+        Admin admin = adminMapper.toEntity(id, request);
         return adminRepository.save(admin);
     }
 

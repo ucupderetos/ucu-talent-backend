@@ -9,10 +9,6 @@ import java.util.List;
 
 public record CreateStudentProfileRequest(
 
-        @Schema(description = "Id del usuario dueño del perfil (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")
-        @NotBlank(message = "El userId es obligatorio")
-        String userId,
-
         @Schema(description = "Nombre del alumno", example = "Nicolas")
         @NotBlank(message = "El nombre es obligatorio")
         String name,
@@ -36,6 +32,9 @@ public record CreateStudentProfileRequest(
         String linkedinUrl,
 
         @Schema(description = "Skills del alumno, cargadas desde el frontend", example = "[\"Java\", \"Spring Boot\", \"SQL\"]")
-        List<String> skills
+        List<String> skills,
+
+        @Schema(description = "Descripción del perfil del alumno",  example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
+        String description
 
 ) {}

@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.user;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ucu.retojulio2026.talent.common.UruguayClock;
 import ucu.retojulio2026.talent.company.CompanyDeletionService;
 import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.education.Education;
@@ -13,9 +14,10 @@ import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationService;
 import ucu.retojulio2026.talent.workexperience.WorkExperience;
 import ucu.retojulio2026.talent.workexperience.WorkExperienceService;
 
+import java.time.LocalDateTime;
 
 @Service
-public class UserDeletionServiceImpl implements UserDeletionService {
+public class AccountFacadeImpl implements AccountFacade {
 
     private final UserService userService;
     private final StudentProfileService studentProfileService;
@@ -25,7 +27,7 @@ public class UserDeletionServiceImpl implements UserDeletionService {
     private final WorkExperienceService workExperienceService;
     private final VacancyApplicationService vacancyApplicationService;
 
-    public UserDeletionServiceImpl(UserService userService, StudentProfileService studentProfileService,
+    public AccountFacadeImpl(UserService userService, StudentProfileService studentProfileService,
             CompanyService companyService, CompanyDeletionService companyDeletionService,
             EducationService educationService, WorkExperienceService workExperienceService,
             VacancyApplicationService vacancyApplicationService) {
@@ -40,18 +42,34 @@ public class UserDeletionServiceImpl implements UserDeletionService {
 
     @Override
     @Transactional
-    public void delete(String userId) {
+    public void deleteAccount(String userId) {
         User user = userService.getById(userId); // 404 si no existe
 
         switch (user.getRole()) {
             case ALUMNO -> deleteStudentProfileCascade(userId);
             case EMPRESA -> deleteCompanyCascade(userId);
             case ADMIN -> {
-                // ADMIN no tiene perfil asociado.
+                break;
             }
         }
 
         userService.delete(userId);
+    }
+
+    @Override
+    @Transactional
+    public void reviewAccount(String userId, AccountStatus status, String adminComment) {
+        User user = userService.getById(userId);
+        userService.updateStatus(userId, status);
+
+        LocalDateTime reviewedAt = UruguayClock.ahora();
+        switch (user.getRole()) {
+            case ALUMNO -> studentProfileService.review(userId, reviewedAt, adminComment);
+            case EMPRESA -> companyService.review(userId, reviewedAt, adminComment);
+            case ADMIN -> {
+                break;
+            }
+        }
     }
 
     private void deleteStudentProfileCascade(String studentProfileId) {
