@@ -31,6 +31,10 @@
 	</properties>
 	<dependencies>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
   			<groupId>com.google.cloud.sql</groupId>
   			<artifactId>postgres-socket-factory</artifactId>
   			<version>1.19.1</version>
