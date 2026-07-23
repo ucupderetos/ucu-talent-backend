@@ -1,0 +1,157 @@
+name: CI/CD Backend Java+Maven
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+env:
+  PROJECT_ID: reto-universitario-2026
+  REGION: us-central1
+
+jobs:
+  # -- Continuos Integration
+  unit-test-backend:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Give execute permission to mvnw
+        run: chmod +x mvnw
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+      - run: ./mvnw test
+
+  docker-build-check-backend:
+    name: Check dockerfile builds
+    needs: unit-test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t temp-image:ci-check .
+
+  # -- Continuous deployment DEV
+
+  build-and-deploy-dev:
+    name: Build, push y deploy a Cloud Run DEV
+    needs: [unit-test-backend, docker-build-check-backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      contents: read
+
+    env:
+      SERVICE: api-dev
+      IMAGE: us-central1-docker.pkg.dev/reto-universitario-2026/ucutalent/backend-dev
+      TAG_FIJO: dev-${{ github.sha }}
+      TAG_FLOTANTE: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Autenticar contra Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Docker para Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build de la imagen
+        run: | 
+          docker build \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }} .
+
+      - name: Push a Artifact Registry
+        run: |
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }}
+
+      - name: Deploy a Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+
+          env_vars: |
+            POSTGRES_URL=${{ vars.POSTGRES_URL }}
+            CORS_ALLOWED_ORIGIN=${{ vars.CORS_ALLOWED_ORIGIN }}
+
+          secrets: |
+            POSTGRES_USER=dev-backend-db-username:latest
+            POSTGRES_PASSWORD=dev-backend-db-password:latest
+            FLYWAY_USER=dev-flyway-db-username:latest
+            FLYWAY_PASSWORD=dev-flyway-db-password:latest
+            JWT_SECRET=dev-jwt-secret:latest
+
+          flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
+
+  # -- Continuous deployment PROD
+
+  build-and-deploy-prod:
+    name: Build, push y deploy a Cloud Run PROD
+    needs: [unit-test-backend, docker-build-check-backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+
+    env:
+      SERVICE: api-prod
+      IMAGE: us-central1-docker.pkg.dev/reto-universitario-2026/ucutalent/backend-prod
+      TAG_FIJO: prod-${{ github.sha }}
+      TAG_FLOTANTE: prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Autenticar contra Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Docker para Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build de la imagen
+        run: |
+          docker build \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }} .
+
+      - name: Push a Artifact Registry
+        run: |
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }}
+
+      - name: Deploy a Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+
+          env_vars: |
+            POSTGRES_URL=${{ vars.POSTGRES_URL }}
+            CORS_ALLOWED_ORIGIN=${{ vars.CORS_ALLOWED_ORIGIN }}
+
+          secrets: |
+            POSTGRES_USER=prod-backend-db-username:latest
+            POSTGRES_PASSWORD=prod-backend-db-password:latest
+            FLYWAY_USER=prod-flyway-db-username:latest
+            FLYWAY_PASSWORD=prod-flyway-db-password:latest
+            JWT_SECRET=prod-jwt-secret:latest
+
+          flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
