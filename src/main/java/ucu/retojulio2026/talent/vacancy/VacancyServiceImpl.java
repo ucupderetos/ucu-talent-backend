@@ -156,6 +156,13 @@ public class VacancyServiceImpl implements VacancyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<Vacancy> searchPublished(SearchCriteriaVacancyRequest criteria, Pageable pageable) {
+        Specification<Vacancy> specification = vacancyFilterResolverImpl.buildStudentSpecification(criteria);
+        return vacancyRepository.findAll(specification, pageable);
+    }
+
+    @Override
     @Transactional
     public Vacancy updateVacancy(String id, UpdateVacancyRequest request) {
 
