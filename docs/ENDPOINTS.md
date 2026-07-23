@@ -182,6 +182,7 @@ Controller: `education/EducationController` · Tag: **Educacion**
 - `studentProfileId` string · `@NotBlank`
 - `degreeLevel` enum `DegreeLevel` · `@NotNull` — `TECNICATURA | LICENCIATURA | GRADO | POSGRADO | DOCTORADO`
 - `degreeId` string · `@NotBlank`
+- `institution` string? (obligatoria si la carrera no es UCU)
 - `description` string? (TEXT)
 - `startDate` date · `@NotNull`
 - `endDate` date? (null si está en curso)

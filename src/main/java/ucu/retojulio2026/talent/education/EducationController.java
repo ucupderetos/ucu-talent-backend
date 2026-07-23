@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.education.dto.CreateEducationRequest;
 import ucu.retojulio2026.talent.education.dto.EducationMapper;
 import ucu.retojulio2026.talent.education.dto.EducationResponse;
@@ -52,8 +55,18 @@ public class EducationController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @PostMapping
-    public ResponseEntity<EducationResponse> create(@Valid @RequestBody CreateEducationRequest request) {
-        Education created = educationService.create(request);
+        public ResponseEntity<EducationResponse> create(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @Valid @RequestBody CreateEducationRequest request) {
+                CreateEducationRequest ownRequest = new CreateEducationRequest(
+                                jwt.getSubject(),
+                                request.degreeLevel(),
+                                request.degreeId(),
+                                request.institution(),
+                                request.description(),
+                                request.startDate(),
+                                request.endDate());
+                Education created = educationService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(educationMapper.toResponse(created));
     }
 
@@ -127,9 +140,22 @@ public class EducationController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<EducationResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de education") @PathVariable("id") String educationId,
             @Valid @RequestBody UpdateEducationRequest request) {
-        Education updated = educationService.update(educationId, request);
+        Education existing = educationService.getByEducationId(educationId);
+        AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
+
+        UpdateEducationRequest ownRequest = new UpdateEducationRequest(
+                jwt.getSubject(),
+                request.degreeLevel(),
+                request.degreeId(),
+                request.institution(),
+                request.description(),
+                request.startDate(),
+                request.endDate());
+
+        Education updated = educationService.update(educationId, ownRequest);
         return ResponseEntity.ok(educationMapper.toResponse(updated));
     }
 
@@ -139,12 +165,16 @@ public class EducationController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Registro eliminado"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+                        @ApiResponse(responseCode = "403", description = "No es el dueño de este registro"),
             @ApiResponse(responseCode = "404", description = "No existe un registro con ese id")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
+                        @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de education") @PathVariable("id") String educationId) {
-        educationService.delete(educationId);
+                Education existing = educationService.getByEducationId(educationId);
+                AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
+                educationService.delete(educationId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -12,9 +12,12 @@ import ucu.retojulio2026.talent.education.dto.UpdateEducationRequest;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 public class EducationServiceImpl implements EducationService {
+
+    private static final LocalDate MIN_LOGICAL_START_DATE = LocalDate.of(1900, 1, 1);
 
     private final EducationRepository educationRepository;
     private final EducationMapper educationMapper;
@@ -35,6 +38,7 @@ public class EducationServiceImpl implements EducationService {
     public Education create(CreateEducationRequest request) {
         validateRelatedData(request.studentProfileId(), request.degreeId(), request.institution());
         validateDateRange(request.startDate(), request.endDate());
+        validateLogicalDateRange(request.startDate());
 
         Education education = educationMapper.toEntity(request);
         return educationRepository.save(education);
@@ -62,6 +66,7 @@ public class EducationServiceImpl implements EducationService {
         Education existing = getByEducationId(educationId);
         validateRelatedData(request.studentProfileId(), request.degreeId(), request.institution());
         validateDateRange(request.startDate(), request.endDate());
+        validateLogicalDateRange(request.startDate());
 
         existing.setStudentProfileId(request.studentProfileId());
         existing.setDegreeLevel(request.degreeLevel());
@@ -101,6 +106,15 @@ public class EducationServiceImpl implements EducationService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "La fecha de fin no puede ser anterior a la fecha de inicio"
+            );
+        }
+    }
+
+    private void validateLogicalDateRange(LocalDate startDate) {
+        if (startDate.isBefore(MIN_LOGICAL_START_DATE)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de inicio no puede ser anterior al 01/01/1900"
             );
         }
     }
