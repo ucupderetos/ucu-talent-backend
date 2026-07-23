@@ -10,10 +10,13 @@ import ucu.retojulio2026.talent.workexperience.dto.CreateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.UpdateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceMapper;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class WorkExperienceServiceImpl implements WorkExperienceService {
+
+    private static final LocalDate MIN_LOGICAL_START_DATE = LocalDate.of(1900, 1, 1);
 
     private final WorkExperienceRepository workExperienceRepository;
     private final WorkExperienceMapper workExperienceMapper;
@@ -30,6 +33,8 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     @Override
     public WorkExperience create(CreateWorkExperienceRequest request) {
         validateStudentProfileExists(request.studentProfileId());
+        validateDateRange(request.startDate(), request.endDate());
+        validateLogicalDateRange(request.startDate());
         WorkExperience workExperience = workExperienceMapper.toEntity(request);
         workExperience.setWorkExperienceId(null);
         return workExperienceRepository.save(workExperience);
@@ -50,6 +55,8 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
     @Override
     public WorkExperience update(String id, UpdateWorkExperienceRequest request) {
         WorkExperience existing = getById(id);
+        validateDateRange(request.startDate(), request.endDate());
+        validateLogicalDateRange(request.startDate());
 
         existing.setCompany(request.company());
         existing.setPosition(request.position());
@@ -70,6 +77,24 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
         if (!studentProfileService.existsById(studentProfileId)) {
             throw new ResourceNotFoundException(
                     "StudentProfile con id '" + studentProfileId + "' no encontrado");
+        }
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de fin no puede ser anterior a la fecha de inicio"
+            );
+        }
+    }
+
+    private void validateLogicalDateRange(LocalDate startDate) {
+        if (startDate != null && startDate.isBefore(MIN_LOGICAL_START_DATE)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de inicio no puede ser anterior al 01/01/1900"
+            );
         }
     }
 }
