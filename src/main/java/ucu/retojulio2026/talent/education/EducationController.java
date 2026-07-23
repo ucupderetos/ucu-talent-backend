@@ -55,8 +55,18 @@ public class EducationController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
     @PostMapping
-    public ResponseEntity<EducationResponse> create(@Valid @RequestBody CreateEducationRequest request) {
-        Education created = educationService.create(request);
+        public ResponseEntity<EducationResponse> create(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @Valid @RequestBody CreateEducationRequest request) {
+                CreateEducationRequest ownRequest = new CreateEducationRequest(
+                                jwt.getSubject(),
+                                request.degreeLevel(),
+                                request.degreeId(),
+                                request.institution(),
+                                request.description(),
+                                request.startDate(),
+                                request.endDate());
+                Education created = educationService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(educationMapper.toResponse(created));
     }
 
@@ -130,9 +140,22 @@ public class EducationController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<EducationResponse> update(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de education") @PathVariable("id") String educationId,
             @Valid @RequestBody UpdateEducationRequest request) {
-        Education updated = educationService.update(educationId, request);
+        Education existing = educationService.getByEducationId(educationId);
+        AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
+
+        UpdateEducationRequest ownRequest = new UpdateEducationRequest(
+                jwt.getSubject(),
+                request.degreeLevel(),
+                request.degreeId(),
+                request.institution(),
+                request.description(),
+                request.startDate(),
+                request.endDate());
+
+        Education updated = educationService.update(educationId, ownRequest);
         return ResponseEntity.ok(educationMapper.toResponse(updated));
     }
 
