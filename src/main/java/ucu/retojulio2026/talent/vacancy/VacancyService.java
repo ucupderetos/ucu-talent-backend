@@ -45,4 +45,6 @@ public interface VacancyService {
     void finalizeExpiredVacancies();
 
     Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable);
+
+    Page<Vacancy> searchPublished(SearchCriteriaVacancyRequest criteria, Pageable pageable);
 }

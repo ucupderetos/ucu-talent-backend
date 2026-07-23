@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.vacancy.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.vacancy.Modality;
+import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 
 public record SearchCriteriaVacancyRequest(
 
@@ -22,6 +23,9 @@ public record SearchCriteriaVacancyRequest(
         Department location,
 
         @Schema(description = "Palabra clave, busca en nombre y descripcion", example = "Java")
-        String keyword
+        String keyword,
+
+        @Schema(description = "Estado del puesto", example = "PUBLICADO")
+        VacancyStatus status
 ) {
 }

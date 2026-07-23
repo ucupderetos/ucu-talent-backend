@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import ucu.retojulio2026.talent.vacancy.Vacancy;
+import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 
 /**
@@ -33,5 +34,13 @@ public class VacancyFilterResolverImpl {
         // Specification.allOf ya devuelve unrestricted() si la lista viene
         // vacia (ningun filtro aplico), no hace falta un chequeo manual.
         return Specification.allOf(aplicables);
+    }
+
+    // Fuerza estado PUBLICADO
+    public Specification<Vacancy> buildStudentSpecification(SearchCriteriaVacancyRequest criteria) {
+        Specification<Vacancy> base = buildSpecification(criteria);
+        Specification<Vacancy> soloPublicado =
+                (root, query, cb) -> cb.equal(root.get("status"), VacancyStatus.PUBLICADO);
+        return base.and(soloPublicado);
     }
 }

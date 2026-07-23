@@ -92,7 +92,7 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(vacancy));
     }
 
-    @Operation(summary = "Busqueda combinada de Puestos",
+    @Operation(summary = "Busqueda combinada de Puestos (ADMIN)",
             description = "Filtros combinables (AND): area, tipo de contrato, modalidad, localidad y "
                     + "keyword (busca en nombre y descripcion). Todos los filtros son opcionales.")
     @ApiResponses({
@@ -101,6 +101,7 @@ public class VacancyController {
     })
     @GetMapping("/search")
     public ResponseEntity<Page<VacancyResponse>> search(
+            @Parameter(description = "Estado") @RequestParam(required = false) VacancyStatus status,
             @Parameter(description = "Id del area (incluye subareas)") @RequestParam(required = false) String areaId,
             @Parameter(description = "Id de la carrera (se resuelve via su area)") @RequestParam(required = false) String degreeId,
             @Parameter(description = "Tipo de contrato") @RequestParam(required = false) String contractType,
@@ -113,10 +114,38 @@ public class VacancyController {
             @Parameter(description = "Tamaño de pagina") @RequestParam(required = false, defaultValue = "20") int size) {
 
         SearchCriteriaVacancyRequest criteria = new SearchCriteriaVacancyRequest(
-                areaId, degreeId, contractType, modality, location, keyword);
+                areaId, degreeId, contractType, modality, location, keyword, status);
         Sort sort = Sort.by(sortDirection, sortBy.propertyName());
         Page<VacancyResponse> response = vacancyService.search(criteria, PageRequest.of(page, size, sort))
                 .map(vacancyMapper::toResponse);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Busqueda combinada de Puestos",
+            description = "Filtros combinables (AND): area, tipo de contrato, modalidad, localidad y "
+                    + "keyword (busca en nombre y descripcion). Todos los filtros son opcionales.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
+    })
+    @GetMapping("student/search")
+    public ResponseEntity<Page<VacancyStudentResponse>> searchStudent(
+            @Parameter(description = "Id del area (incluye subareas)") @RequestParam(required = false) String areaId,
+            @Parameter(description = "Id de la carrera (se resuelve via su area)") @RequestParam(required = false) String degreeId,
+            @Parameter(description = "Tipo de contrato") @RequestParam(required = false) String contractType,
+            @Parameter(description = "Modalidad de trabajo") @RequestParam(required = false) Modality modality,
+            @Parameter(description = "Localidad (departamento)") @RequestParam(required = false) Department location,
+            @Parameter(description = "Palabra clave, busca en nombre y descripcion") @RequestParam(required = false) String keyword,
+            @Parameter(description = "Campo de orden") @RequestParam(required = false, defaultValue = "PUBLICATION_DATE") VacancySortField sortBy,
+            @Parameter(description = "Direccion del orden") @RequestParam(required = false, defaultValue = "DESC") Sort.Direction sortDirection,
+            @Parameter(description = "Numero de pagina (0-indexed)") @RequestParam(required = false, defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de pagina") @RequestParam(required = false, defaultValue = "20") int size) {
+
+        SearchCriteriaVacancyRequest criteria = new SearchCriteriaVacancyRequest(
+                areaId, degreeId, contractType, modality, location, keyword, null);
+        Sort sort = Sort.by(sortDirection, sortBy.propertyName());
+        Page<VacancyStudentResponse> response = vacancyService.searchPublished(criteria, PageRequest.of(page, size, sort))
+                .map(vacancyMapper::toStudentResponse);
         return ResponseEntity.ok(response);
     }
 
