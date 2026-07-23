@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t temp-image:ci-check .
 
-  # -- Continuos deployment DEV
+  # -- Continuous deployment DEV
 
   build-and-deploy-dev:
     name: Build, push y deploy a Cloud Run DEV
@@ -48,6 +48,8 @@ jobs:
     env:
       SERVICE: api-dev
       IMAGE: us-central1-docker.pkg.dev/reto-universitario-2026/ucutalent/backend-dev
+      TAG_FIJO: dev-${{ github.sha }}
+      TAG_FLOTANTE: dev
 
     steps:
       - uses: actions/checkout@v4
@@ -63,17 +65,22 @@ jobs:
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build de la imagen
-        run: docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
+        run: | 
+          docker build \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }} .
 
       - name: Push a Artifact Registry
-        run: docker push ${{ env.IMAGE }}:${{ github.sha }}
+        run: |
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }}
 
       - name: Deploy a Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}:${{ github.sha }}
+          image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
 
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
@@ -88,7 +95,7 @@ jobs:
 
           flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
 
-  # -- Continuos deployment PROD
+  # -- Continuous deployment PROD
 
   build-and-deploy-prod:
     name: Build, push y deploy a Cloud Run PROD
@@ -102,6 +109,8 @@ jobs:
     env:
       SERVICE: api-prod
       IMAGE: us-central1-docker.pkg.dev/reto-universitario-2026/ucutalent/backend-prod
+      TAG_FIJO: prod-${{ github.sha }}
+      TAG_FLOTANTE: prod
 
     steps:
       - uses: actions/checkout@v4
@@ -117,17 +126,22 @@ jobs:
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build de la imagen
-        run: docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
+        run: |
+          docker build \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} \
+           -t ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }} .
 
       - name: Push a Artifact Registry
-        run: docker push ${{ env.IMAGE }}:${{ github.sha }}
+        run: |
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          docker push ${{ env.IMAGE }}:${{ env.TAG_FLOTANTE }}
 
       - name: Deploy a Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}:${{ github.sha }}
+          image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
 
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
