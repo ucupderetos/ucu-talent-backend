@@ -89,16 +89,20 @@ public class VacancyApplicationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Obtener una postulación por id")
+    @Operation(summary = "Obtener una postulación por id (solo la empresa dueña de la vacante)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Postulación encontrada"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no es la empresa dueña de la vacante"),
             @ApiResponse(responseCode = "404", description = "No existe una postulación con ese id")
     })
     @GetMapping("/{id}")
     public ResponseEntity<VacancyApplicationResponse> getById(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de la postulación") @PathVariable String id) {
         VacancyApplication vacancyApplication = vacancyApplicationService.getById(id);
+        Vacancy vacancy = vacancyService.getVacancyById(vacancyApplication.getVacancyId());
+        AuthorizationGuard.requireOwnership(jwt, vacancy.getCompanyId());
         return ResponseEntity.ok(vacancyApplicationMapper.toResponse(vacancyApplication));
     }
 
