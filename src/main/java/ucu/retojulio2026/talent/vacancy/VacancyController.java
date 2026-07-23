@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -214,6 +215,7 @@ public class VacancyController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN"),
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/status-summary")
     public ResponseEntity<VacancyStatusSummaryResponse> getStatusSummary() {
         return ResponseEntity.ok(VacancyStatusSummaryResponse.from(vacancyService.countByStatusSummary()));
