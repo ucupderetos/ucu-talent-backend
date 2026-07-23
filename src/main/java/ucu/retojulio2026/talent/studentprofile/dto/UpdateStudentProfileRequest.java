@@ -18,6 +18,10 @@ public record UpdateStudentProfileRequest(
 
         @Schema(description = "Skills del alumno", example = "[\"Java\", \"Spring Boot\", \"SQL\"]")
         @NotEmpty(message = "El skills es obligatorio")
-        List<String> skills
+        List<String> skills,
+
+        @Schema(description = "Descripción del perfil del alumno",  example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
+        @NotBlank(message = "La descripción es obligatoria")
+        String description
 
 ) {}

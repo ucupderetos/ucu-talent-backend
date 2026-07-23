@@ -58,11 +58,7 @@ public class CompanyController {
     public ResponseEntity<CompanyResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateCompanyRequest request) {
-        // userId siempre sale del token, nunca del body (PK compartida: companyId == userId).
-        CreateCompanyRequest ownRequest = new CreateCompanyRequest(jwt.getSubject(), request.name(),
-                request.industry(), request.description(), request.webUrl(), request.linkedinUrl(),
-                request.location());
-        Company created = companyService.create(ownRequest);
+        Company created = companyService.create(jwt.getSubject(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 

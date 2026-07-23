@@ -47,8 +47,7 @@ public class DevAdminController {
     @Transactional
     public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody CreateDevAdminRequest request) {
         User admin = userService.createAdmin(request.email(), request.password());
-        adminService.create(new CreateAdminRequest(
-                admin.getUserId(), request.name(), request.surname()));
+        adminService.create(admin.getUserId(), new CreateAdminRequest(request.name(), request.surname()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(admin));
     }

@@ -9,8 +9,9 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 @Mapper(componentModel = "spring")
 public interface CompanyMapper {
 
-    @Mapping(target = "companyId", source = "userId")
-    Company toEntity(CreateCompanyRequest request);
+    // El id sale del JWT en el controller, nunca del body -- ver CompanyController.create().
+    @Mapping(target = "companyId", source = "id")
+    Company toEntity(String id, CreateCompanyRequest request);
 
     // status vive en User, no en Company (PK compartida) - se pasa aparte.
     @Mapping(target = "status", source = "status")

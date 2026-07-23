@@ -56,6 +56,8 @@ Controller: `user/UserController` · Tag: **Usuarios**
 
 **`UpdateUserStatusRequest`** (entrada)
 - `status` enum `AccountStatus` · `@NotNull` (solo `APROBADO` | `RECHAZADO`)
+- `adminComment` string? (opcional) — se guarda en `StudentProfile.adminComment`/`Company.adminComment`
+  según el rol del usuario (no aplica a `ADMIN`, no tiene perfil asociado)
 
 **`UserResponse`** (salida — nunca expone `passwordHash`)
 - `userId` · `email` · `role` (`Role`) · `status` (`AccountStatus`) · `registeredAt` (date)
@@ -66,8 +68,8 @@ Controller: `user/UserController` · Tag: **Usuarios**
 
 Controller: `studentprofile/StudentProfileController` · Tag: **Alumnos**
 
-Paso 2 del registro de un `ALUMNO`. `userId` en el body se ignora siempre — se deriva del
-token.
+Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no hay campo
+`userId` en el body de creación).
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
@@ -75,25 +77,24 @@ token.
 | 2 | GET | `/student-profile` | Listar todos los perfiles | 🔒 Autenticado | — | `List<StudentProfileResponse>` | `200` | — |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
 | 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `404` no existe |
-| 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn y skills por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 6 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 | 7 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
-**`CreateStudentProfileRequest`** (entrada — `userId` se ignora, sale del token)
-- `userId` string · `@NotBlank` (decorativo, ver arriba)
+**`CreateStudentProfileRequest`** (entrada — sin `userId`, el id sale del token)
 - `name` string · `@NotBlank` · `surname` string · `@NotBlank`
 - `documentType` enum `DocumentType` · `@NotNull`
 - `documentNumber` string · `@NotBlank`
 - `phoneNumber` string? (opcional) · `linkedinUrl` string? (opcional)
-- `skills` `string[]?` (opcional)
+- `skills` `string[]?` (opcional) · `description` string? (opcional)
 
-**`UpdateStudentProfileRequest`** (entrada — solo estos 3 campos, todos obligatorios)
-- `phoneNumber` string · `@NotBlank` · `linkedinUrl` string · `@NotBlank` · `skills` `string[]` · `@NotEmpty`
+**`UpdateStudentProfileRequest`** (entrada — 4 campos, todos obligatorios)
+- `phoneNumber` string · `@NotBlank` · `linkedinUrl` string · `@NotBlank` · `skills` `string[]` · `@NotEmpty` · `description` string · `@NotBlank`
 
 **`StudentProfileResponse`** (salida — no expone `userId`, la PK ya lo es)
-- `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber` · `phoneNumber` · `linkedinUrl` · `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño)
+- `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber` · `phoneNumber` · `linkedinUrl` · `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt` (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
 
 **`StudentProfileStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `ALUMNO`)
@@ -117,8 +118,8 @@ Controller: `company/CompanyController` · Tag: **Empresas**
 
 ### Schemas
 
-**`CreateCompanyRequest`** (entrada — `userId` se ignora, sale del token)
-- `userId` `@NotBlank` (decorativo) · `name` `@NotBlank` (razón social)
+**`CreateCompanyRequest`** (entrada — sin `userId`, el id sale del token)
+- `name` `@NotBlank` (razón social)
 - `industry` `@NotBlank` · `description` `@NotBlank` · `webUrl` `@NotBlank` · `linkedinUrl` `@NotBlank`
 - `location` enum `Department` · `@NotNull`
 
@@ -126,7 +127,7 @@ Controller: `company/CompanyController` · Tag: **Empresas**
 - `name` `@NotBlank` · `industry` `@NotBlank` · `description` `@NotBlank` · `webUrl` `@NotBlank` · `linkedinUrl` `@NotBlank` · `location` `Department` `@NotNull`
 
 **`CompanyResponse`** (salida — no expone `userId`)
-- `companyId` (= `userId`) · `name` · `industry` · `description` · `webUrl` · `linkedinUrl` · `location` (`Department`) · `status` (`AccountStatus`, del `User` dueño)
+- `companyId` (= `userId`) · `name` · `industry` · `description` · `webUrl` · `linkedinUrl` · `location` (`Department`) · `status` (`AccountStatus`, del `User` dueño) · `reviewedAt` (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
 
 **`CompanyStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `EMPRESA`)
@@ -151,8 +152,8 @@ Perfil del `ADMIN` (PK compartida con `User`, mismo patrón que `StudentProfile`
 
 ### Schemas
 
-**`CreateAdminRequest`** (entrada — `userId` se ignora, sale del token)
-- `userId` `@NotBlank` (decorativo) · `name` `@NotBlank` · `surname` `@NotBlank`
+**`CreateAdminRequest`** (entrada — sin `userId`, el id sale del token)
+- `name` `@NotBlank` · `surname` `@NotBlank`
 
 **`UpdateAdminRequest`** (entrada — no incluye `userId`)
 - `name` `@NotBlank` · `surname` `@NotBlank`
@@ -251,10 +252,11 @@ Controller: `degree/DegreeController` · Tag: **Carreras**
 | 1 | POST | `/degree` | Crear una carrera | ⚠️ Sin restricción | `CreateDegreeRequest`            | `DegreeResponse` | `201` | `400` datos inválidos |
 | 2 | GET | `/degree/{id}` | Obtener carrera por id | 🔒 Autenticado | — (path `id`)                    | `DegreeResponse` | `200` | `404` |
 | 3 | GET | `/degree` | Listar todas las carreras | 🔒 Autenticado | —                                | `List<DegreeResponse>` | `200` | — |
-| 4 | GET | `/degree?name={name}` | Buscar por nombre exacto | 🔒 Autenticado | — (query `name`: `@NotBlank`)    | `DegreeResponse` | `200` | `400` · `404` no existe |
-| 5 | GET | `/degree?areaId={areaId}` | Listar por area | 🔒 Autenticado | — (query La`areaId`: `@NotBlank`) | `List<DegreeResponse>` | `200` | `400` |
-| 6 | PUT | `/degree/{id}` | Actualizar carrera por id | ⚠️ Sin restricción | `UpdateDegreeRequest`            | `DegreeResponse` | `200` | `400` · `404` no existe |
-| 7 | DELETE | `/degree/{id}` | Eliminar carrera por id | ⚠️ Sin restricción | — (path `id`)                    | — (vacío) | `204` | `404` |
+| 4 | GET | `/degree?areaId={areaId}` | Listar por area | 🔒 Autenticado | — (query La`areaId`: `@NotBlank`) | `List<DegreeResponse>` | `200` | `400` |
+| 5 | PUT | `/degree/{id}` | Actualizar carrera por id | ⚠️ Sin restricción | `UpdateDegreeRequest`            | `DegreeResponse` | `200` | `400` · `404` no existe |
+| 6 | DELETE | `/degree/{id}` | Eliminar carrera por id | ⚠️ Sin restricción | — (path `id`)                    | — (vacío) | `204` | `404` |
+
+> `name` se normaliza en `create`/`update` (trim + primera letra en mayúscula). No es único.
 
 ### Schemas
 

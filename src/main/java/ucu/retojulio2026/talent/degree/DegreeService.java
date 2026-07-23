@@ -11,8 +11,6 @@ public interface DegreeService {
 
     Degree getById(String id);
 
-    Degree getByName(String name);
-
     List<Degree> getAll();
 
     List<Degree> getByAreaId(String areaId);

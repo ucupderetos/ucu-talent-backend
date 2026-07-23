@@ -58,11 +58,7 @@ public class StudentProfileController {
     public ResponseEntity<StudentProfileResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateStudentProfileRequest request) {
-
-        CreateStudentProfileRequest ownRequest = new CreateStudentProfileRequest(jwt.getSubject(),
-                request.name(), request.surname(), request.documentType(), request.documentNumber(),
-                request.phoneNumber(), request.linkedinUrl(), request.skills());
-        StudentProfile created = studentProfileService.create(ownRequest);
+        StudentProfile created = studentProfileService.create(jwt.getSubject(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
 

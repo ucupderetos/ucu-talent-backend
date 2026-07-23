@@ -16,7 +16,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
-import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UpdateUserStatusRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
@@ -31,14 +30,14 @@ public class UserController {
 
     private final UserService userService;
     private final UserRegistrationService userRegistrationService;
-    private final UserDeletionService userDeletionService;
+    private final AccountFacade accountFacade;
     private final UserMapper userMapper;
 
     public UserController(UserService userService, UserRegistrationService userRegistrationService,
-            UserDeletionService userDeletionService, UserMapper userMapper) {
+            AccountFacade accountFacade, UserMapper userMapper) {
         this.userService = userService;
         this.userRegistrationService = userRegistrationService;
-        this.userDeletionService = userDeletionService;
+        this.accountFacade = accountFacade;
         this.userMapper = userMapper;
     }
 
@@ -124,7 +123,7 @@ public class UserController {
     public ResponseEntity<UserResponse> updateStatus(
             @Parameter(description = "Id del usuario") @PathVariable String id,
             @Valid @RequestBody UpdateUserStatusRequest request) {
-        userService.updateStatus(id, request.status());
+        accountFacade.reviewAccount(id, request.status(), request.adminComment());
         User updated = userService.getById(id);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }
@@ -143,7 +142,7 @@ public class UserController {
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id del usuario") @PathVariable String id) {
         AuthorizationGuard.requireOwnership(jwt, id);
-        userDeletionService.delete(id);
+        accountFacade.deleteAccount(id);
         return ResponseEntity.noContent().build();
     }
 

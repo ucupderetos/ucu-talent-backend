@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.user.AccountStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record StudentProfileResponse(
@@ -33,5 +34,15 @@ public record StudentProfileResponse(
         List<String> skills,
 
         @Schema(description = "Estado de la cuenta", example = "APROBADO")
-        AccountStatus status
+        AccountStatus status,
+
+        @Schema(description = "Descripción del perfil del alumno",  example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
+        String description,
+
+        @Schema(description = "Fecha de aprobación/rechazo del ADMIN")
+        LocalDateTime reviewedAt,
+
+        @Schema(description = "Comentario del ADMIN sobre aprobación o rechazo de cuenta", example = "Aprobado")
+        String  adminComment
+
 ) {}

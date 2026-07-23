@@ -85,23 +85,6 @@ public class DegreeController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Buscar una carrera por nombre")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Carrera encontrada"),
-            @ApiResponse(responseCode = "400", description = "El nombre es invalido"),
-            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
-            @ApiResponse(responseCode = "404", description = "No existe una carrera con ese nombre")
-    })
-    @GetMapping(params = "name")
-    public ResponseEntity<DegreeResponse> getByName(
-            @Parameter(description = "Nombre exacto de la carrera", example = "Licenciatura en Informatica")
-            @RequestParam
-            @NotBlank(message = "El nombre es obligatorio")
-            String name) {
-        Degree degree = degreeService.getByName(name);
-        return ResponseEntity.ok(degreeMapper.toResponse(degree));
-    }
-
     @Operation(summary = "Listar carreras por areaId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),

@@ -11,8 +11,10 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
 import ucu.retojulio2026.talent.user.UserService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class StudentProfileServiceImpl implements StudentProfileService {
@@ -29,14 +31,15 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     }
 
     @Override
-    public StudentProfile create(CreateStudentProfileRequest request) {
-        if (!userService.existsById(request.userId())) {
-            throw new ResourceNotFoundException("User con id '" + request.userId() + "' no encontrado");
+    public StudentProfile create(String id, CreateStudentProfileRequest request) {
+        if (!userService.existsById(id)) {
+            throw new ResourceNotFoundException("User con id '" + id + "' no encontrado");
         }
-        if (studentProfileRepository.existsById(request.userId())) {
-            throw new DuplicateResourceException("El usuario '" + request.userId() + "' ya tiene un perfil de alumno asociado");
+        if (studentProfileRepository.existsById(id)) {
+            throw new DuplicateResourceException("El usuario '" + id + "' ya tiene un perfil de alumno asociado");
         }
-        StudentProfile studentProfile = studentProfileMapper.toEntity(request);
+        StudentProfile studentProfile = studentProfileMapper.toEntity(id, request);
+        studentProfile.setSkills(normalizeSkills(studentProfile.getSkills()));
         return studentProfileRepository.save(studentProfile);
     }
 
@@ -45,8 +48,22 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         StudentProfile studentProfile = getById(id);
         studentProfile.setPhoneNumber(request.phoneNumber());
         studentProfile.setLinkedinUrl(request.linkedinUrl());
-        studentProfile.setSkills(request.skills());
+        studentProfile.setSkills(normalizeSkills(request.skills()));
+        studentProfile.setDescription(request.description());
         return studentProfileRepository.save(studentProfile);
+    }
+
+    private List<String> normalizeSkills(List<String> skills) {
+        if (skills == null) {
+            return List.of();
+        }
+        return skills.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .filter(skill -> !skill.isBlank())
+                .distinct()
+                .toList();
     }
 
     @Override
@@ -59,7 +76,6 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     public List<StudentProfile> getAll() {
         return studentProfileRepository.findAll();
     }
-
 
     @Override
     public void delete(String id) {
@@ -78,4 +94,13 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     public Map<AccountStatus, Long> getStatusSummary() {
         return userService.countByRoleGroupedByStatus(Role.ALUMNO);
     }
+
+    @Override
+    public void review(String id, LocalDateTime reviewedAt, String adminComment) {
+        StudentProfile studentProfile = getById(id);
+        studentProfile.setReviewedAt(reviewedAt);
+        studentProfile.setAdminComment(adminComment);
+        studentProfileRepository.save(studentProfile);
+    }
+
 }

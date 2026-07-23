@@ -6,6 +6,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import ucu.retojulio2026.talent.common.DocumentType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 //Lombok para no tener que generar los Getters, Setters y Constructores básicos.
@@ -45,5 +46,14 @@ public class StudentProfile {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "skills", columnDefinition = "jsonb")
     private List<String> skills;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @Column(name = "admin_comment")
+    private String adminComment;
 
 }

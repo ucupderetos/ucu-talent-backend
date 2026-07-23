@@ -11,8 +11,9 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 public interface StudentProfileMapper {
 
     // PK compartida: studentProfileId siempre es el mismo valor que userId (no se genera aparte).
-    @Mapping(target = "studentProfileId", source = "userId")
-    StudentProfile toEntity(CreateStudentProfileRequest request);
+    // El id sale del JWT en el controller, nunca del body -- ver StudentProfileController.create().
+    @Mapping(target = "studentProfileId", source = "id")
+    StudentProfile toEntity(String id, CreateStudentProfileRequest request);
 
     // status vive en User, no en StudentProfile (PK compartida) - se pasa aparte.
     @Mapping(target = "status", source = "status")

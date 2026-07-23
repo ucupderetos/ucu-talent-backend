@@ -7,10 +7,6 @@ import ucu.retojulio2026.talent.common.Department;
 
 public record CreateCompanyRequest(
 
-        @Schema(description = "Id del usuario dueño de la empresa (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")
-        @NotBlank(message = "El userId es obligatorio")
-        String userId,
-
         @Schema(description = "Razon social de la empresa", example = "ACME S.A.")
         @NotBlank(message = "La razon social es obligatoria")
         String name,
