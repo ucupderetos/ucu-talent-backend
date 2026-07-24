@@ -23,5 +23,7 @@ public interface VacancyApplicationService {
 
     VacancyApplication update(String id, VacancyApplicationStatus status);
 
+    VacancyApplication accept(String id);
+
     void delete(String id);
 }

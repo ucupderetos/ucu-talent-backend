@@ -4,11 +4,10 @@ import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus;
 
 import java.time.LocalDate;
 
-public record VacancyApplicationResponse(
+public record VacancyApplicationStudentResponse(
         String vacancyApplicationId,
         String vacancyId,
         String studentProfileId,
         VacancyApplicationStatus status,
-        LocalDate appliedAt,
-        boolean accepted
+        LocalDate appliedAt
 ) {}

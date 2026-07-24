@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,7 @@ import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationR
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStatusSummaryResponse;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.UpdateVacancyApplicationRequest;
 
 import java.util.List;
@@ -80,11 +82,11 @@ public class VacancyApplicationController {
             @ApiResponse(responseCode = "403", description = "El usuario autenticado no es ALUMNO")
     })
     @GetMapping("/me")
-    public ResponseEntity<List<VacancyApplicationResponse>> getMyApplications(
+    public ResponseEntity<List<VacancyApplicationStudentResponse>> getMyApplications(
             @AuthenticationPrincipal Jwt jwt) {
-        List<VacancyApplicationResponse> response = vacancyApplicationService.getByStudentProfileId(jwt.getSubject())
+        List<VacancyApplicationStudentResponse> response = vacancyApplicationService.getByStudentProfileId(jwt.getSubject())
                 .stream()
-                .map(vacancyApplicationMapper::toResponse)
+                .map(vacancyApplicationMapper::toStudentResponse)
                 .toList();
         return ResponseEntity.ok(response);
     }
@@ -218,6 +220,24 @@ public class VacancyApplicationController {
         AuthorizationGuard.requireOwnership(jwt, vacancy.getCompanyId());
         VacancyApplication updated = vacancyApplicationService.update(id, request.status());
         return ResponseEntity.ok(vacancyApplicationMapper.toResponse(updated));
+    }
+
+    @Operation(summary = "Marcar una postulación como aceptada para seguir en el proceso de selección (solo la empresa dueña de la vacante)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Postulación marcada como aceptada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "Usuario autenticado no es la empresa dueña de la vacante"),
+            @ApiResponse(responseCode = "404", description = "No existe una postulación con ese id")
+    })
+    @PatchMapping("/{id}/accept")
+    public ResponseEntity<VacancyApplicationResponse> accept(
+            @AuthenticationPrincipal Jwt jwt,
+            @Parameter(description = "Id de la postulación") @PathVariable String id) {
+        VacancyApplication application = vacancyApplicationService.getById(id);
+        Vacancy vacancy = vacancyService.getVacancyById(application.getVacancyId());
+        AuthorizationGuard.requireOwnership(jwt, vacancy.getCompanyId());
+        VacancyApplication accepted = vacancyApplicationService.accept(id);
+        return ResponseEntity.ok(vacancyApplicationMapper.toResponse(accepted));
     }
 
     // ===== DELETE =====
