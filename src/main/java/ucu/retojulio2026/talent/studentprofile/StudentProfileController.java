@@ -64,8 +64,13 @@ public class StudentProfileController {
 
     // ===== READ =====
 
-    @Operation(summary = "Listar todos los perfiles de alumno")
-    @ApiResponse(responseCode = "200", description = "Listado obtenido")
+    @Operation(summary = "Listar todos los perfiles de alumno (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<StudentProfileResponse>> getAll() {
         List<StudentProfileResponse> response = studentProfileService.getAll()

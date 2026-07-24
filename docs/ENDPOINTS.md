@@ -74,7 +74,7 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` · `409` ya tiene perfil |
-| 2 | GET | `/student-profile` | Listar todos los perfiles | 🔒 Autenticado | — | `List<StudentProfileResponse>` | `200` | — |
+| 2 | GET | `/student-profile` | Listar todos los perfiles | 🔒 rol `ADMIN` | — | `List<StudentProfileResponse>` | `200` | `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
 | 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `404` no existe |
 | 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
@@ -144,7 +144,7 @@ Perfil del `ADMIN` (PK compartida con `User`, mismo patrón que `StudentProfile`
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/admin` | Crear el admin del usuario logueado | 🔒 rol `ADMIN` | `CreateAdminRequest` | `AdminResponse` | `201` | `400` · `403` rol incorrecto · `409` ya tiene admin |
-| 2 | GET | `/admin` | Listar todos los admins | 🔒 Autenticado | — | `List<AdminResponse>` | `200` | — |
+| 2 | GET | `/admin` | Listar todos los admins | 🔒 rol `ADMIN` | — | `List<AdminResponse>` | `200` | `403` no es ADMIN |
 | 3 | GET | `/admin/{id}` | Obtener admin por id | 🔒 Autenticado | — (path `id`) | `AdminResponse` | `200` | `404` |
 | 4 | GET | `/admin?userId={userId}` | Admin de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `AdminResponse` | `200` | `400` · `404` no existe |
 | 5 | PUT | `/admin/{id}` | Actualizar admin por id | 🔒 + dueño | `UpdateAdminRequest` | `AdminResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
