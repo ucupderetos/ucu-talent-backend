@@ -175,8 +175,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
+                        // Listado de admins: expone todos los admins, solo ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/admin").hasRole("ADMIN")
                         // Listado de usuarios: expone todos los emails, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
+                        // Listado de alumnos: expone datos personales (documento, telefono) de todos, solo ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/student-profile").hasRole("ADMIN")
                         // Aprobar/rechazar cuenta: solo ADMIN.
                         .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
