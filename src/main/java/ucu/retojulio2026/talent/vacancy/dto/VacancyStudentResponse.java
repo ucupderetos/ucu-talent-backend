@@ -24,6 +24,9 @@ public record VacancyStudentResponse(
         @Schema(description = "Fecha de cierre del puesto", example = "2026-08-15")
         LocalDate closingDate,
 
+        @Schema(description = "Fecha de actualización", example = "2026-07-16T16:45:00")
+        LocalDateTime updatedAt,
+
         @Schema(description = "Fecha de creación", example = "2026-07-16T14:30:15")
         LocalDateTime createdAt,
 

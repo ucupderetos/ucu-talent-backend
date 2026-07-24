@@ -30,6 +30,15 @@ public record VacancyResponse (
         @Schema(description = "Fecha de revisión", example = "2026-07-16T16:45:00")
         LocalDateTime reviewedAt,
 
+        @Schema(description = "Fecha de actualización", example = "2026-07-16T16:45:00")
+        LocalDateTime updatedAt,
+
+        @Schema(description = "Fecha de eliminación", example = "2026-07-16T16:45:00")
+        LocalDateTime deletedAt,
+
+        @Schema(description = "Eliminación", example = "true")
+        boolean deleted,
+
         @Schema(description = "Comentario del administrador", example = "Comentario o null")
         String adminComment,
 

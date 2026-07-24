@@ -41,6 +41,15 @@ public class Vacancy {
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted_at", updatable = true, nullable = true)
+    private LocalDateTime deletedAt;
+
+    @Column(name = "updated_at", updatable = true, nullable = true)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted", updatable = true, nullable = false)
+    private boolean deleted = false;
+
     @Column(name = "reviewed_at", updatable = true, nullable = true)
     private LocalDateTime reviewedAt;
 

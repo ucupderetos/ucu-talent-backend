@@ -223,17 +223,25 @@ public class VacancyServiceImpl implements VacancyService {
             );
         }
 
+        existing.setUpdatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
+
         return vacancyRepository.save(existing);
     }
 
     @Override
     @Transactional
     public void deleteVacancy(String id) {
-
         Vacancy existing = vacancyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
-
-        vacancyRepository.deleteById(id);
+        if (existing.getStatus().equals(VacancyStatus.FINALIZADO)) {
+            throw new ForbiddenOperationException(
+                    "No puedes borrar un puesto finalizado."
+            );
+        }
+        existing.setDeletedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
+        existing.setStatus(VacancyStatus.FINALIZADO);
+        existing.setDeleted(true);
+        vacancyRepository.save(existing);
     }
 
     @Override
@@ -250,11 +258,6 @@ public class VacancyServiceImpl implements VacancyService {
         if (existing.getStatus() == VacancyStatus.FINALIZADO) {
             throw new ForbiddenOperationException(
                     "El Puesto ya finalizó."
-            );
-        }
-        if (existing.getStatus() == VacancyStatus.PENDIENTE) {
-            throw new ForbiddenOperationException(
-                    "El Puesto está en revisión."
             );
         }
         existing.setReviewedBy(adminId);
@@ -280,6 +283,8 @@ public class VacancyServiceImpl implements VacancyService {
                     "El Puesto está en revisión."
             );
         }
+        // El Updated solo cuando es la misma compañia que cambia algo en su Puesto.
+        existing.setUpdatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
         existing.setStatus(request.status());
 
         return vacancyRepository.save(existing);

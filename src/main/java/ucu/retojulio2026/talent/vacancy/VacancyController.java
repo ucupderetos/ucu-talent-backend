@@ -111,10 +111,12 @@ public class VacancyController {
             @Parameter(description = "Campo de orden") @RequestParam(required = false, defaultValue = "PUBLICATION_DATE") VacancySortField sortBy,
             @Parameter(description = "Direccion del orden") @RequestParam(required = false, defaultValue = "DESC") Sort.Direction sortDirection,
             @Parameter(description = "Numero de pagina (0-indexed)") @RequestParam(required = false, defaultValue = "0") int page,
-            @Parameter(description = "Tamaño de pagina") @RequestParam(required = false, defaultValue = "20") int size) {
+            @Parameter(description = "Tamaño de pagina") @RequestParam(required = false, defaultValue = "20") int size,
+            @Parameter(description = "Eliminado") @RequestParam(required = false) Boolean deleted)
+        {
 
         SearchCriteriaVacancyRequest criteria = new SearchCriteriaVacancyRequest(
-                areaId, degreeId, contractType, modality, location, keyword, status);
+                areaId, degreeId, contractType, modality, location, keyword, status, deleted);
         Sort sort = Sort.by(sortDirection, sortBy.propertyName());
         Page<VacancyResponse> response = vacancyService.search(criteria, PageRequest.of(page, size, sort))
                 .map(vacancyMapper::toResponse);
@@ -142,7 +144,7 @@ public class VacancyController {
             @Parameter(description = "Tamaño de pagina") @RequestParam(required = false, defaultValue = "20") int size) {
 
         SearchCriteriaVacancyRequest criteria = new SearchCriteriaVacancyRequest(
-                areaId, degreeId, contractType, modality, location, keyword, null);
+                areaId, degreeId, contractType, modality, location, keyword, null, false);
         Sort sort = Sort.by(sortDirection, sortBy.propertyName());
         Page<VacancyStudentResponse> response = vacancyService.searchPublished(criteria, PageRequest.of(page, size, sort))
                 .map(vacancyMapper::toStudentResponse);
@@ -271,6 +273,13 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 
+    @Operation(summary = "Actualizar Estado del Puesto")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Puesto actualizado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "La empresa ya no esta aprobada"),
+            @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
+    })
     @PatchMapping("status/{id}")
     public ResponseEntity<VacancyResponse> updateVacancyStatusCompany(
             @AuthenticationPrincipal Jwt jwt, // Version NO ADMIN
@@ -282,6 +291,13 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
 
+    @Operation(summary = "Actualizar Estado del Puesto (ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Puesto actualizado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "La empresa ya no esta aprobada"),
+            @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
+    })
     @PutMapping("status/{id}")
     public ResponseEntity<VacancyResponse> updateVacancyStatus(
             @AuthenticationPrincipal Jwt jwt, // Version ADMIN

@@ -1,0 +1,4 @@
+ALTER TABLE "vacancy"
+    ADD COLUMN deleted_at TIMESTAMP,
+    ADD COLUMN updated_at TIMESTAMP,
+    ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT FALSE;
