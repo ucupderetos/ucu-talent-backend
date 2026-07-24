@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
+import ucu.retojulio2026.talent.common.DocumentNormalizer;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.AccountStatus;
@@ -38,7 +39,13 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         if (studentProfileRepository.existsById(id)) {
             throw new DuplicateResourceException("El usuario '" + id + "' ya tiene un perfil de alumno asociado");
         }
+
+        String normalizedDocumentNumber = DocumentNormalizer.normalize(request.documentNumber());
+        if (studentProfileRepository.existsByDocumentTypeAndDocumentNumber(request.documentType(), normalizedDocumentNumber)) {
+            throw new DuplicateResourceException("Ya existe un alumno con ese tipo y numero de documento");
+        }
         StudentProfile studentProfile = studentProfileMapper.toEntity(id, request);
+        studentProfile.setDocumentNumber(normalizedDocumentNumber);
         studentProfile.setSkills(normalizeSkills(studentProfile.getSkills()));
         return studentProfileRepository.save(studentProfile);
     }

@@ -3,8 +3,11 @@ package ucu.retojulio2026.talent.universityregistry.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import ucu.retojulio2026.talent.common.DocumentBearer;
 import ucu.retojulio2026.talent.common.DocumentType;
+import ucu.retojulio2026.talent.common.validation.ValidDocumentNumber;
 
+@ValidDocumentNumber
 public record UpdateUniversityRegistryRequest(
 
         @Schema(description = "Tipo de documento", example = "CEDULA_IDENTIDAD")
@@ -23,4 +26,4 @@ public record UpdateUniversityRegistryRequest(
         @NotBlank(message = "El apellido es obligatorio")
         String surname
 
-) {}
+) implements DocumentBearer {}
