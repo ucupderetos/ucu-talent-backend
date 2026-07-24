@@ -9,5 +9,4 @@ class TalentApplicationTests {
 	/*@Test
 	void contextLoads() {
 	}*/
-
 }
