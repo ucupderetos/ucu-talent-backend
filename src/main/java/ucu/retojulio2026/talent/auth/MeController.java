@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ucu.retojulio2026.talent.auth.dto.MeResponse;
+import ucu.retojulio2026.talent.user.AccountFacade;
 import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 
@@ -21,9 +22,11 @@ import ucu.retojulio2026.talent.user.UserService;
 public class MeController {
 
     private final UserService userService;
+    private final AccountFacade accountFacade;
 
-    public MeController(UserService userService) {
+    public MeController(UserService userService, AccountFacade accountFacade) {
         this.userService = userService;
+        this.accountFacade = accountFacade;
     }
 
     @Operation(summary = "Datos del usuario logueado (hidrata la sesion en el front)")
@@ -35,13 +38,15 @@ public class MeController {
     public ResponseEntity<MeResponse> me(@AuthenticationPrincipal Jwt jwt) {
 
         User user = userService.getById(jwt.getSubject());
+        Boolean hasProfile = accountFacade.hasProfile(jwt.getSubject());
 
         MeResponse response = new MeResponse(
                 user.getUserId(),
                 user.getEmail(),
                 user.getRole(),
                 user.getStatus(),
-                user.getRegisteredAt()
+                user.getRegisteredAt(),
+                hasProfile
         );
 
         return ResponseEntity.ok(response);

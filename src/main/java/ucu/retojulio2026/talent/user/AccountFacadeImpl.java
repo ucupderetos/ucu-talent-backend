@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.user;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ucu.retojulio2026.talent.admin.AdminService;
 import ucu.retojulio2026.talent.common.UruguayClock;
 import ucu.retojulio2026.talent.company.CompanyDeletionService;
 import ucu.retojulio2026.talent.company.CompanyService;
@@ -23,18 +24,21 @@ public class AccountFacadeImpl implements AccountFacade {
     private final StudentProfileService studentProfileService;
     private final CompanyService companyService;
     private final CompanyDeletionService companyDeletionService;
+    private final AdminService adminService;
     private final EducationService educationService;
     private final WorkExperienceService workExperienceService;
     private final VacancyApplicationService vacancyApplicationService;
 
     public AccountFacadeImpl(UserService userService, StudentProfileService studentProfileService,
             CompanyService companyService, CompanyDeletionService companyDeletionService,
-            EducationService educationService, WorkExperienceService workExperienceService,
+            AdminService adminService, EducationService educationService,
+            WorkExperienceService workExperienceService,
             VacancyApplicationService vacancyApplicationService) {
         this.userService = userService;
         this.studentProfileService = studentProfileService;
         this.companyService = companyService;
         this.companyDeletionService = companyDeletionService;
+        this.adminService = adminService;
         this.educationService = educationService;
         this.workExperienceService = workExperienceService;
         this.vacancyApplicationService = vacancyApplicationService;
@@ -70,6 +74,16 @@ public class AccountFacadeImpl implements AccountFacade {
                 break;
             }
         }
+    }
+
+    @Override
+    public boolean hasProfile(String userId) {
+        User user = userService.getById(userId);
+        return switch (user.getRole()) {
+            case ALUMNO -> studentProfileService.existsById(userId);
+            case EMPRESA -> companyService.existsById(userId);
+            case ADMIN -> adminService.existsById(userId);
+        };
     }
 
     private void deleteStudentProfileCascade(String studentProfileId) {

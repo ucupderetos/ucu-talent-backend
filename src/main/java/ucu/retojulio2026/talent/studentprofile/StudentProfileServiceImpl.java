@@ -103,4 +103,11 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         studentProfileRepository.save(studentProfile);
     }
 
+    @Override
+    public boolean hasProfile(String id) {
+        return studentProfileRepository.existsById(id);
+    }
+
+
+
 }
