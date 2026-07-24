@@ -1,10 +1,12 @@
 package ucu.retojulio2026.talent.mail;
 
-import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus;
-
 public interface MailService {
 
     void sendCompanyNewApplicationEmail(String companyEmail, String applicantName, String vacancyName);
 
-    void sendApplicantStatusChangedEmail(String applicantEmail, String vacancyName, VacancyApplicationStatus newStatus);
+    void sendApplicationVistoEmail(String applicantEmail, String studentName, String vacancyName);
+
+    void sendVacancyClosedEmail(String applicantEmail, String studentName, String vacancyName);
+
+    void sendVacancySelectedEmail(String applicantEmail, String studentName, String vacancyName, String companyName);
 }
