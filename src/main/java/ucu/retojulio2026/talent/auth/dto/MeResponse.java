@@ -20,5 +20,8 @@ public record MeResponse(
         AccountStatus status,
 
         @Schema(description = "Fecha de alta del usuario", example = "2026-07-15")
-        LocalDate registeredAt
+        LocalDate registeredAt,
+
+        @Schema(description = "Si ya existe el perfil (StudentProfile/Company/Admin) del paso 2 del registro.", example = "true")
+        Boolean hasProfile
 ) {}
