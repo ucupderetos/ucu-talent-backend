@@ -1,14 +1,15 @@
 package ucu.retojulio2026.talent.mail;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus;
 
 @Service
 public class MailServiceImpl implements MailService {
@@ -16,58 +17,70 @@ public class MailServiceImpl implements MailService {
 
     private final JavaMailSender mailSender;
     private final MailValidator mailValidator;
+    private final MailTemplateService mailTemplateService;
 
     @Value("${spring.mail.username:}")
     private String mailFrom;
 
-    public MailServiceImpl(ObjectProvider<JavaMailSender> mailSenderProvider, MailValidator mailValidator) {
+    public MailServiceImpl(ObjectProvider<JavaMailSender> mailSenderProvider, MailValidator mailValidator,
+                            MailTemplateService mailTemplateService) {
         this.mailSender = mailSenderProvider.getIfAvailable();
         this.mailValidator = mailValidator;
+        this.mailTemplateService = mailTemplateService;
     }
 
     @Async("taskExecutor")
     @Override
     public void sendCompanyNewApplicationEmail(String companyEmail, String applicantName, String vacancyName) {
-        if (mailSender == null) {
-            log.warn("SMTP no configurado: se omite correo de nueva postulación a {}", companyEmail);
-            return;
-        }
-
-        String normalizedCompanyEmail = mailValidator.normalize(companyEmail);
-        mailValidator.validateOrThrow(normalizedCompanyEmail);
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            setFromIfConfigured(message);
-            message.setTo(normalizedCompanyEmail);
-            message.setSubject("Nueva postulación recibida");
-            message.setText(buildCompanyNewApplicationBody(applicantName, vacancyName));
-            mailSender.send(message);
-            log.info("Correo de nueva postulación enviado a {}", normalizedCompanyEmail);
-        } catch (Exception e) {
-            throw new RuntimeException("Error al enviar correo de nueva postulación", e);
-        }
+        sendTemplated(MailTemplateCode.NEW_APPLICATION, companyEmail, Map.of(
+                "applicantName", applicantName,
+                "vacancyName", vacancyName));
     }
 
     @Async("taskExecutor")
     @Override
-    public void sendApplicantStatusChangedEmail(String applicantEmail, String vacancyName, VacancyApplicationStatus newStatus) {
+    public void sendApplicationVistoEmail(String applicantEmail, String studentName, String vacancyName) {
+        sendTemplated(MailTemplateCode.APPLICATION_VISTO, applicantEmail, Map.of(
+                "studentName", studentName,
+                "vacancyName", vacancyName));
+    }
+
+    @Async("taskExecutor")
+    @Override
+    public void sendVacancyClosedEmail(String applicantEmail, String studentName, String vacancyName) {
+        sendTemplated(MailTemplateCode.VACANCY_CLOSED, applicantEmail, Map.of(
+                "studentName", studentName,
+                "vacancyName", vacancyName));
+    }
+
+    @Async("taskExecutor")
+    @Override
+    public void sendVacancySelectedEmail(String applicantEmail, String studentName, String vacancyName, String companyName) {
+        sendTemplated(MailTemplateCode.VACANCY_SELECTED, applicantEmail, Map.of(
+                "studentName", studentName,
+                "vacancyName", vacancyName,
+                "companyName", companyName));
+    }
+
+    private void sendTemplated(MailTemplateCode code, String to, Map<String, String> variables) {
         if (mailSender == null) {
-            log.warn("SMTP no configurado: se omite correo de cambio de estado a {}", applicantEmail);
+            log.warn("SMTP no configurado: se omite correo '{}' a {}", code, to);
             return;
         }
 
-        String normalizedApplicantEmail = mailValidator.normalize(applicantEmail);
-        mailValidator.validateOrThrow(normalizedApplicantEmail);
+        String normalizedTo = mailValidator.normalize(to);
+        mailValidator.validateOrThrow(normalizedTo);
         try {
+            MailTemplateService.RenderedMail renderedMail = mailTemplateService.render(code, variables);
             SimpleMailMessage message = new SimpleMailMessage();
             setFromIfConfigured(message);
-            message.setTo(normalizedApplicantEmail);
-            message.setSubject("Tu postulación cambió de estado");
-            message.setText(buildApplicantStatusChangedBody(vacancyName, newStatus));
+            message.setTo(normalizedTo);
+            message.setSubject(renderedMail.subject());
+            message.setText(renderedMail.body());
             mailSender.send(message);
-            log.info("Correo de cambio de estado enviado a {}", normalizedApplicantEmail);
+            log.info("Correo '{}' enviado a {}", code, normalizedTo);
         } catch (Exception e) {
-            throw new RuntimeException("Error al enviar correo de cambio de estado", e);
+            throw new RuntimeException("Error al enviar correo '" + code + "'", e);
         }
     }
 
@@ -75,23 +88,5 @@ public class MailServiceImpl implements MailService {
         if (mailFrom != null && !mailFrom.isBlank()) {
             message.setFrom(mailFrom);
         }
-    }
-
-    private String buildCompanyNewApplicationBody(String applicantName, String vacancyName) {
-        return "Hola,\n\n"
-                + "Recibiste una nueva postulación.\n"
-                + "Postulante: " + applicantName + "\n"
-                + "Puesto: " + vacancyName + "\n\n"
-                + "Saludos,\n"
-                + "Equipo Talent";
-    }
-
-    private String buildApplicantStatusChangedBody(String vacancyName, VacancyApplicationStatus newStatus) {
-        return "Hola,\n\n"
-                + "Tu postulación cambió de estado.\n"
-                + "Puesto: " + vacancyName + "\n"
-                + "Nuevo estado: " + newStatus + "\n\n"
-                + "Saludos,\n"
-                + "Equipo Talent";
     }
 }

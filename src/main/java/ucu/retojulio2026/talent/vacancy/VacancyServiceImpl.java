@@ -38,9 +38,10 @@ public class VacancyServiceImpl implements VacancyService {
     private final AreaService areaService;
     private final VacancyApplicationRepository vacancyApplicationRepository;
     private final VacancyFilterResolverImpl vacancyFilterResolverImpl;
+    private final VacancyFinalizationNotifier vacancyFinalizationNotifier;
 
 
-    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl) {
+    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl, VacancyFinalizationNotifier vacancyFinalizationNotifier) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
@@ -48,6 +49,7 @@ public class VacancyServiceImpl implements VacancyService {
         this.userService = userService;
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.vacancyFilterResolverImpl = vacancyFilterResolverImpl;
+        this.vacancyFinalizationNotifier = vacancyFinalizationNotifier;
     }
 
     @Override
@@ -144,6 +146,7 @@ public class VacancyServiceImpl implements VacancyService {
 
         for (Vacancy vacancy : expired) {
             vacancy.setStatus(VacancyStatus.FINALIZADO);
+            vacancyFinalizationNotifier.notifyApplicants(vacancy);
         }
     }
 
