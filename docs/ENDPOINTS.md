@@ -310,11 +310,11 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 | 1 | POST | `/vacancy` | Crear un puesto | 🔒 rol `EMPRESA` + dueño de `companyId` + empresa `APROBADO` | `CreateVacancyRequest` | `VacancyResponse` | `201` | `400` · `403` no es el dueño / empresa no aprobada · `404` company/area no existe |
 | 2 | GET | `/vacancy` | Listar todos los puestos | 🔒 Autenticado | — | `List<VacancyResponse>` | `200` | — |
 | 3 | GET | `/vacancy/{id}` | Obtener puesto por id | 🔒 Autenticado | — (path `id`) | `VacancyResponse` | `200` | `404` |
-| 4 | GET | `/vacancy?status={status}` | Listar por estado | 🔒 Autenticado | — (query `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 5 | GET | `/vacancy?companyId={id}` | Listar por empresa | 🔒 Autenticado | — (query `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 6 | GET | `/vacancy?areaId={id}` | Listar por area | 🔒 Autenticado | — (query `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 7 | GET | `/vacancy?modality={modality}` | Listar por modalidad | 🔒 Autenticado | — (query `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 8 | GET | `/vacancy?location={location}` | Listar por localidad | 🔒 Autenticado | — (query `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 4 | GET | `/vacancy/status/{status}` | Listar por estado | 🔒 Autenticado | — (path `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 5 | GET | `/vacancy/company/{companyId}` | Listar por empresa | 🔒 Autenticado | — (path `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 6 | GET | `/vacancy/area/{areaId}` | Listar por area | 🔒 Autenticado | — (path `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 7 | GET | `/vacancy/modality/{modality}` | Listar por modalidad | 🔒 Autenticado | — (path `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 8 | GET | `/vacancy/location/{location}` | Listar por localidad | 🔒 Autenticado | — (path `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
 | 9 | PUT | `/vacancy/{id}` | Actualizar puesto por id | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 10 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 11 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
