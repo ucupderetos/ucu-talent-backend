@@ -241,6 +241,7 @@ Controller: `auth/AuthController` (`/auth`) + `auth/MeController` (`/me`) · Tag
 
 **`MeResponse`** (salida — se lee `status` fresco de la BD, nunca del JWT)
 - `userId` · `email` · `role` (`Role`) · `status` (`AccountStatus`) · `registeredAt` (date)
+- `hasProfile` boolean — si ya existe el perfil del paso 2 del registro (`StudentProfile`/`Company`/`Admin` según `role`)
 
 ---
 
