@@ -75,7 +75,7 @@ public class MailServiceImpl implements MailService {
             SimpleMailMessage message = new SimpleMailMessage();
             setFromIfConfigured(message);
             message.setTo(normalizedTo);
-            message.setSubject(renderedMail.subject());
+            message.setSubject(stripHeaderInjection(renderedMail.subject()));
             message.setText(renderedMail.body());
             mailSender.send(message);
             log.info("Correo '{}' enviado a {}", code, normalizedTo);
@@ -88,5 +88,9 @@ public class MailServiceImpl implements MailService {
         if (mailFrom != null && !mailFrom.isBlank()) {
             message.setFrom(mailFrom);
         }
+    }
+
+    private static String stripHeaderInjection(String subject) {
+        return subject == null ? null : subject.replaceAll("[\\r\\n]", " ");
     }
 }

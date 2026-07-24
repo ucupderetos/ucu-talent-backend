@@ -27,6 +27,7 @@
 12. Registro universitario (`UniversityRegistry`)
 13. Auditoria (`AuditLog`)
 14. **Dev (TEMPORAL)**
+15. Templates de mail (`MailTemplate`)
 
 ---
 
@@ -453,6 +454,28 @@ Para borrarlo: el paquete `dev/` completo, `"/dev/**"` de
 
 ---
 
+## 15. Templates de mail — `/mail-template`
+
+Controller: `mail/MailTemplateController` · Tag: **Templates de mail**
+
+| # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
+|---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
+| 1 | GET | `/mail-template` | Listar todos los templates de mail | 🔒 rol `ADMIN` | — | `List<MailTemplateResponse>` | `200` | `403` no es ADMIN |
+| 2 | GET | `/mail-template/{code}` | Obtener un template por código | 🔒 rol `ADMIN` | — (path `code`: `MailTemplateCode`) | `MailTemplateResponse` | `200` | `400` código inválido · `403` no es ADMIN · `404` no existe |
+| 3 | PUT | `/mail-template/{code}` | Actualizar subject/body de un template | 🔒 rol `ADMIN` | `UpdateMailTemplateRequest` | `MailTemplateResponse` | `200` | `400` datos inválidos o código inválido · `403` no es ADMIN · `404` no existe |
+
+### Schemas
+
+**`UpdateMailTemplateRequest`** (entrada)
+- `subject` string · `@NotBlank` `@Size(max=200)`
+- `body` string · `@NotBlank` (admite placeholders `{{variable}}`)
+
+**`MailTemplateResponse`** (salida)
+- `mailTemplateId` · `code` (`MailTemplateCode`) · `subject` · `body` · `placeholders` `string[]`
+  (de solo lectura, fijo por `code`)
+
+---
+
 ## Enums de referencia
 
 - **`Role`**: `ALUMNO`, `EMPRESA`, `ADMIN` (registro público solo `ALUMNO` | `EMPRESA`; `ADMIN` vía sección 13, temporal)
@@ -465,5 +488,6 @@ Para borrarlo: el paquete `dev/` completo, `"/dev/**"` de
 - **`Modality`**: `PRESENCIAL`, `HIBRIDO`, `REMOTO`
 - **`Departamento`** (localidad de Vacancy, 19): mismos valores que `Department`
 - **`Department`** (19): `ARTIGAS`, `CANELONES`, `CERRO_LARGO`, `COLONIA`, `DURAZNO`, `FLORES`, `FLORIDA`, `LAVALLEJA`, `MALDONADO`, `MONTEVIDEO`, `PAYSANDU`, `RIO_NEGRO`, `RIVERA`, `ROCHA`, `SALTO`, `SAN_JOSE`, `SORIANO`, `TACUAREMBO`, `TREINTA_Y_TRES`
+- **`MailTemplateCode`**: `NEW_APPLICATION`, `APPLICATION_VISTO`, `VACANCY_CLOSED`, `VACANCY_SELECTED` — códigos fijos, sin create/delete por API
 
 ---
