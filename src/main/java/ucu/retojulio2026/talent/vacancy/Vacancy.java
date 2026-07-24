@@ -2,7 +2,6 @@ package ucu.retojulio2026.talent.vacancy;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
 import ucu.retojulio2026.talent.common.Department;
 
@@ -28,7 +27,7 @@ public class Vacancy {
     @Column(name = "reviewed_by", length = 12, updatable = true, nullable = true)
     private String reviewedBy;
 
-    @Column(name = "area_id", length = 12, updatable = false, nullable = true)
+    @Column(name = "area_id", length = 12, updatable = false, nullable = false)
     private String areaId;
 
     @Column(name = "publication_date", updatable = true, nullable = false)
@@ -77,11 +76,12 @@ public class Vacancy {
     @Column(columnDefinition = "TEXT")
     private String requirements;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "contract_type", length = 80)
-    private String contractType;
+    private ContractType contractType;
 
-    @Column(name = "salary_range", length = 80)
-    private String salaryRange;
+    @Column(name = "salary", length = 80)
+    private String salary;
 
     @PrePersist
     protected void assignDefault() {

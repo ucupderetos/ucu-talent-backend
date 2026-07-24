@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.vacancy.ContractType;
 import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.Modality;
 
@@ -12,10 +13,12 @@ import java.time.LocalDateTime;
 
 public record CreateVacancyRequest (
 
+    @Schema(description = "La empresa para el puesto")
     @NotBlank(message = "La empresa es obligatoria")
     String companyId,
 
     @Schema(description = "El Area para el puesto")
+    @NotBlank(message = "El area es obligatoria")
     String areaId,
 
     @Schema(description = "Fecha de publicación del puesto", example = "2026-08-15")
@@ -27,7 +30,6 @@ public record CreateVacancyRequest (
     LocalDate closingDate,
 
     @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
-    @NotNull(message = "La localidad es obligatoria")
     Department location,
 
     @Schema(description = "Modalidad de trabajo", example = "REMOTO")
@@ -46,11 +48,11 @@ public record CreateVacancyRequest (
     @NotBlank(message = "Los requisitos son obligatorios")
     String requirements,
 
-    @Schema(description = "Tipo de contrato", example = "Full time")
-    @NotBlank(message = "El tipo de contrato es obligatorio")
-    String contractType,
+    @Schema(description = "Tipo de contrato", example = "FULL_TIME")
+    @NotNull(message = "El tipo de contrato es obligatorio")
+    ContractType contractType,
 
-    @Schema(description = "Rango salarial", example = "USD 800 - 2000")
-    @NotBlank(message = "El rango salarial es obligatorio")
-    String salaryRange
+    @Schema(description = "Salario", example = "USD 700")
+    @NotBlank(message = "El salario es obligatorio")
+    String salary
 ) {}

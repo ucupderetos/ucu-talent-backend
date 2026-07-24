@@ -344,7 +344,7 @@ public class VacancyController {
                 request.description(),
                 request.requirements(),
                 request.contractType(),
-                request.salaryRange()
+                request.salary()
         );
     }
 }
