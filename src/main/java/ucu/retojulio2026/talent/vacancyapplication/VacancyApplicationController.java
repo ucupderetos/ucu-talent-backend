@@ -106,8 +106,13 @@ public class VacancyApplicationController {
         return ResponseEntity.ok(vacancyApplicationMapper.toResponse(vacancyApplication));
     }
 
-    @Operation(summary = "Listar todas las postulaciones")
-    @ApiResponse(responseCode = "200", description = "Listado obtenido")
+    @Operation(summary = "Listar todas las postulaciones (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no es ADMIN")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<VacancyApplicationResponse>> getAll() {
         List<VacancyApplicationResponse> response = vacancyApplicationService.getAll()
@@ -162,12 +167,14 @@ public class VacancyApplicationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Listar postulaciones por estado")
+    @Operation(summary = "Listar postulaciones por estado (solo ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "400", description = "Estado invalido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no es ADMIN")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(params = "status")
     public ResponseEntity<List<VacancyApplicationResponse>> getByStatus(
             @Parameter(description = "Estado de la postulación", example = "PENDIENTE")
