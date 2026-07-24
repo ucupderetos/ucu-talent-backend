@@ -90,5 +90,10 @@ public class CompanyServiceImpl implements CompanyService {
         companyRepository.save(company);
     }
 
+    @Override
+    public boolean hasProfile(String id) {
+        return companyRepository.existsById(id);
+    }
+
 }
 

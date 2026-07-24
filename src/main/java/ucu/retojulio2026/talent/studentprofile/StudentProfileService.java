@@ -25,4 +25,6 @@ public interface StudentProfileService {
     Map<AccountStatus, Long> getStatusSummary();
 
     void review(String id, LocalDateTime reviewedAt, String adminComment);
+
+    boolean hasProfile(String id);
 }

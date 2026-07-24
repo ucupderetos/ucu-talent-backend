@@ -34,6 +34,8 @@ public class VacancyApplication {
     @Column(name = "applied_at", nullable = false)
     private LocalDate appliedAt;
 
+
+
     @PrePersist
     protected void assignId() {
         if (this.vacancyApplicationId == null) {
