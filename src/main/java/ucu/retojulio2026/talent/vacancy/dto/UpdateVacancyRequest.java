@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.vacancy.ContractType;
 import ucu.retojulio2026.talent.vacancy.Modality;
 
 import java.time.LocalDate;
@@ -32,7 +33,7 @@ public record UpdateVacancyRequest(
     String requirements,
 
     @Schema(description = "Tipo de contrato", example = "Full time")
-    String contractType,
+    ContractType contractType,
 
     @Schema(description = "Rango salarial", example = "USD 800 - 2000")
     String salaryRange

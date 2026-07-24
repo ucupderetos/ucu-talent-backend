@@ -10,7 +10,6 @@ import ucu.retojulio2026.talent.area.AreaService;
 import ucu.retojulio2026.talent.audit.Auditable;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.common.ForbiddenOperationException;
-import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.User;
@@ -214,7 +213,7 @@ public class VacancyServiceImpl implements VacancyService {
             existing.setContractType(request.contractType());
         }
         if (request.salaryRange() != null) {
-            existing.setSalaryRange(request.salaryRange());
+            existing.setSalary(request.salaryRange());
         }
 
         if (existing.getPublicationDate().isAfter(existing.getClosingDate())) {
