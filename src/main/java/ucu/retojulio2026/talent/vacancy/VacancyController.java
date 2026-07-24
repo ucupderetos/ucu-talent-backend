@@ -157,10 +157,10 @@ public class VacancyController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "400", description = "Estado invalido")
     })
-    @GetMapping(params = "status")
+    @GetMapping("/status/{status}")
     public ResponseEntity<List<VacancyResponse>> getByStatus(
             @Parameter(description = "Estado del puesto", example = "PENDIENTE")
-            @RequestParam VacancyStatus status) {
+            @PathVariable VacancyStatus status) {
         List<VacancyResponse> response = vacancyService.getByStatus(status)
                 .stream()
                 .map(vacancyMapper::toResponse)
@@ -174,10 +174,10 @@ public class VacancyController {
             @ApiResponse(responseCode = "400", description = "El companyId es invalido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
-    @GetMapping(params = "companyId")
+    @GetMapping("/company/{companyId}")
     public ResponseEntity<List<VacancyResponse>> getByCompanyId(
             @Parameter(description = "Id de la empresa", example = "V1StGXR8_Z5j")
-            @RequestParam
+            @PathVariable
             @NotBlank(message = "El companyId es obligatorio")
             String companyId) {
         List<VacancyResponse> response = vacancyService.getByCompanyId(companyId)
@@ -193,10 +193,10 @@ public class VacancyController {
             @ApiResponse(responseCode = "400", description = "El areaId es invalido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
-    @GetMapping(params = "areaId")
+    @GetMapping("/area/{areaId}")
     public ResponseEntity<List<VacancyResponse>> getByAreaId(
             @Parameter(description = "Id del area", example = "V1StGXR8_Z5j")
-            @RequestParam
+            @PathVariable
             @NotBlank(message = "El areaId es obligatorio")
             String areaId) {
         List<VacancyResponse> response = vacancyService.getByAreaId(areaId)
@@ -212,10 +212,10 @@ public class VacancyController {
             @ApiResponse(responseCode = "400", description = "Modalidad invalida"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
-    @GetMapping(params = "modality")
+    @GetMapping("/modality/{modality}")
     public ResponseEntity<List<VacancyResponse>> getByModality(
             @Parameter(description = "Modalidad de trabajo", example = "REMOTO")
-            @RequestParam Modality modality) {
+            @PathVariable Modality modality) {
         List<VacancyResponse> response = vacancyService.getByModality(modality)
                 .stream()
                 .map(vacancyMapper::toResponse)
@@ -229,10 +229,10 @@ public class VacancyController {
             @ApiResponse(responseCode = "400", description = "Localidad invalida"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
     })
-    @GetMapping(params = "location")
+    @GetMapping("/location/{location}")
     public ResponseEntity<List<VacancyResponse>> getByLocation(
             @Parameter(description = "Localidad (departamento)", example = "MONTEVIDEO")
-            @RequestParam Department location) {
+            @PathVariable Department location) {
         List<VacancyResponse> response = vacancyService.getByLocation(location)
                 .stream()
                 .map(vacancyMapper::toResponse)
