@@ -73,7 +73,7 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` · `409` ya tiene perfil |
+| 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` datos inválidos o documento con formato inválido · `409` ya tiene perfil o documento duplicado |
 | 2 | GET | `/student-profile` | Listar todos los perfiles | 🔒 rol `ADMIN` | — | `List<StudentProfileResponse>` | `200` | `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
 | 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `404` no existe |
@@ -83,10 +83,14 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 
 ### Schemas
 
-**`CreateStudentProfileRequest`** (entrada — sin `userId`, el id sale del token)
+**`CreateStudentProfileRequest`** (entrada — sin `userId`, el id sale del token; `@ValidDocumentNumber`)
 - `name` string · `@NotBlank` · `surname` string · `@NotBlank`
 - `documentType` enum `DocumentType` · `@NotNull`
-- `documentNumber` string · `@NotBlank`
+- `documentNumber` string · `@NotBlank` · `@ValidDocumentNumber` valida el formato según `documentType`
+  (`CEDULA_IDENTIDAD`/`DNI`: solo dígitos · `PASAPORTE`: alfanumérico · `400` si no matchea) — acepta
+  `.`, `-` y espacios (ej. `"1.234.567-8"`), se normalizan y se guardan sin ellos (ej. `"12345678"`).
+  Duplicado de `documentType` + `documentNumber` (ya normalizado) → `409`; el mismo número con
+  `documentType` distinto es válido.
 - `phoneNumber` string? (opcional) · `linkedinUrl` string? (opcional)
 - `skills` `string[]?` (opcional) · `description` string? (opcional)
 
@@ -94,7 +98,10 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 - `phoneNumber` string · `@NotBlank` · `linkedinUrl` string · `@NotBlank` · `skills` `string[]` · `@NotEmpty` · `description` string · `@NotBlank`
 
 **`StudentProfileResponse`** (salida — no expone `userId`, la PK ya lo es)
-- `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber` · `phoneNumber` · `linkedinUrl` · `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt` (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
+- `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber`
+  (normalizado, sin `.`/`-`/espacios aunque se haya mandado con ellos) · `phoneNumber` · `linkedinUrl` ·
+  `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt`
+  (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
 
 **`StudentProfileStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `ALUMNO`)
@@ -382,21 +389,25 @@ Controller: `universityregistry/UniversityRegistryController` · Tag: **Universi
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/university-registry` | Crear un registro | 🔒 rol `ADMIN` | `CreateUniversityRegistryRequest` | `UniversityRegistryResponse` | `201` | `400` datos inválidos · `403` no es ADMIN |
+| 1 | POST | `/university-registry` | Crear un registro | 🔒 rol `ADMIN` | `CreateUniversityRegistryRequest` | `UniversityRegistryResponse` | `201` | `400` datos inválidos o documento con formato inválido · `403` no es ADMIN |
 | 2 | GET | `/university-registry` | Listar todos los registros | 🔒 rol `ADMIN` | — | `List<UniversityRegistryResponse>` | `200` | `403` no es ADMIN |
 | 3 | GET | `/university-registry/{id}` | Obtener registro por id | 🔒 rol `ADMIN` | — (path `id`) | `UniversityRegistryResponse` | `200` | `403` no es ADMIN · `404` |
-| 4 | PUT | `/university-registry/{id}` | Actualizar registro por id | 🔒 rol `ADMIN` | `UpdateUniversityRegistryRequest` | `UniversityRegistryResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
+| 4 | PUT | `/university-registry/{id}` | Actualizar registro por id | 🔒 rol `ADMIN` | `UpdateUniversityRegistryRequest` | `UniversityRegistryResponse` | `200` | `400` datos inválidos o documento con formato inválido · `403` no es ADMIN · `404` no existe |
 | 5 | DELETE | `/university-registry/{id}` | Eliminar registro por id | 🔒 rol `ADMIN` | — (path `id`) | — (vacío) | `204` | `403` no es ADMIN · `404` |
 
 
 ### Schemas
 
-**`CreateUniversityRegistryRequest`** / **`UpdateUniversityRegistryRequest`** (entrada)
+**`CreateUniversityRegistryRequest`** / **`UpdateUniversityRegistryRequest`** (entrada — `@ValidDocumentNumber`)
 - `documentType` enum `DocumentType` (`common.DocumentType`: `CEDULA_IDENTIDAD | PASAPORTE | DNI`)
-- `documentNumber` · `name` · `surname` (string)
+- `documentNumber` · `@ValidDocumentNumber` valida el formato según `documentType`
+  (`CEDULA_IDENTIDAD`/`DNI`: solo dígitos · `PASAPORTE`: alfanumérico · `400` si no matchea) — acepta
+  `.`, `-` y espacios (ej. `"1.234.567-8"`), se normalizan y se guardan sin ellos (ej. `"12345678"`)
+- `name` · `surname` (string)
 
 **`UniversityRegistryResponse`** (salida)
-- `universityRegistryId` · `documentType` (`DocumentType`) · `documentNumber` · `name` · `surname`
+- `universityRegistryId` · `documentType` (`DocumentType`) · `documentNumber` (normalizado, sin
+  `.`/`-`/espacios aunque se haya mandado con ellos) · `name` · `surname`
 
 ---
 

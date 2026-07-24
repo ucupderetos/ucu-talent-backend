@@ -2,6 +2,7 @@ package ucu.retojulio2026.talent.universityregistry;
 
 import org.springframework.stereotype.Service;
 
+import ucu.retojulio2026.talent.common.DocumentNormalizer;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.universityregistry.dto.CreateUniversityRegistryRequest;
 import ucu.retojulio2026.talent.universityregistry.dto.UniversityRegistryMapper;
@@ -24,6 +25,7 @@ public class UniversityRegistryServiceImpl implements UniversityRegistryService 
     @Override
     public UniversityRegistry create(CreateUniversityRegistryRequest request) {
         UniversityRegistry universityRegistry = universityRegistryMapper.toEntity(request);
+        universityRegistry.setDocumentNumber(DocumentNormalizer.normalize(request.documentNumber()));
         return universityRegistryRepository.save(universityRegistry);
     }
 
@@ -42,7 +44,7 @@ public class UniversityRegistryServiceImpl implements UniversityRegistryService 
     public UniversityRegistry update(String id, UpdateUniversityRegistryRequest request) {
         UniversityRegistry universityRegistry = getById(id);
         universityRegistry.setDocumentType(request.documentType());
-        universityRegistry.setDocumentNumber(request.documentNumber());
+        universityRegistry.setDocumentNumber(DocumentNormalizer.normalize(request.documentNumber()));
         universityRegistry.setName(request.name());
         universityRegistry.setSurname(request.surname());
         return universityRegistryRepository.save(universityRegistry);
