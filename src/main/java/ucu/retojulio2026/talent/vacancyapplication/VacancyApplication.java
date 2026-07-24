@@ -34,7 +34,8 @@ public class VacancyApplication {
     @Column(name = "applied_at", nullable = false)
     private LocalDate appliedAt;
 
-
+    @Column(name = "accepted", nullable = false)
+    private boolean accepted;
 
     @PrePersist
     protected void assignId() {

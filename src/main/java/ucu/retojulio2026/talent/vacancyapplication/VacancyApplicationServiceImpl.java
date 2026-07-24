@@ -160,6 +160,13 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     }
 
     @Override
+    public VacancyApplication accept(String id) {
+        VacancyApplication vacancyApplication = getById(id);
+        vacancyApplication.setAccepted(true);
+        return vacancyApplicationRepository.save(vacancyApplication);
+    }
+
+    @Override
     public void delete(String id) {
         if (!vacancyApplicationRepository.existsById(id)) {
             throw new ResourceNotFoundException("VacancyApplication con id '" + id + "' no encontrada");
