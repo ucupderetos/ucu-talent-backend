@@ -26,6 +26,9 @@ public record SearchCriteriaVacancyRequest(
         String keyword,
 
         @Schema(description = "Estado del puesto", example = "PUBLICADO")
-        VacancyStatus status
+        VacancyStatus status,
+
+        @Schema(description = "Mostrar eliminados", example = "true")
+        Boolean deleted
 ) {
 }
