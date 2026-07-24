@@ -28,6 +28,9 @@ x-api-env: &api-env
   SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
   SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-true}
   SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-true}
+  GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+  GCP_BUCKET_NAME: ${GCP_BUCKET_NAME}
+  GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcloud/application_default_credentials.json
 
 services:
   db:
@@ -82,6 +85,9 @@ services:
     environment:
       <<: *api-env
       DB_HOST: db
+
+    volumes:
+        - "${GOOGLE_APPLICATION_CREDENTIALS_HOST}:/secrets/gcloud/application_default_credentials.json:ro"
 
   api-hosted:
     <<: *api-base
