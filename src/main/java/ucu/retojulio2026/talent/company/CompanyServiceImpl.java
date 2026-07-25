@@ -1,5 +1,6 @@
 package ucu.retojulio2026.talent.company;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
@@ -9,6 +10,7 @@ import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
+import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.time.LocalDateTime;
@@ -47,8 +49,16 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<Company> getAll() {
-        return companyRepository.findAll();
+    public List<Company> getAll(AccountStatus status) {
+        if (status == null) {
+            return companyRepository.findAll();
+        }
+        List<String> companyIds = userService.getAll(status, Role.EMPRESA, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(User::getUserId)
+                .toList();
+        return companyRepository.findAllById(companyIds);
     }
 
 
