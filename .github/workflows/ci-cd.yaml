@@ -44,7 +44,7 @@ jobs:
           vuln-type: 'os,library'
           severity: 'HIGH,CRITICAL'
 
-  # -- Continuos deployment DEV
+  # -- Continuous deployment DEV
 
   build-and-deploy-dev:
     name: Build, push y deploy a Cloud Run DEV
@@ -58,6 +58,7 @@ jobs:
     env:
       SERVICE: api-dev
       IMAGE: us-central1-docker.pkg.dev/reto-universitario-2026/ucutalent/backend-dev
+      TAG_FIJO: dev-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v4
@@ -73,21 +74,25 @@ jobs:
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build de la imagen
-        run: docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
-
+        run: docker build -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} .
+           
       - name: Push a Artifact Registry
-        run: docker push ${{ env.IMAGE }}:${{ github.sha }}
-
+        run: docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          
       - name: Deploy a Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}:${{ github.sha }}
+          image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
 
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
             CORS_ALLOWED_ORIGIN=${{ vars.CORS_ALLOWED_ORIGIN }}
+            SPRING_MAIL_HOST=${{ vars.SPRING_MAIL_HOST }}
+            SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
 
           secrets: |
             POSTGRES_USER=dev-backend-db-username:latest
@@ -95,10 +100,12 @@ jobs:
             FLYWAY_USER=dev-flyway-db-username:latest
             FLYWAY_PASSWORD=dev-flyway-db-password:latest
             JWT_SECRET=dev-jwt-secret:latest
+            SPRING_MAIL_USERNAME=mail-username:latest
+            SPRING_MAIL_PASSWORD=mail-password:latest
 
           flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
 
-  # -- Continuos deployment PROD
+  # -- Continuous deployment PROD
 
   build-and-deploy-prod:
     name: Build, push y deploy a Cloud Run PROD
@@ -112,6 +119,7 @@ jobs:
     env:
       SERVICE: api-prod
       IMAGE: us-central1-docker.pkg.dev/reto-universitario-2026/ucutalent/backend-prod
+      TAG_FIJO: prod-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v4
@@ -127,21 +135,25 @@ jobs:
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build de la imagen
-        run: docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
+        run: docker build -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} .
 
       - name: Push a Artifact Registry
-        run: docker push ${{ env.IMAGE }}:${{ github.sha }}
+        run: docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
 
       - name: Deploy a Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}:${{ github.sha }}
+          image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
 
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
             CORS_ALLOWED_ORIGIN=${{ vars.CORS_ALLOWED_ORIGIN }}
+            SPRING_MAIL_HOST=${{ vars.SPRING_MAIL_HOST }}
+            SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
 
           secrets: |
             POSTGRES_USER=prod-backend-db-username:latest
@@ -149,5 +161,9 @@ jobs:
             FLYWAY_USER=prod-flyway-db-username:latest
             FLYWAY_PASSWORD=prod-flyway-db-password:latest
             JWT_SECRET=prod-jwt-secret:latest
+            SPRING_MAIL_USERNAME=mail-username:latest
+            SPRING_MAIL_PASSWORD=mail-password:latest
 
           flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
+
+  
