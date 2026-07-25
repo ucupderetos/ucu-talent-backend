@@ -14,7 +14,7 @@ public interface CompanyService {
 
     Company getById(String id);
 
-    List<Company> getAll();
+    List<Company> getAll(AccountStatus status);
 
     Company update(String id, UpdateCompanyRequest request);
 
