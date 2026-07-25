@@ -34,6 +34,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t temp-image:ci-check .
 
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'temp-image:ci-check'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+
   # -- Continuous deployment DEV
 
   build-and-deploy-dev:
@@ -66,11 +76,9 @@ jobs:
       - name: Build de la imagen
         run: docker build -t ${{ env.IMAGE }}:${{ env.TAG_FIJO }} .
            
-
       - name: Push a Artifact Registry
         run: docker push ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
           
-
       - name: Deploy a Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -81,6 +89,10 @@ jobs:
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
             CORS_ALLOWED_ORIGIN=${{ vars.CORS_ALLOWED_ORIGIN }}
+            SPRING_MAIL_HOST=${{ vars.SPRING_MAIL_HOST }}
+            SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
 
           secrets: |
             POSTGRES_USER=dev-backend-db-username:latest
@@ -88,6 +100,8 @@ jobs:
             FLYWAY_USER=dev-flyway-db-username:latest
             FLYWAY_PASSWORD=dev-flyway-db-password:latest
             JWT_SECRET=dev-jwt-secret:latest
+            SPRING_MAIL_USERNAME=mail-username:latest
+            SPRING_MAIL_PASSWORD=mail-password:latest
 
           flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
 
@@ -136,6 +150,10 @@ jobs:
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
             CORS_ALLOWED_ORIGIN=${{ vars.CORS_ALLOWED_ORIGIN }}
+            SPRING_MAIL_HOST=${{ vars.SPRING_MAIL_HOST }}
+            SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
+            SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
 
           secrets: |
             POSTGRES_USER=prod-backend-db-username:latest
@@ -143,5 +161,9 @@ jobs:
             FLYWAY_USER=prod-flyway-db-username:latest
             FLYWAY_PASSWORD=prod-flyway-db-password:latest
             JWT_SECRET=prod-jwt-secret:latest
+            SPRING_MAIL_USERNAME=mail-username:latest
+            SPRING_MAIL_PASSWORD=mail-password:latest
 
           flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
+
+  
