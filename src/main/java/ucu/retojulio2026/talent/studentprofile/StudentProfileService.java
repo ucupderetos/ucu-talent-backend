@@ -16,7 +16,7 @@ public interface StudentProfileService {
 
     StudentProfile getById(String id);
 
-    List<StudentProfile> getAll();
+    List<StudentProfile> getAll(AccountStatus status);
 
     void delete(String id);
 
