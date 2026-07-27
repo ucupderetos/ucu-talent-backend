@@ -14,9 +14,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
+import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
+import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -115,5 +118,50 @@ class UserServiceImplTest {
 
         assertThat(violations)
                 .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
+    }
+
+    @Test
+    void alta_de_admin_con_email_duplicado_lanza_duplicate_resource_exception() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        when(userRepository.existsByEmail("admin@ucu.edu.uy")).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class,
+                () -> service.createAdmin("admin@ucu.edu.uy", RAW_PASSWORD));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void alta_de_admin_queda_aprobada_con_role_admin_y_status_aprobado() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        when(userRepository.existsByEmail("admin@ucu.edu.uy")).thenReturn(false);
+        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(HASHED_PASSWORD);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User created = service.createAdmin("admin@ucu.edu.uy", RAW_PASSWORD);
+
+        assertThat(created.getRole()).isEqualTo(Role.ADMIN);
+        assertThat(created.getStatus()).isEqualTo(AccountStatus.APROBADO);
+    }
+
+    @Test
+    void no_se_puede_volver_a_pendiente_una_cuenta_ya_revisada() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        User user = newMappedUser(Role.ALUMNO);
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+
+        assertThrows(InvalidStatusTransitionException.class,
+                () -> service.updateStatus("user-1", AccountStatus.PENDIENTE));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void revisar_un_usuario_inexistente_lanza_resource_not_found_exception() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        when(userRepository.findById("user-x")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updateStatus("user-x", AccountStatus.APROBADO));
     }
 }
