@@ -53,7 +53,7 @@ public class Vacancy {
     private LocalDateTime reviewedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 30)
+    @Column(length = 30, nullable = true)
     private Department location;
 
     @Column(name = "admin_comment", columnDefinition = "TEXT", nullable = true)
