@@ -40,6 +40,10 @@ Si es tu primer día, seguí este orden:
    El paso que falta para que la app arranque: generar tu propia clave y
    pegarla en tu `.env`. No hace falta que coincida con la de nadie más.
 
+10. **[Cómo escribir un unit test de reglas de negocio](como-escribir-unit-tests.md)**
+    El paso a paso para probar un Service con Mockito, sin base de datos ni
+    Spring levantado.
+
 ## Para cuando tengas más base
 
 Cuando quieras profundizar en el *porqué* técnico de las decisiones del proyecto,
