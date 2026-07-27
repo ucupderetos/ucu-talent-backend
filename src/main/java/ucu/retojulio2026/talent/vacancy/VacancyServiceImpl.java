@@ -267,7 +267,11 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setAdminComment(request.adminComment()); // Si no queda un comentario de otro, da igual si manda null
         existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
 
-        return vacancyRepository.save(existing);
+        Vacancy updated = vacancyRepository.save(existing);
+        if (request.status() == VacancyStatus.FINALIZADO) {
+            vacancyFinalizationNotifier.notifyApplicants(updated);
+        }
+        return updated;
     }
 
     @Override
@@ -289,6 +293,10 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setUpdatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
         existing.setStatus(request.status());
 
-        return vacancyRepository.save(existing);
+        Vacancy updated = vacancyRepository.save(existing);
+        if (request.status() == VacancyStatus.FINALIZADO) {
+            vacancyFinalizationNotifier.notifyApplicants(updated);
+        }
+        return updated;
     }
 }

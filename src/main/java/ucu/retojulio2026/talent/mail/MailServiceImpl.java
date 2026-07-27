@@ -22,6 +22,9 @@ public class MailServiceImpl implements MailService {
     @Value("${spring.mail.username:}")
     private String mailFrom;
 
+    @Value("${spring.mail.host:}")
+    private String mailHost;
+
     public MailServiceImpl(ObjectProvider<JavaMailSender> mailSenderProvider, MailValidator mailValidator,
                             MailTemplateService mailTemplateService) {
         this.mailSender = mailSenderProvider.getIfAvailable();
@@ -63,7 +66,7 @@ public class MailServiceImpl implements MailService {
     }
 
     private void sendTemplated(MailTemplateCode code, String to, Map<String, String> variables) {
-        if (mailSender == null) {
+        if (mailSender == null || mailHost.isBlank()) {
             log.warn("SMTP no configurado: se omite correo '{}' a {}", code, to);
             return;
         }
