@@ -5,12 +5,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ucu.retojulio2026.talent.common.DocumentType;
 import ucu.retojulio2026.talent.user.AccountStatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record StudentProfileResponse(
         @Schema(description = "Id del perfil de alumno (NanoID). Es el mismo valor que el userId.", example = "V1StGXR8_Z5j")
         String studentProfileId,
+
+        @Schema(description = "Email del alumno", example = "nicogon@ucu.edu.uy")
+        String email,
+
+        @Schema(description = "Fecha de alta del usuario", example = "2026-07-15")
+        LocalDate registeredAt,
 
         @Schema(description = "Nombre del alumno", example = "Nicolas")
         String name,

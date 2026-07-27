@@ -44,7 +44,7 @@ Controller: `user/UserController` · Tag: **Usuarios**
 | 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado |
 | 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role` | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`) | `List<UserResponse>` | `200` | — |
 | 3 | GET | `/user/{id}` | Obtener una cuenta por id | 🔒 Autenticado | — (path `id`) | `UserResponse` | `200` | `404` |
-| 4 | GET | `/user?email={email}` | Buscar por email | 🔒 Autenticado | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `404` no existe |
+| 4 | GET | `/user?email={email}` | Buscar por email | 🔒 rol `ADMIN` (misma regla de path que `GET /user`, no distingue query string) | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `403` no es ADMIN · `404` no existe |
 | 5 | PATCH | `/user/{id}` | Aprobar o rechazar un usuario | 🔒 rol `ADMIN` | `UpdateUserStatusRequest` | `UserResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe · `409` transición inválida |
 | 6 | DELETE | `/user/{id}` | Eliminar una cuenta | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 
@@ -75,9 +75,9 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` datos inválidos o documento con formato inválido · `409` ya tiene perfil o documento duplicado |
-| 2 | GET | `/student-profile` | Listar todos los perfiles | 🔒 rol `ADMIN` | — | `List<StudentProfileResponse>` | `200` | `403` no es ADMIN |
+| 2 | GET | `/student-profile?status={status}` | Listar perfiles, opcionalmente filtrados por estado | 🔒 rol `ADMIN` | — (query `status`: `AccountStatus`, opcional) | `List<StudentProfileResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
-| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `404` no existe |
+| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 rol `ADMIN` (misma regla de path que `GET /student-profile`, no distingue query string) | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
 | 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 6 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 | 7 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
@@ -99,7 +99,8 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 - `phoneNumber` string · `@NotBlank` · `linkedinUrl` string · `@NotBlank` · `skills` `string[]` · `@NotEmpty` · `description` string · `@NotBlank`
 
 **`StudentProfileResponse`** (salida — no expone `userId`, la PK ya lo es)
-- `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber`
+- `studentProfileId` (= `userId`) · `email` (del `User` dueño) · `registeredAt` (date, del `User` dueño) ·
+  `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber`
   (normalizado, sin `.`/`-`/espacios aunque se haya mandado con ellos) · `phoneNumber` · `linkedinUrl` ·
   `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt`
   (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
@@ -479,7 +480,7 @@ Controller: `mail/MailTemplateController` · Tag: **Templates de mail**
 ## Enums de referencia
 
 - **`Role`**: `ALUMNO`, `EMPRESA`, `ADMIN` (registro público solo `ALUMNO` | `EMPRESA`; `ADMIN` vía sección 13, temporal)
-- **`AccountStatus`**: `PENDIENTE`, `APROBADO`, `RECHAZADO` — reemplaza a `Company.approved`, aplica a los tres roles. Al registrarse (`POST /user`): `ALUMNO` nace `APROBADO`, `EMPRESA` nace `PENDIENTE` (el `ADMIN` de `/dev/admin` nace `APROBADO` directo).
+- **`AccountStatus`**: `PENDIENTE`, `APROBADO`, `RECHAZADO` — reemplaza a `Company.approved`, aplica a los tres roles. Al registrarse (`POST /user`): `ALUMNO` nace `APROBADO`, `EMPRESA` nace `PENDIENTE` (el `ADMIN` de `/dev/admin` nace `APROBADO` directo). Transición vía `PATCH /user/{id}`: desde `APROBADO`/`RECHAZADO` el Admin puede alternar libremente entre ambos (reversible); nunca se puede volver a `PENDIENTE` (`409`).
 - **`DocumentType`**: `CEDULA_IDENTIDAD`, `PASAPORTE`, `DNI` — enum **único compartido** en
   `common.DocumentType`, usado por `StudentProfile` y `UniversityRegistry`
 - **`Education.DegreeLevel`**: `TECNICATURA`, `LICENCIATURA`, `GRADO`, `POSGRADO`, `DOCTORADO`

@@ -20,6 +20,7 @@ import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileResponse;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileStatusSummaryResponse;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
+import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
@@ -41,7 +42,7 @@ public class StudentProfileController {
     }
 
     private StudentProfileResponse toResponse(StudentProfile studentProfile) {
-        return studentProfileMapper.toResponse(studentProfile, userService.getById(studentProfile.getStudentProfileId()).getStatus());
+        return studentProfileMapper.toResponse(studentProfile, userService.getById(studentProfile.getStudentProfileId()));
     }
 
     // ===== CREATE =====
@@ -64,7 +65,7 @@ public class StudentProfileController {
 
     // ===== READ =====
 
-    @Operation(summary = "Listar todos los perfiles de alumno (solo ADMIN)")
+    @Operation(summary = "Listar todos los perfiles de alumno, opcionalmente filtrados por estado (solo ADMIN)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
@@ -72,8 +73,10 @@ public class StudentProfileController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<StudentProfileResponse>> getAll() {
-        List<StudentProfileResponse> response = studentProfileService.getAll()
+    public ResponseEntity<List<StudentProfileResponse>> getAll(
+            @Parameter(description = "Filtrar por estado de la cuenta", example = "PENDIENTE")
+            @RequestParam(required = false) AccountStatus status) {
+        List<StudentProfileResponse> response = studentProfileService.getAll(status)
                 .stream()
                 .map(this::toResponse)
                 .toList();

@@ -1,5 +1,6 @@
 package ucu.retojulio2026.talent.studentprofile;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
@@ -10,6 +11,7 @@ import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
+import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.time.LocalDateTime;
@@ -80,8 +82,16 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     }
 
     @Override
-    public List<StudentProfile> getAll() {
-        return studentProfileRepository.findAll();
+    public List<StudentProfile> getAll(AccountStatus status) {
+        if (status == null) {
+            return studentProfileRepository.findAll();
+        }
+        List<String> studentProfileIds = userService.getAll(status, Role.ALUMNO, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(User::getUserId)
+                .toList();
+        return studentProfileRepository.findAllById(studentProfileIds);
     }
 
     @Override
