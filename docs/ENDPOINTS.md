@@ -327,14 +327,14 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 **`CreateVacancyRequest`** (entrada)
 - `companyId` string · `@NotBlank` · `areaId` string · `@NotBlank`
 - `location` enum `Departamento` · `@NotNull` · `modality` enum `Modality` · `@NotNull`
-- `status` enum `VacancyStatus`? (en el `POST` se fuerza a `PENDIENTE`)
-- `name` · `description` · `requirements` · `contractType` · `salaryRange` — todos string `@NotBlank`
+- `status` enum `VacancyStatus`? (en el `POST` se fuerza a `PUBLICADO`)
+- `name` · `description` · `requirements` · `contractType` · `salary` — todos string `@NotBlank`
 - `publicationDate` date? · `closingDate` date?
 
 **`UpdateVacancyRequest`** (entrada — sin `companyId`/`areaId`, no se reasignan)
 - `publicationDate` date · `@NotNull` · `closingDate` date · `@NotNull`
 - `location` enum `Departamento` · `@NotNull` · `modality` enum `Modality` · `@NotNull`
-- `name` · `description` · `requirements` · `contractType` · `salaryRange` — todos string `@NotBlank`
+- `name` · `description` · `requirements` · `contractType` · `salary` — todos string `@NotBlank`
 
 **`UpdateVacancyStatusRequest`** (entrada)
 - `status` enum `VacancyStatus` · `@NotNull`
@@ -343,7 +343,7 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 - `adminComment` string? · `status` enum `VacancyStatus` · `@NotNull`
 
 **`VacancyResponse`** (salida)
-- `vacancyId` · `companyId` · `areaId` · `publicationDate` · `closingDate` · `location` (`Departamento`) · `modality` (`Modality`) · `status` (`VacancyStatus`) · `name` · `description` · `requirements` · `contractType` · `salaryRange`
+- `vacancyId` · `companyId` · `areaId` · `publicationDate` · `closingDate` · `location` (`Departamento`) · `modality` (`Modality`) · `status` (`VacancyStatus`) · `name` · `description` · `requirements` · `contractType` · `salary`
 
 **`VacancyStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `publicado` · `finalizado` (todos `long`)
