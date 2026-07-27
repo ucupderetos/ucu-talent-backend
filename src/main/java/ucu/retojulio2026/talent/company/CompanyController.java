@@ -20,6 +20,7 @@ import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.company.dto.CompanyResponse;
 import ucu.retojulio2026.talent.company.dto.CompanyStatusSummaryResponse;
+import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.util.List;
@@ -64,12 +65,14 @@ public class CompanyController {
 
     // ===== READ =====
 
-    @Operation(summary = "Listar todas las empresas")
+    @Operation(summary = "Listar todas las empresas, opcionalmente filtradas por estado")
     @ApiResponse(responseCode = "200", description = "Listado obtenido")
     @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     @GetMapping
-    public ResponseEntity<List<CompanyResponse>> getAll() {
-        List<CompanyResponse> response = companyService.getAll()
+    public ResponseEntity<List<CompanyResponse>> getAll(
+            @Parameter(description = "Filtrar por estado de la cuenta", example = "PENDIENTE")
+            @RequestParam(required = false) AccountStatus status) {
+        List<CompanyResponse> response = companyService.getAll(status)
                 .stream()
                 .map(this::toResponse)
                 .toList();

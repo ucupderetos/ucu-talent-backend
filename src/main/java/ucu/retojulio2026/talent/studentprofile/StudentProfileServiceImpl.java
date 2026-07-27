@@ -1,14 +1,17 @@
 package ucu.retojulio2026.talent.studentprofile;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
+import ucu.retojulio2026.talent.common.DocumentNormalizer;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
+import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 
 import java.time.LocalDateTime;
@@ -38,7 +41,13 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         if (studentProfileRepository.existsById(id)) {
             throw new DuplicateResourceException("El usuario '" + id + "' ya tiene un perfil de alumno asociado");
         }
+
+        String normalizedDocumentNumber = DocumentNormalizer.normalize(request.documentNumber());
+        if (studentProfileRepository.existsByDocumentTypeAndDocumentNumber(request.documentType(), normalizedDocumentNumber)) {
+            throw new DuplicateResourceException("Ya existe un alumno con ese tipo y numero de documento");
+        }
         StudentProfile studentProfile = studentProfileMapper.toEntity(id, request);
+        studentProfile.setDocumentNumber(normalizedDocumentNumber);
         studentProfile.setSkills(normalizeSkills(studentProfile.getSkills()));
         return studentProfileRepository.save(studentProfile);
     }
@@ -73,8 +82,16 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     }
 
     @Override
-    public List<StudentProfile> getAll() {
-        return studentProfileRepository.findAll();
+    public List<StudentProfile> getAll(AccountStatus status) {
+        if (status == null) {
+            return studentProfileRepository.findAll();
+        }
+        List<String> studentProfileIds = userService.getAll(status, Role.ALUMNO, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(User::getUserId)
+                .toList();
+        return studentProfileRepository.findAllById(studentProfileIds);
     }
 
     @Override
@@ -102,5 +119,12 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         studentProfile.setAdminComment(adminComment);
         studentProfileRepository.save(studentProfile);
     }
+
+    @Override
+    public boolean hasProfile(String id) {
+        return studentProfileRepository.existsById(id);
+    }
+
+
 
 }

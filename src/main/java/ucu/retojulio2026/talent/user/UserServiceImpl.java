@@ -106,18 +106,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateStatus(String userId, AccountStatus newStaus){
+    public void updateStatus(String userId, AccountStatus newStatus){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User con id '" + userId + "' no encontrado"));
-        if (user.getStatus() != AccountStatus.PENDIENTE) {
-            throw new InvalidStatusTransitionException(
-                    "Solo se puede aprobar o rechazar una cuenta pendiente");
-        }
-        if (newStaus == AccountStatus.PENDIENTE) {
+        if (newStatus == AccountStatus.PENDIENTE) {
             throw new InvalidStatusTransitionException(
                     "El nuevo estado debe ser APROBADO o RECHAZADO");
         }
-        user.setStatus(newStaus);
+        user.setStatus(newStatus);
         userRepository.save(user);
     }
 }

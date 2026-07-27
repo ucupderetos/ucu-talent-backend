@@ -20,7 +20,7 @@ public record EducationResponse(
         @Schema(description = "Id de la carrera", example = "V1StGXR8_Z5j")
         String degreeId,
 
-        @Schema(description = "Institucion", example = "Universidad ORT Uruguay")
+        @Schema(description = "Institucion", example = "Universidad UCU Uruguay")
         String institution,
 
         @Schema(description = "Descripcion", example = "Cursada completa, tesis en curso")

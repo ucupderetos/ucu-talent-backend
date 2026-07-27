@@ -9,5 +9,6 @@ public record VacancyApplicationResponse(
         String vacancyId,
         String studentProfileId,
         VacancyApplicationStatus status,
-        LocalDate appliedAt
+        LocalDate appliedAt,
+        boolean accepted
 ) {}

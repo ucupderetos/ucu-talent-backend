@@ -14,7 +14,7 @@ public interface CompanyService {
 
     Company getById(String id);
 
-    List<Company> getAll();
+    List<Company> getAll(AccountStatus status);
 
     Company update(String id, UpdateCompanyRequest request);
 
@@ -24,6 +24,7 @@ public interface CompanyService {
 
     Map<AccountStatus, Long> getStatusSummary();
 
-    // Lo setea el Admin al aprobar/rechazar la cuenta -- ver AccountFacade.reviewAccount().
     void review(String id, LocalDateTime reviewedAt, String adminComment);
+
+    boolean hasProfile(String id);
 }

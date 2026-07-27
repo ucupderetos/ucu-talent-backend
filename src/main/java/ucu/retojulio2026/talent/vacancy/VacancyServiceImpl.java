@@ -10,7 +10,6 @@ import ucu.retojulio2026.talent.area.AreaService;
 import ucu.retojulio2026.talent.audit.Auditable;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.common.ForbiddenOperationException;
-import ucu.retojulio2026.talent.company.Company;
 import ucu.retojulio2026.talent.company.CompanyService;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.User;
@@ -39,9 +38,10 @@ public class VacancyServiceImpl implements VacancyService {
     private final AreaService areaService;
     private final VacancyApplicationRepository vacancyApplicationRepository;
     private final VacancyFilterResolverImpl vacancyFilterResolverImpl;
+    private final VacancyFinalizationNotifier vacancyFinalizationNotifier;
 
 
-    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl) {
+    public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl, VacancyFinalizationNotifier vacancyFinalizationNotifier) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
         this.companyService = companyService;
@@ -49,6 +49,7 @@ public class VacancyServiceImpl implements VacancyService {
         this.userService = userService;
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.vacancyFilterResolverImpl = vacancyFilterResolverImpl;
+        this.vacancyFinalizationNotifier = vacancyFinalizationNotifier;
     }
 
     @Override
@@ -145,6 +146,7 @@ public class VacancyServiceImpl implements VacancyService {
 
         for (Vacancy vacancy : expired) {
             vacancy.setStatus(VacancyStatus.FINALIZADO);
+            vacancyFinalizationNotifier.notifyApplicants(vacancy);
         }
     }
 
@@ -214,7 +216,7 @@ public class VacancyServiceImpl implements VacancyService {
             existing.setContractType(request.contractType());
         }
         if (request.salaryRange() != null) {
-            existing.setSalaryRange(request.salaryRange());
+            existing.setSalary(request.salaryRange());
         }
 
         if (existing.getPublicationDate().isAfter(existing.getClosingDate())) {
@@ -265,7 +267,11 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setAdminComment(request.adminComment()); // Si no queda un comentario de otro, da igual si manda null
         existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
 
-        return vacancyRepository.save(existing);
+        Vacancy updated = vacancyRepository.save(existing);
+        if (request.status() == VacancyStatus.FINALIZADO) {
+            vacancyFinalizationNotifier.notifyApplicants(updated);
+        }
+        return updated;
     }
 
     @Override
@@ -287,6 +293,10 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setUpdatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
         existing.setStatus(request.status());
 
-        return vacancyRepository.save(existing);
+        Vacancy updated = vacancyRepository.save(existing);
+        if (request.status() == VacancyStatus.FINALIZADO) {
+            vacancyFinalizationNotifier.notifyApplicants(updated);
+        }
+        return updated;
     }
 }

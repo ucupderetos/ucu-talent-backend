@@ -2,6 +2,7 @@ package ucu.retojulio2026.talent.vacancy.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.vacancy.ContractType;
 import ucu.retojulio2026.talent.vacancy.Modality;
 import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 
@@ -48,10 +49,10 @@ public record VacancyStudentResponse(
         @Schema(description = "Requisitos del puesto", example = "Java 21, Spring Boot, PostgreSQL")
         String requirements,
 
-        @Schema(description = "Tipo de contrato", example = "Full time")
-        String contractType,
+        @Schema(description = "Tipo de contrato", example = "FULL_TIME")
+        ContractType contractType,
 
-        @Schema(description = "Rango salarial", example = "USD 700 - 2000")
-        String salaryRange
+        @Schema(description = "Salario", example = "USD 700")
+        String salary
 ) {
 }

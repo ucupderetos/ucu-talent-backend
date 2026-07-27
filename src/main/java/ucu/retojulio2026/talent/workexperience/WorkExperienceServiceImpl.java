@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class WorkExperienceServiceImpl implements WorkExperienceService {
 
-    private static final LocalDate MIN_LOGICAL_START_DATE = LocalDate.of(1900, 1, 1);
+    private static final LocalDate MIN_LOGICAL_START_DATE = LocalDate.of(2015, 1, 1);
 
     private final WorkExperienceRepository workExperienceRepository;
     private final WorkExperienceMapper workExperienceMapper;
@@ -93,7 +93,7 @@ public class WorkExperienceServiceImpl implements WorkExperienceService {
         if (startDate != null && startDate.isBefore(MIN_LOGICAL_START_DATE)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "La fecha de inicio no puede ser anterior al 01/01/1900"
+                    "La fecha de inicio no puede ser anterior al 01/01/2015"
             );
         }
     }

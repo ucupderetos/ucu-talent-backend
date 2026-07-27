@@ -17,7 +17,9 @@ import java.util.List;
 @ToString
 
 @Entity
-@Table(name = "student_profile")
+@Table(name = "student_profile", uniqueConstraints = @UniqueConstraint(
+        name = "uq_student_profile_document",
+        columnNames = {"document_type", "document_number"}))
 public class StudentProfile {
 
     @Id

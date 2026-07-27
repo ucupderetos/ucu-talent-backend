@@ -3,10 +3,13 @@ package ucu.retojulio2026.talent.studentprofile.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import ucu.retojulio2026.talent.common.DocumentBearer;
 import ucu.retojulio2026.talent.common.DocumentType;
+import ucu.retojulio2026.talent.common.validation.ValidDocumentNumber;
 
 import java.util.List;
 
+@ValidDocumentNumber
 public record CreateStudentProfileRequest(
 
         @Schema(description = "Nombre del alumno", example = "Nicolas")
@@ -37,4 +40,4 @@ public record CreateStudentProfileRequest(
         @Schema(description = "Descripción del perfil del alumno",  example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
         String description
 
-) {}
+) implements DocumentBearer {}

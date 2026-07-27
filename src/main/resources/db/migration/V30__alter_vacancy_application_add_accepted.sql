@@ -1,0 +1,2 @@
+ALTER TABLE vacancy_application
+    ADD COLUMN accepted BOOLEAN NOT NULL DEFAULT FALSE;

@@ -27,6 +27,7 @@
 12. Registro universitario (`UniversityRegistry`)
 13. Auditoria (`AuditLog`)
 14. **Dev (TEMPORAL)**
+15. Templates de mail (`MailTemplate`)
 
 ---
 
@@ -43,7 +44,7 @@ Controller: `user/UserController` · Tag: **Usuarios**
 | 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado |
 | 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role` | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`) | `List<UserResponse>` | `200` | — |
 | 3 | GET | `/user/{id}` | Obtener una cuenta por id | 🔒 Autenticado | — (path `id`) | `UserResponse` | `200` | `404` |
-| 4 | GET | `/user?email={email}` | Buscar por email | 🔒 Autenticado | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `404` no existe |
+| 4 | GET | `/user?email={email}` | Buscar por email | 🔒 rol `ADMIN` (misma regla de path que `GET /user`, no distingue query string) | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `403` no es ADMIN · `404` no existe |
 | 5 | PATCH | `/user/{id}` | Aprobar o rechazar un usuario | 🔒 rol `ADMIN` | `UpdateUserStatusRequest` | `UserResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe · `409` transición inválida |
 | 6 | DELETE | `/user/{id}` | Eliminar una cuenta | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 
@@ -73,20 +74,24 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` · `409` ya tiene perfil |
-| 2 | GET | `/student-profile` | Listar todos los perfiles | 🔒 rol `ADMIN` | — | `List<StudentProfileResponse>` | `200` | `403` no es ADMIN |
+| 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` datos inválidos o documento con formato inválido · `409` ya tiene perfil o documento duplicado |
+| 2 | GET | `/student-profile?status={status}` | Listar perfiles, opcionalmente filtrados por estado | 🔒 rol `ADMIN` | — (query `status`: `AccountStatus`, opcional) | `List<StudentProfileResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
-| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `404` no existe |
+| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 rol `ADMIN` (misma regla de path que `GET /student-profile`, no distingue query string) | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
 | 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 6 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 | 7 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
-**`CreateStudentProfileRequest`** (entrada — sin `userId`, el id sale del token)
+**`CreateStudentProfileRequest`** (entrada — sin `userId`, el id sale del token; `@ValidDocumentNumber`)
 - `name` string · `@NotBlank` · `surname` string · `@NotBlank`
 - `documentType` enum `DocumentType` · `@NotNull`
-- `documentNumber` string · `@NotBlank`
+- `documentNumber` string · `@NotBlank` · `@ValidDocumentNumber` valida el formato según `documentType`
+  (`CEDULA_IDENTIDAD`/`DNI`: solo dígitos · `PASAPORTE`: alfanumérico · `400` si no matchea) — acepta
+  `.`, `-` y espacios (ej. `"1.234.567-8"`), se normalizan y se guardan sin ellos (ej. `"12345678"`).
+  Duplicado de `documentType` + `documentNumber` (ya normalizado) → `409`; el mismo número con
+  `documentType` distinto es válido.
 - `phoneNumber` string? (opcional) · `linkedinUrl` string? (opcional)
 - `skills` `string[]?` (opcional) · `description` string? (opcional)
 
@@ -94,7 +99,11 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 - `phoneNumber` string · `@NotBlank` · `linkedinUrl` string · `@NotBlank` · `skills` `string[]` · `@NotEmpty` · `description` string · `@NotBlank`
 
 **`StudentProfileResponse`** (salida — no expone `userId`, la PK ya lo es)
-- `studentProfileId` (= `userId`) · `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber` · `phoneNumber` · `linkedinUrl` · `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt` (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
+- `studentProfileId` (= `userId`) · `email` (del `User` dueño) · `registeredAt` (date, del `User` dueño) ·
+  `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber`
+  (normalizado, sin `.`/`-`/espacios aunque se haya mandado con ellos) · `phoneNumber` · `linkedinUrl` ·
+  `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt`
+  (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
 
 **`StudentProfileStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `ALUMNO`)
@@ -241,6 +250,7 @@ Controller: `auth/AuthController` (`/auth`) + `auth/MeController` (`/me`) · Tag
 
 **`MeResponse`** (salida — se lee `status` fresco de la BD, nunca del JWT)
 - `userId` · `email` · `role` (`Role`) · `status` (`AccountStatus`) · `registeredAt` (date)
+- `hasProfile` boolean — si ya existe el perfil del paso 2 del registro (`StudentProfile`/`Company`/`Admin` según `role`).
 
 ---
 
@@ -301,11 +311,11 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 | 1 | POST | `/vacancy` | Crear un puesto | 🔒 rol `EMPRESA` + dueño de `companyId` + empresa `APROBADO` | `CreateVacancyRequest` | `VacancyResponse` | `201` | `400` · `403` no es el dueño / empresa no aprobada · `404` company/area no existe |
 | 2 | GET | `/vacancy` | Listar todos los puestos | 🔒 Autenticado | — | `List<VacancyResponse>` | `200` | — |
 | 3 | GET | `/vacancy/{id}` | Obtener puesto por id | 🔒 Autenticado | — (path `id`) | `VacancyResponse` | `200` | `404` |
-| 4 | GET | `/vacancy?status={status}` | Listar por estado | 🔒 Autenticado | — (query `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 5 | GET | `/vacancy?companyId={id}` | Listar por empresa | 🔒 Autenticado | — (query `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 6 | GET | `/vacancy?areaId={id}` | Listar por area | 🔒 Autenticado | — (query `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 7 | GET | `/vacancy?modality={modality}` | Listar por modalidad | 🔒 Autenticado | — (query `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 8 | GET | `/vacancy?location={location}` | Listar por localidad | 🔒 Autenticado | — (query `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 4 | GET | `/vacancy/status/{status}` | Listar por estado | 🔒 Autenticado | — (path `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 5 | GET | `/vacancy/company/{companyId}` | Listar por empresa | 🔒 Autenticado | — (path `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 6 | GET | `/vacancy/area/{areaId}` | Listar por area | 🔒 Autenticado | — (path `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 7 | GET | `/vacancy/modality/{modality}` | Listar por modalidad | 🔒 Autenticado | — (path `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 8 | GET | `/vacancy/location/{location}` | Listar por localidad | 🔒 Autenticado | — (path `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
 | 9 | PUT | `/vacancy/{id}` | Actualizar puesto por id | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 10 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 11 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
@@ -348,15 +358,16 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/vacancy-application` | Crear una postulación | 🔒 rol `ALUMNO` + alumno `APROBADO` | `CreateVacancyApplicationRequest` | `VacancyApplicationResponse` | `201` | `400` · `403` alumno no aprobado · `404` vacante/perfil no existe · `409` ya postulado |
-| 2 | GET | `/vacancy-application/me` | Listar mis postulaciones (alumno autenticado) | 🔒 rol `ALUMNO` | — | `List<VacancyApplicationResponse>` | `200` | `403` no es ALUMNO |
+| 2 | GET | `/vacancy-application/me` | Listar mis postulaciones (alumno autenticado) | 🔒 rol `ALUMNO` | — | `List<VacancyApplicationStudentResponse>` | `200` | `403` no es ALUMNO |
 | 3 | GET | `/vacancy-application/{id}` | Obtener postulación por id | 🔒 + dueño (empresa dueña de la vacante) | — (path `id`) | `VacancyApplicationResponse` | `200` | `403` no es la empresa dueña · `404` no existe |
-| 4 | GET | `/vacancy-application` | Listar todas las postulaciones | 🔒 Autenticado | — | `List<VacancyApplicationResponse>` | `200` | — |
+| 4 | GET | `/vacancy-application` | Listar todas las postulaciones | 🔒 rol `ADMIN` | — | `List<VacancyApplicationResponse>` | `200` | `403` no es ADMIN |
 | 5 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 + dueño (empresa dueña de la vacante) | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es la empresa dueña · `404` no existe la vacante |
 | 6 | GET | `/vacancy-application?studentProfileId={id}` | Listar por perfil de alumno | 🔒 rol `ADMIN` | — (query `studentProfileId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es ADMIN |
-| 7 | GET | `/vacancy-application?status={status}` | Listar por estado | 🔒 Autenticado | — (query `status`: `VacancyApplicationStatus`) | `List<VacancyApplicationResponse>` | `200` | `400` enum inválido |
+| 7 | GET | `/vacancy-application?status={status}` | Listar por estado | 🔒 rol `ADMIN` | — (query `status`: `VacancyApplicationStatus`) | `List<VacancyApplicationResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
 | 8 | PUT | `/vacancy-application/{id}` | Actualizar el estado por id | 🔒 + dueño (empresa dueña de la vacante) | `UpdateVacancyApplicationRequest` | `VacancyApplicationResponse` | `200` | `400` · `403` no es la empresa dueña · `404` no existe · `409` transición inválida (retrocede) |
-| 9 | DELETE | `/vacancy-application/{id}` | Eliminar postulación por id | 🔒 + dueño (alumno postulante) | — (path `id`) | — (vacío) | `204` | `403` no es el postulante · `404` no existe |
-| 10 | GET | `/vacancy-application/status-summary` | Totales de postulaciones por estado | 🔒 rol `ADMIN` | — | `VacancyApplicationStatusSummaryResponse` | `200` | `403` no es ADMIN |
+| 9 | PATCH | `/vacancy-application/{id}/accept` | Marcar la postulación como aceptada (`accepted: true`) | 🔒 + dueño (empresa dueña de la vacante) | — (path `id`) | `VacancyApplicationResponse` | `200` | `403` no es la empresa dueña · `404` no existe |
+| 10 | DELETE | `/vacancy-application/{id}` | Eliminar postulación por id | 🔒 + dueño (alumno postulante) | — (path `id`) | — (vacío) | `204` | `403` no es el postulante · `404` no existe |
+| 11 | GET | `/vacancy-application/status-summary` | Totales de postulaciones por estado | 🔒 rol `ADMIN` | — | `VacancyApplicationStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -367,7 +378,10 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 **`UpdateVacancyApplicationRequest`** (entrada)
 - `status` enum `VacancyApplicationStatus`
 
-**`VacancyApplicationResponse`** (salida)
+**`VacancyApplicationResponse`** (salida — visible para empresa dueña y ADMIN)
+- `vacancyApplicationId` · `vacancyId` · `studentProfileId` · `status` (`VacancyApplicationStatus`) · `appliedAt` (date) · `accepted` boolean (default `false`; solo se pasa a `true` vía `PATCH /vacancy-application/{id}/accept`)
+
+**`VacancyApplicationStudentResponse`** (salida — usado solo en `GET /vacancy-application/me`, nunca expone `accepted`)
 - `vacancyApplicationId` · `vacancyId` · `studentProfileId` · `status` (`VacancyApplicationStatus`) · `appliedAt` (date)
 
 **`VacancyApplicationStatusSummaryResponse`** (salida)
@@ -381,21 +395,25 @@ Controller: `universityregistry/UniversityRegistryController` · Tag: **Universi
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/university-registry` | Crear un registro | 🔒 rol `ADMIN` | `CreateUniversityRegistryRequest` | `UniversityRegistryResponse` | `201` | `400` datos inválidos · `403` no es ADMIN |
+| 1 | POST | `/university-registry` | Crear un registro | 🔒 rol `ADMIN` | `CreateUniversityRegistryRequest` | `UniversityRegistryResponse` | `201` | `400` datos inválidos o documento con formato inválido · `403` no es ADMIN |
 | 2 | GET | `/university-registry` | Listar todos los registros | 🔒 rol `ADMIN` | — | `List<UniversityRegistryResponse>` | `200` | `403` no es ADMIN |
 | 3 | GET | `/university-registry/{id}` | Obtener registro por id | 🔒 rol `ADMIN` | — (path `id`) | `UniversityRegistryResponse` | `200` | `403` no es ADMIN · `404` |
-| 4 | PUT | `/university-registry/{id}` | Actualizar registro por id | 🔒 rol `ADMIN` | `UpdateUniversityRegistryRequest` | `UniversityRegistryResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
+| 4 | PUT | `/university-registry/{id}` | Actualizar registro por id | 🔒 rol `ADMIN` | `UpdateUniversityRegistryRequest` | `UniversityRegistryResponse` | `200` | `400` datos inválidos o documento con formato inválido · `403` no es ADMIN · `404` no existe |
 | 5 | DELETE | `/university-registry/{id}` | Eliminar registro por id | 🔒 rol `ADMIN` | — (path `id`) | — (vacío) | `204` | `403` no es ADMIN · `404` |
 
 
 ### Schemas
 
-**`CreateUniversityRegistryRequest`** / **`UpdateUniversityRegistryRequest`** (entrada)
+**`CreateUniversityRegistryRequest`** / **`UpdateUniversityRegistryRequest`** (entrada — `@ValidDocumentNumber`)
 - `documentType` enum `DocumentType` (`common.DocumentType`: `CEDULA_IDENTIDAD | PASAPORTE | DNI`)
-- `documentNumber` · `name` · `surname` (string)
+- `documentNumber` · `@ValidDocumentNumber` valida el formato según `documentType`
+  (`CEDULA_IDENTIDAD`/`DNI`: solo dígitos · `PASAPORTE`: alfanumérico · `400` si no matchea) — acepta
+  `.`, `-` y espacios (ej. `"1.234.567-8"`), se normalizan y se guardan sin ellos (ej. `"12345678"`)
+- `name` · `surname` (string)
 
 **`UniversityRegistryResponse`** (salida)
-- `universityRegistryId` · `documentType` (`DocumentType`) · `documentNumber` · `name` · `surname`
+- `universityRegistryId` · `documentType` (`DocumentType`) · `documentNumber` (normalizado, sin
+  `.`/`-`/espacios aunque se haya mandado con ellos) · `name` · `surname`
 
 ---
 
@@ -437,10 +455,32 @@ Para borrarlo: el paquete `dev/` completo, `"/dev/**"` de
 
 ---
 
+## 15. Templates de mail — `/mail-template`
+
+Controller: `mail/MailTemplateController` · Tag: **Templates de mail**
+
+| # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
+|---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
+| 1 | GET | `/mail-template` | Listar todos los templates de mail | 🔒 rol `ADMIN` | — | `List<MailTemplateResponse>` | `200` | `403` no es ADMIN |
+| 2 | GET | `/mail-template/{code}` | Obtener un template por código | 🔒 rol `ADMIN` | — (path `code`: `MailTemplateCode`) | `MailTemplateResponse` | `200` | `400` código inválido · `403` no es ADMIN · `404` no existe |
+| 3 | PUT | `/mail-template/{code}` | Actualizar subject/body de un template | 🔒 rol `ADMIN` | `UpdateMailTemplateRequest` | `MailTemplateResponse` | `200` | `400` datos inválidos o código inválido · `403` no es ADMIN · `404` no existe |
+
+### Schemas
+
+**`UpdateMailTemplateRequest`** (entrada)
+- `subject` string · `@NotBlank` `@Size(max=200)`
+- `body` string · `@NotBlank` (admite placeholders `{{variable}}`)
+
+**`MailTemplateResponse`** (salida)
+- `mailTemplateId` · `code` (`MailTemplateCode`) · `subject` · `body` · `placeholders` `string[]`
+  (de solo lectura, fijo por `code`)
+
+---
+
 ## Enums de referencia
 
 - **`Role`**: `ALUMNO`, `EMPRESA`, `ADMIN` (registro público solo `ALUMNO` | `EMPRESA`; `ADMIN` vía sección 13, temporal)
-- **`AccountStatus`**: `PENDIENTE`, `APROBADO`, `RECHAZADO` — reemplaza a `Company.approved`, aplica a los tres roles. Al registrarse (`POST /user`): `ALUMNO` nace `APROBADO`, `EMPRESA` nace `PENDIENTE` (el `ADMIN` de `/dev/admin` nace `APROBADO` directo).
+- **`AccountStatus`**: `PENDIENTE`, `APROBADO`, `RECHAZADO` — reemplaza a `Company.approved`, aplica a los tres roles. Al registrarse (`POST /user`): `ALUMNO` nace `APROBADO`, `EMPRESA` nace `PENDIENTE` (el `ADMIN` de `/dev/admin` nace `APROBADO` directo). Transición vía `PATCH /user/{id}`: desde `APROBADO`/`RECHAZADO` el Admin puede alternar libremente entre ambos (reversible); nunca se puede volver a `PENDIENTE` (`409`).
 - **`DocumentType`**: `CEDULA_IDENTIDAD`, `PASAPORTE`, `DNI` — enum **único compartido** en
   `common.DocumentType`, usado por `StudentProfile` y `UniversityRegistry`
 - **`Education.DegreeLevel`**: `TECNICATURA`, `LICENCIATURA`, `GRADO`, `POSGRADO`, `DOCTORADO`
@@ -449,5 +489,6 @@ Para borrarlo: el paquete `dev/` completo, `"/dev/**"` de
 - **`Modality`**: `PRESENCIAL`, `HIBRIDO`, `REMOTO`
 - **`Departamento`** (localidad de Vacancy, 19): mismos valores que `Department`
 - **`Department`** (19): `ARTIGAS`, `CANELONES`, `CERRO_LARGO`, `COLONIA`, `DURAZNO`, `FLORES`, `FLORIDA`, `LAVALLEJA`, `MALDONADO`, `MONTEVIDEO`, `PAYSANDU`, `RIO_NEGRO`, `RIVERA`, `ROCHA`, `SALTO`, `SAN_JOSE`, `SORIANO`, `TACUAREMBO`, `TREINTA_Y_TRES`
+- **`MailTemplateCode`**: `NEW_APPLICATION`, `APPLICATION_VISTO`, `VACANCY_CLOSED`, `VACANCY_SELECTED` — códigos fijos, sin create/delete por API
 
 ---

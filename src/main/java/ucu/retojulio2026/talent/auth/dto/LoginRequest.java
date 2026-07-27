@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
 
-        @Schema(description = "Email del usuario", example = "washi@ucu.edu.uy")
+        @Schema(description = "Email del usuario", example = "nicogon@ucu.edu.uy")
         @NotBlank(message = "El email es obligatorio")
         String email,
 

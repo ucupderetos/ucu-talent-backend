@@ -12,4 +12,6 @@ public interface VacancyApplicationMapper {
     VacancyApplication toEntity(CreateVacancyApplicationRequest request);
 
     VacancyApplicationResponse toResponse(VacancyApplication vacancyApplication);
+
+    VacancyApplicationStudentResponse toStudentResponse(VacancyApplication vacancyApplication);
 }

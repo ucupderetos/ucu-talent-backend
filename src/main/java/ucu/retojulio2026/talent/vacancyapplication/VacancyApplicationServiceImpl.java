@@ -153,10 +153,24 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         if (previousStatus != status) {
             Vacancy vacancy = vacancyService.getVacancyById(vacancyApplication.getVacancyId());
             User applicantUser = userService.getById(vacancyApplication.getStudentProfileId());
-            mailService.sendApplicantStatusChangedEmail(applicantUser.getEmail(), vacancy.getName(), status);
+            StudentProfile applicant = studentProfileService.getById(vacancyApplication.getStudentProfileId());
+            String applicantFullName = applicant.getName() + " " + applicant.getSurname();
+
+            if (status == VacancyApplicationStatus.VISTO) {
+                mailService.sendApplicationVistoEmail(applicantUser.getEmail(), applicantFullName, vacancy.getName());
+            } else if (status == VacancyApplicationStatus.FINALIZADO) {
+                mailService.sendVacancyClosedEmail(applicantUser.getEmail(), applicantFullName, vacancy.getName());
+            }
         }
 
         return updated;
+    }
+
+    @Override
+    public VacancyApplication accept(String id) {
+        VacancyApplication vacancyApplication = getById(id);
+        vacancyApplication.setAccepted(true);
+        return vacancyApplicationRepository.save(vacancyApplication);
     }
 
     @Override
