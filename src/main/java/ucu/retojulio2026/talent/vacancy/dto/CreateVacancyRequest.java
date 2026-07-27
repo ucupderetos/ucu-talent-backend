@@ -30,6 +30,7 @@ public record CreateVacancyRequest (
     LocalDate closingDate,
 
     @Schema(description = "Localidad del puesto", example = "MONTEVIDEO")
+    @NotNull(message = "La localidad es obligatoria")
     Department location,
 
     @Schema(description = "Modalidad de trabajo", example = "REMOTO")
