@@ -237,7 +237,7 @@ Controller: `auth/AuthController` (`/auth`) + `auth/MeController` (`/me`) · Tag
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/auth/login` | Login con email y contraseña | 🌐 Público | `LoginRequest` | `UserResponse` | `200` (+ `Set-Cookie` httpOnly) | `401` credenciales incorrectas · `400` campos vacíos |
+| 1 | POST | `/auth/login` | Login con email y contraseña | 🌐 Público | `LoginRequest` | `UserResponse` | `200` (+ `Set-Cookie` httpOnly) | `401` credenciales incorrectas · `400` campos vacíos · `429` demasiados intentos (rate limit) |
 | 2 | POST | `/auth/logout` | Vencer la cookie de sesión | 🌐 Público | — | — (vacío) | `200` (+ cookie vencida) | — |
 | 3 | GET | `/me` | Datos de la cuenta logueada (hidrata el front) | 🔒 Autenticado | — | `MeResponse` | `200` | `401` sin cookie o token inválido/vencido |
 
@@ -251,6 +251,20 @@ Controller: `auth/AuthController` (`/auth`) + `auth/MeController` (`/me`) · Tag
 **`MeResponse`** (salida — se lee `status` fresco de la BD, nunca del JWT)
 - `userId` · `email` · `role` (`Role`) · `status` (`AccountStatus`) · `registeredAt` (date)
 - `hasProfile` boolean — si ya existe el perfil del paso 2 del registro (`StudentProfile`/`Company`/`Admin` según `role`).
+
+### 7.4 Rate limiting de login
+
+- El endpoint `POST /auth/login` tiene límite doble en memoria (Bucket4j + Caffeine):
+  - Por email: 5 intentos por 60 segundos.
+  - Por IP: 20 intentos por 60 segundos.
+- Si se excede cualquiera de los dos límites, responde:
+  - `429 Too Many Requests`
+  - Body `application/problem+json` (`ProblemDetail`)
+  - Header `Retry-After` (segundos de bloqueo)
+- Bloqueo progresivo (estilo lockout de iOS): cada vez que la misma key (email o IP) vuelve a exceder su límite, el castigo escala un escalón en vez de repetirse: 30s → 3min → 15min (configurable, se mantiene en el último escalón si sigue reincidiendo). El contador de reincidencia de una key se resetea solo si pasa 24h sin nuevas infracciones.
+- Cloud Run: al usar contadores en memoria, con N instancias el límite efectivo agregado puede acercarse a `N x límite`.
+  - Para demo estricta de rate limit: configurar `min-instances=1` y `max-instances=1`.
+  - Si se escala a múltiples instancias, este rate limit debe considerarse aproximado.
 
 ---
 
