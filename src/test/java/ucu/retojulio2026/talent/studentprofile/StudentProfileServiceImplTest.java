@@ -53,7 +53,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void createShouldThrowResourceNotFoundExceptionWhenUserDoesNotExist() {
+    void crear_falla_si_el_usuario_no_existe() {
         String userId = "user-1";
 
         when(userService.existsById(userId)).thenReturn(false);
@@ -67,7 +67,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void createShouldThrowDuplicateResourceExceptionWhenProfileAlreadyExists() {
+    void crear_falla_si_el_perfil_ya_existe() {
         String userId = "user-1";
 
         when(userService.existsById(userId)).thenReturn(true);
@@ -82,7 +82,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void createShouldThrowDuplicateResourceExceptionWhenNormalizedDocumentAlreadyExists() {
+    void crear_falla_si_el_documento_normalizado_ya_existe() {
         String userId = "user-1";
 
         CreateStudentProfileRequest request = new CreateStudentProfileRequest(
@@ -118,7 +118,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void createShouldSaveProfileWithNormalizedDocumentAndSkills() {
+    void crear_guarda_documento_y_habilidades_normalizadas() {
         String userId = "user-1";
 
         CreateStudentProfileRequest request = new CreateStudentProfileRequest(
@@ -163,7 +163,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void updateShouldUpdateAllowedFieldsAndNormalizeSkills() {
+    void actualizar_modifica_campos_permitidos_y_normaliza_habilidades() {
         String userId = "user-1";
 
         StudentProfile existingProfile = new StudentProfile();
@@ -203,7 +203,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void updateShouldThrowResourceNotFoundExceptionWhenProfileDoesNotExist() {
+    void actualizar_falla_si_el_perfil_no_existe() {
         String userId = "user-1";
 
         UpdateStudentProfileRequest request = new UpdateStudentProfileRequest(
@@ -225,7 +225,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void getAllShouldReturnAllProfilesWhenStatusIsNull() {
+    void listar_devuelve_todos_los_perfiles_si_el_estado_es_nulo() {
         StudentProfile profile1 = new StudentProfile();
         StudentProfile profile2 = new StudentProfile();
 
@@ -242,7 +242,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void getAllShouldReturnProfilesFilteredByStatus() {
+    void listar_filtra_perfiles_por_estado() {
         StudentProfile profile1 = new StudentProfile();
         profile1.setStudentProfileId("user-1");
 
@@ -286,7 +286,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void reviewShouldUpdateReviewedAtAndAdminComment() {
+    void revisar_actualiza_fecha_y_comentario() {
         String userId = "user-1";
         LocalDateTime reviewedAt = LocalDateTime.of(
                 2026, 7, 27, 11, 0
@@ -313,7 +313,7 @@ class StudentProfileServiceImplTest {
     }
 
     @Test
-    void getByIdShouldThrowResourceNotFoundExceptionWhenProfileDoesNotExist() {
+    void buscar_por_id_falla_si_el_perfil_no_existe() {
         String userId = "user-1";
 
         when(studentProfileRepository.findById(userId))
