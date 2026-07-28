@@ -187,4 +187,14 @@ class UserServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> service.getByEmail("nadie@ucu.edu.uy"));
     }
+
+    @Test
+    void borrar_un_usuario_inexistente_lanza_resource_not_found_exception() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        when(userRepository.existsById("user-x")).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.delete("user-x"));
+
+        verify(userRepository, never()).deleteById(anyString());
+    }
 }
