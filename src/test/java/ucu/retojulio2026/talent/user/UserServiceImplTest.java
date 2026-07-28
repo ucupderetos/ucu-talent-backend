@@ -12,6 +12,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
@@ -19,6 +22,7 @@ import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -196,5 +201,65 @@ class UserServiceImplTest {
         assertThrows(ResourceNotFoundException.class, () -> service.delete("user-x"));
 
         verify(userRepository, never()).deleteById(anyString());
+    }
+
+    @Test
+    void listar_con_status_y_role_filtra_por_ambos() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        Pageable pageable = mock(Pageable.class);
+        Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.ALUMNO)));
+        when(userRepository.findByStatusAndRole(AccountStatus.APROBADO, Role.ALUMNO, pageable)).thenReturn(page);
+
+        Page<User> result = service.getAll(AccountStatus.APROBADO, Role.ALUMNO, pageable);
+
+        assertThat(result).isEqualTo(page);
+        verify(userRepository, never()).findByStatus(any(), any());
+        verify(userRepository, never()).findByRole(any(), any());
+        verify(userRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void listar_solo_con_status_filtra_por_status() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        Pageable pageable = mock(Pageable.class);
+        Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.ALUMNO)));
+        when(userRepository.findByStatus(AccountStatus.PENDIENTE, pageable)).thenReturn(page);
+
+        Page<User> result = service.getAll(AccountStatus.PENDIENTE, null, pageable);
+
+        assertThat(result).isEqualTo(page);
+        verify(userRepository, never()).findByStatusAndRole(any(), any(), any());
+        verify(userRepository, never()).findByRole(any(), any());
+        verify(userRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void listar_solo_con_role_filtra_por_role() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        Pageable pageable = mock(Pageable.class);
+        Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.EMPRESA)));
+        when(userRepository.findByRole(Role.EMPRESA, pageable)).thenReturn(page);
+
+        Page<User> result = service.getAll(null, Role.EMPRESA, pageable);
+
+        assertThat(result).isEqualTo(page);
+        verify(userRepository, never()).findByStatusAndRole(any(), any(), any());
+        verify(userRepository, never()).findByStatus(any(), any());
+        verify(userRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void listar_sin_filtros_devuelve_todos_los_usuarios() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        Pageable pageable = mock(Pageable.class);
+        Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.ADMIN)));
+        when(userRepository.findAll(pageable)).thenReturn(page);
+
+        Page<User> result = service.getAll(null, null, pageable);
+
+        assertThat(result).isEqualTo(page);
+        verify(userRepository, never()).findByStatusAndRole(any(), any(), any());
+        verify(userRepository, never()).findByStatus(any(), any());
+        verify(userRepository, never()).findByRole(any(), any());
     }
 }
