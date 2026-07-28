@@ -48,27 +48,56 @@ class WorkExperienceServiceImplTest {
     }
 
     @Test
-    void crear_falla_si_el_perfil_de_estudiante_no_existe() {
-        CreateWorkExperienceRequest request =
+    void crear_valida_la_fecha_de_fin_y_acepta_fin_null() {
+        CreateWorkExperienceRequest invalidRequest =
+                new CreateWorkExperienceRequest(
+                        "student-1",
+                        "Acme S.A.",
+                        "Backend Developer",
+                        LocalDate.of(2024, 1, 1),
+                        LocalDate.of(2023, 1, 1),
+                        "Desarrollo de APIs REST"
+                );
+
+        when(studentProfileService.existsById("student-1"))
+                .thenReturn(true);
+
+        assertThrows(
+                ResponseStatusException.class,
+                () -> workExperienceService.create(invalidRequest)
+        );
+
+        verify(workExperienceMapper, never()).toEntity(any());
+        verify(workExperienceRepository, never()).save(any());
+
+        CreateWorkExperienceRequest validRequest =
                 new CreateWorkExperienceRequest(
                         "student-1",
                         "Acme S.A.",
                         "Backend Developer",
                         LocalDate.of(2022, 1, 1),
-                        LocalDate.of(2024, 1, 1),
+                        null,
                         "Desarrollo de APIs REST"
                 );
 
-        when(studentProfileService.existsById("student-1"))
-                .thenReturn(false);
+        WorkExperience workExperience = new WorkExperience();
+        workExperience.setStudentProfileId("student-1");
+        workExperience.setEndDate(null);
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> workExperienceService.create(request)
-        );
+        when(workExperienceMapper.toEntity(validRequest))
+                .thenReturn(workExperience);
 
-        verify(workExperienceMapper, never()).toEntity(any());
-        verify(workExperienceRepository, never()).save(any());
+        when(workExperienceRepository.save(workExperience))
+                .thenReturn(workExperience);
+
+        WorkExperience result =
+                workExperienceService.create(validRequest);
+
+        assertSame(workExperience, result);
+        assertNull(result.getEndDate());
+
+        verify(workExperienceMapper).toEntity(validRequest);
+        verify(workExperienceRepository).save(workExperience);
     }
 
     @Test
