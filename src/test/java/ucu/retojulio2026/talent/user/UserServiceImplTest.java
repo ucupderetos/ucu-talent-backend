@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -163,5 +164,19 @@ class UserServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> service.updateStatus("user-x", AccountStatus.APROBADO));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AccountStatus.class, names = {"APROBADO", "RECHAZADO"})
+    void revisar_un_usuario_actualiza_y_guarda_el_nuevo_estado(AccountStatus nuevoEstado) {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        User user = newMappedUser(Role.ALUMNO);
+        user.setStatus(AccountStatus.PENDIENTE);
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+
+        service.updateStatus("user-1", nuevoEstado);
+
+        assertThat(user.getStatus()).isEqualTo(nuevoEstado);
+        verify(userRepository, times(1)).save(user);
     }
 }
