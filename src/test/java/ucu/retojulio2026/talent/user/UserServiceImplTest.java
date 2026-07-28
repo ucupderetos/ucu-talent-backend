@@ -23,6 +23,7 @@ import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -261,5 +262,21 @@ class UserServiceImplTest {
         verify(userRepository, never()).findByStatusAndRole(any(), any(), any());
         verify(userRepository, never()).findByStatus(any(), any());
         verify(userRepository, never()).findByRole(any(), any());
+    }
+
+    @Test
+    void panel_de_actividad_trae_las_tres_claves_de_estado_aunque_el_conteo_sea_cero() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        when(userRepository.countByRoleAndStatus(Role.ALUMNO, AccountStatus.PENDIENTE)).thenReturn(3L);
+        when(userRepository.countByRoleAndStatus(Role.ALUMNO, AccountStatus.APROBADO)).thenReturn(5L);
+        when(userRepository.countByRoleAndStatus(Role.ALUMNO, AccountStatus.RECHAZADO)).thenReturn(0L);
+
+        Map<AccountStatus, Long> counts = service.countByRoleGroupedByStatus(Role.ALUMNO);
+
+        assertThat(counts)
+                .containsOnlyKeys(AccountStatus.PENDIENTE, AccountStatus.APROBADO, AccountStatus.RECHAZADO)
+                .containsEntry(AccountStatus.PENDIENTE, 3L)
+                .containsEntry(AccountStatus.APROBADO, 5L)
+                .containsEntry(AccountStatus.RECHAZADO, 0L);
     }
 }
