@@ -179,4 +179,12 @@ class UserServiceImplTest {
         assertThat(user.getStatus()).isEqualTo(nuevoEstado);
         verify(userRepository, times(1)).save(user);
     }
+
+    @Test
+    void buscar_por_email_inexistente_lanza_resource_not_found_exception() {
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        when(userRepository.findByEmail("nadie@ucu.edu.uy")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.getByEmail("nadie@ucu.edu.uy"));
+    }
 }
