@@ -85,6 +85,7 @@ jobs:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          service_account: ucu-talent-github-actions@reto-universitario-2026.iam.gserviceaccount.com
 
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
@@ -93,6 +94,8 @@ jobs:
             SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
+            GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}
+            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}          
 
           secrets: |
             POSTGRES_USER=dev-backend-db-username:latest
@@ -146,6 +149,7 @@ jobs:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}:${{ env.TAG_FIJO }}
+          service_account: ucu-talent-github-actions@reto-universitario-2026.iam.gserviceaccount.com
 
           env_vars: |
             POSTGRES_URL=${{ vars.POSTGRES_URL }}
@@ -154,6 +158,8 @@ jobs:
             SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
+            GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}
+            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}  
 
           secrets: |
             POSTGRES_USER=prod-backend-db-username:latest

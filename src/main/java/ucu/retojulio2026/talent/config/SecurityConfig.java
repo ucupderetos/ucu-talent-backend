@@ -31,9 +31,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatchers;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
@@ -42,6 +44,7 @@ import tools.jackson.databind.ObjectMapper;
 import org.springframework.http.ProblemDetail;
 
 import ucu.retojulio2026.talent.auth.CookieBearerTokenResolver;
+import ucu.retojulio2026.talent.auth.LoginRateLimitFilter;
 
 @EnableMethodSecurity
 @Configuration
@@ -92,12 +95,7 @@ public class SecurityConfig {
         return source;
     }
 
-    // Se ejecuta cuando oauth2ResourceServer rechaza un request sin JWT valido, ANTES de que
-    // llegue a cualquier controller (por eso GlobalExceptionHandler nunca lo ve). Sin este bean,
-    // Spring Security responde 401 vacio + solo el header WWW-Authenticate (RFC 6750) - correcto
-    // para clientes OAuth2 maquina-a-maquina, pero inconsistente con el resto de la API (que
-    // siempre responde ProblemDetail JSON). Mantenemos el header (cumple el RFC) y agregamos el
-    // mismo body que ya usa GlobalExceptionHandler en todos los demas errores.
+    
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint(ObjectMapper objectMapper) {
         return (request, response, authException) -> {
@@ -127,23 +125,27 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/work-experience")
     );
 
-    // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
-    // JWT ni corre aca. Es la unica forma real de que una cookie access_token vieja/invalida
-    // no rompa el login/signup: si el filtro de JWT se ejecutara igual (como pasaba antes,
-    // con todo en una sola cadena + permitAll), una cookie corrupta tira una
-    // AuthenticationException ANTES de que se llegue a evaluar que el path era permitAll,
-    // porque los filtros de autenticacion corren antes que los de autorizacion.
+
     @Bean
     @Order(1)
-    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain publicFilterChain(HttpSecurity http, LoginRateLimitFilter loginRateLimitFilter)
+            throws Exception {
         http
                 .securityMatcher(PUBLIC_MATCHER)
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+                .addFilterAfter(loginRateLimitFilter, CorsFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 
+    @Bean
+    public FilterRegistrationBean<LoginRateLimitFilter> loginRateLimitFilterAutoRegistrationDisabler(
+            LoginRateLimitFilter loginRateLimitFilter) {
+        FilterRegistrationBean<LoginRateLimitFilter> registration = new FilterRegistrationBean<>(loginRateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
     @Bean
     @Order(2)
