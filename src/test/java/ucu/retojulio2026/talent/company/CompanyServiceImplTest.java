@@ -10,8 +10,15 @@ import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.user.AccountStatus;
+import ucu.retojulio2026.talent.user.Role;
+import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,5 +85,32 @@ class CompanyServiceImplTest {
         assertThat(updated.getWebUrl()).isEqualTo("https://acme.com");
         assertThat(updated.getLinkedinUrl()).isEqualTo("https://linkedin.com/company/acme");
         assertThat(updated.getLocation()).isEqualTo(Department.MONTEVIDEO);
+    }
+
+    @Test
+    void listado_con_status_resuelve_los_ids_via_user_service_y_pide_solo_esos() {
+        CompanyServiceImpl service = new CompanyServiceImpl(companyRepository, companyMapper, userService);
+        User companyUser = new User();
+        companyUser.setUserId("company-1");
+        Page<User> page = new PageImpl<>(List.of(companyUser));
+        when(userService.getAll(AccountStatus.APROBADO, Role.EMPRESA, Pageable.unpaged())).thenReturn(page);
+        when(companyRepository.findAllById(List.of("company-1"))).thenReturn(List.of(new Company()));
+
+        service.getAll(AccountStatus.APROBADO);
+
+        verify(userService).getAll(AccountStatus.APROBADO, Role.EMPRESA, Pageable.unpaged());
+        verify(companyRepository).findAllById(List.of("company-1"));
+        verify(companyRepository, never()).findAll();
+    }
+
+    @Test
+    void listado_sin_status_devuelve_todas_las_empresas() {
+        CompanyServiceImpl service = new CompanyServiceImpl(companyRepository, companyMapper, userService);
+
+        service.getAll(null);
+
+        verify(companyRepository).findAll();
+        verify(userService, never()).getAll(any(), any(), any());
+        verify(companyRepository, never()).findAllById(any());
     }
 }
