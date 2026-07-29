@@ -45,6 +45,7 @@ import org.springframework.http.ProblemDetail;
 
 import ucu.retojulio2026.talent.auth.CookieBearerTokenResolver;
 import ucu.retojulio2026.talent.auth.LoginRateLimitFilter;
+import ucu.retojulio2026.talent.auth.SignupRateLimitFilter;
 
 @EnableMethodSecurity
 @Configuration
@@ -128,21 +129,34 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain publicFilterChain(HttpSecurity http, LoginRateLimitFilter loginRateLimitFilter)
-            throws Exception {
+    public SecurityFilterChain publicFilterChain(HttpSecurity http, LoginRateLimitFilter loginRateLimitFilter,
+            SignupRateLimitFilter signupRateLimitFilter) throws Exception {
         http
                 .securityMatcher(PUBLIC_MATCHER)
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .addFilterAfter(loginRateLimitFilter, CorsFilter.class)
+                .addFilterAfter(signupRateLimitFilter, CorsFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 
+    // LoginRateLimitFilter/SignupRateLimitFilter son @Component, y Spring Boot auto-registra como
+    // filtro global (para "/*") cualquier bean de tipo Filter que encuentre, sin importar si ya lo
+    // agregamos a mano dentro de una SecurityFilterChain con addFilterAfter. Sin estos beans
+    // deshabilitados, cada filtro correria DOS VECES por request, duplicando el consumo del limite.
     @Bean
     public FilterRegistrationBean<LoginRateLimitFilter> loginRateLimitFilterAutoRegistrationDisabler(
             LoginRateLimitFilter loginRateLimitFilter) {
         FilterRegistrationBean<LoginRateLimitFilter> registration = new FilterRegistrationBean<>(loginRateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<SignupRateLimitFilter> signupRateLimitFilterAutoRegistrationDisabler(
+            SignupRateLimitFilter signupRateLimitFilter) {
+        FilterRegistrationBean<SignupRateLimitFilter> registration = new FilterRegistrationBean<>(signupRateLimitFilter);
         registration.setEnabled(false);
         return registration;
     }

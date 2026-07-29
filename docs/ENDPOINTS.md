@@ -42,8 +42,8 @@ Controller: `user/UserController` · Tag: **Usuarios**
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado |
-| 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role`, paginado | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`, `page`? int default `0`, `size`? int default `20`) | `List<UserResponse>` | `200` | — |
+| 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado · `429` demasiadas altas (rate limit) |
+| 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role` | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`) | `List<UserResponse>` | `200` | — |
 | 3 | GET | `/user/{id}` | Obtener una cuenta por id | 🔒 Autenticado | — (path `id`) | `UserResponse` | `200` | `404` |
 | 4 | GET | `/user/mail?email={email}` | Buscar por email | 🔒 rol `ADMIN` | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `403` no es ADMIN · `404` no existe |
 | 5 | GET | `/user/profile-image?profileObject={objectName}` | Obtener URL firmada de la foto de perfil | 🔒 Autenticado | — (query `profileObject`) | `String` (URL firmada) | `200` | `400` formato inválido · `403` no autenticado · `404` no existe |
@@ -273,6 +273,16 @@ Controller: `auth/AuthController` (`/auth`) + `auth/MeController` (`/me`) · Tag
 - Cloud Run: al usar contadores en memoria, con N instancias el límite efectivo agregado puede acercarse a `N x límite`.
   - Para demo estricta de rate limit: configurar `min-instances=1` y `max-instances=1`.
   - Si se escala a múltiples instancias, este rate limit debe considerarse aproximado.
+
+### 7.5 Rate limiting de alta de cuentas
+
+- El endpoint `POST /user` tiene el mismo mecanismo que el login (Bucket4j + Caffeine + bloqueo progresivo), pero con cache y config totalmente independientes — una IP o email penalizados en el login no afectan el alta de cuentas, y viceversa:
+  - Por email: 3 altas por 60 segundos.
+  - Por IP: 3 altas (cuentas distintas) por 60 segundos.
+- Mismo formato de respuesta al exceder el límite: `429` + `application/problem+json` + header `Retry-After`.
+- Bloqueo mucho más severo que el de login, pensado para desalentar creación masiva de cuentas: **1 día → 3 días → 7 días**, quedándose en 7 días si sigue reincidiendo.
+- El contador de reincidencia dura 30 días (no 1 día): si vuelve a exceder el límite al día siguiente de que expiró el primer bloqueo, escala a 3 días en vez de reiniciar en 1 día.
+- Aplica la misma advertencia de Cloud Run que 7.4 (contadores en memoria, aproximados con N > 1 instancias).
 
 ---
 
