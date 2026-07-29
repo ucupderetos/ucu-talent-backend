@@ -42,8 +42,8 @@ Controller: `user/UserController` · Tag: **Usuarios**
 
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
-| 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado |
-| 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role`, paginado | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`, `page`? int default `0`, `size`? int default `20`) | `List<UserResponse>` | `200` | — |
+| 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado · `429` demasiadas altas (rate limit) |
+| 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role` | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`) | `List<UserResponse>` | `200` | — |
 | 3 | GET | `/user/{id}` | Obtener una cuenta por id | 🔒 Autenticado | — (path `id`) | `UserResponse` | `200` | `404` |
 | 4 | GET | `/user/mail?email={email}` | Buscar por email | 🔒 rol `ADMIN` | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `403` no es ADMIN · `404` no existe |
 | 5 | GET | `/user/profile-image?profileObject={objectName}` | Obtener URL firmada de la foto de perfil | 🔒 Autenticado | — (query `profileObject`) | `String` (URL firmada) | `200` | `400` formato inválido · `403` no autenticado · `404` no existe |
