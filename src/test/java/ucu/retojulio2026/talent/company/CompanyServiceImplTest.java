@@ -43,4 +43,15 @@ class CompanyServiceImplTest {
 
         verify(companyRepository, never()).save(any(Company.class));
     }
+
+    @Test
+    void un_usuario_no_puede_tener_mas_de_una_empresa_asociada() {
+        CompanyServiceImpl service = new CompanyServiceImpl(companyRepository, companyMapper, userService);
+        when(userService.existsById("user-1")).thenReturn(true);
+        when(companyRepository.existsById("user-1")).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class, () -> service.create("user-1", sampleRequest()));
+
+        verify(companyRepository, never()).save(any(Company.class));
+    }
 }
