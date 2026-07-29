@@ -121,7 +121,7 @@ public class UserController {
     public ResponseEntity<String> getProfileImage(@RequestParam String profileObject, @AuthenticationPrincipal Jwt jwt) {
         String url = userService.getProfileImage(profileObject, jwt);
         return ResponseEntity.ok(url);
-    } //propio hay que cambiarlo de lugar y hacerlo generico tanto images como files.
+    }
 
     // ===== UPDATE =====
 
@@ -150,16 +150,14 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
             @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
     })
-    @PatchMapping(value = "profile/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/profile/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponse> updateProfileImage(
-            @Parameter(description = "Imagen de perfil del usuario")
             @AuthenticationPrincipal Jwt jwt,
-            @RequestPart MultipartFile file) {
-        User usuario = userService.getById(jwt.getSubject());
-        AuthorizationGuard.requireOwnership(jwt, usuario.getUserId());
+            @RequestPart("file") MultipartFile file) {
+
         User updated = userService.updateProfileImage(jwt.getSubject(), file);
         return ResponseEntity.ok(userMapper.toResponse(updated));
-    } //SIEMPRE IMAGEN NUNCA OTRA COSA COMPROBAR ESO ANTES!
+    }
 
     // ===== DELETE =====
 
@@ -179,4 +177,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/profile/image")
+    public ResponseEntity<Void> deleteProfileImage(@AuthenticationPrincipal Jwt jwt) {
+        userService.deleteProfileImage(jwt.getSubject());
+        return ResponseEntity.noContent().build();
+    }
 }

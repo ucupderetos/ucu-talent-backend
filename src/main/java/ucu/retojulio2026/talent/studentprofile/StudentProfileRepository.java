@@ -9,4 +9,6 @@ import ucu.retojulio2026.talent.common.DocumentType;
 public interface StudentProfileRepository extends JpaRepository<StudentProfile, String> {
 
     boolean existsByDocumentTypeAndDocumentNumber(DocumentType documentType, String documentNumber);
+
+    boolean existsByCvFile(String cvFile);
 }

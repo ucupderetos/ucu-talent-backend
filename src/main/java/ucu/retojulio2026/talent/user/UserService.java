@@ -32,4 +32,6 @@ public interface UserService {
     String getProfileImage(String profileObject, Jwt jwt);
 
     User updateProfileImage(String userId, MultipartFile file);
+
+    void deleteProfileImage(String userId);
 }

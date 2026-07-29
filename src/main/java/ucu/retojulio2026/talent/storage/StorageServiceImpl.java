@@ -160,7 +160,7 @@ public class StorageServiceImpl implements StorageService {
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Solo se permiten imágenes JPG y PNG."
+                    "Solo se permiten archivos JPG, PNG o PDF."
             );
         }
     }

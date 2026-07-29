@@ -25,6 +25,6 @@ public record UserResponse(
         @Schema(description = "Fecha de alta del usuario", example = "2026-07-15")
         LocalDate registeredAt,
 
-        @Schema(description = "Imagen de perfil del usuario", example = "image/V6SgGZR2Z5j.png")
+        @Schema(description = "Imagen de perfil del usuario", example = "users/profile-images/V6SgGZR2Z5j.png")
         String profileImage
 ) {}

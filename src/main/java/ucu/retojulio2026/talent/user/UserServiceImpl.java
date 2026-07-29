@@ -22,6 +22,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
 
 //Implementacion concreta del contrato UserService. Es el bean que Spring inyecta.
 @Service
@@ -37,6 +38,28 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.storageService = storageService;
+    }
+
+    private static final Set<String> ALLOWED_PROFILE_IMAGE_TYPES = Set.of(
+            "image/jpeg",
+            "image/png"
+    );
+
+    private void validateProfileImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La imagen de perfil es obligatoria."
+            );
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_PROFILE_IMAGE_TYPES.contains(contentType)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Solo se permiten imágenes JPG o PNG para la foto de perfil."
+            );
+        }
     }
 
     @Override
@@ -152,6 +175,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateProfileImage(String userId, MultipartFile file) {
+        validateProfileImage(file);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User con id '" + userId + "' no encontrado"));
 
@@ -159,18 +184,28 @@ public class UserServiceImpl implements UserService {
 
         StorageUploadResponse uploaded = storageService.upload(file, "users/profile-images");
 
-        try {
-            user.setProfileImage(uploaded.objectName());
-            User saved = userRepository.save(user);
+        user.setProfileImage(uploaded.objectName());
+        User saved = userRepository.save(user);
 
-            if (oldObjectName != null && !oldObjectName.isBlank()) {
-                storageService.delete(oldObjectName);
-            }
-
-            return saved;
-        } catch (RuntimeException e) {
-            storageService.delete(uploaded.objectName());
-            throw e;
+        if (oldObjectName != null && !oldObjectName.isBlank()) {
+            storageService.delete(oldObjectName);
         }
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfileImage(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User con id '" + userId + "' no encontrado"));
+
+        String oldObjectName = user.getProfileImage();
+        if (oldObjectName == null || oldObjectName.isBlank()) {
+            throw new ResourceNotFoundException("El usuario no tiene imagen de perfil");
+        }
+
+        user.setProfileImage(null);
+        userRepository.save(user);
+        storageService.delete(oldObjectName);
     }
 }
