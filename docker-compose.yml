@@ -85,9 +85,10 @@ services:
     environment:
       <<: *api-env
       DB_HOST: db
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcloud/service-account-key.json
 
     volumes:
-        - "${GOOGLE_APPLICATION_CREDENTIALS_HOST}:/secrets/gcloud/application_default_credentials.json:ro"
+        - "${GOOGLE_APPLICATION_CREDENTIALS_HOST}:/secrets/gcloud/service-account-key.json:ro"
 
   api-hosted:
     <<: *api-base
