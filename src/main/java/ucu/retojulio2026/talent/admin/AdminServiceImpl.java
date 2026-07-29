@@ -49,7 +49,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Admin update(String id, UpdateAdminRequest request) {
-        Admin admin = getById(id); // lanza 404 si no existe
+        Admin admin = getById(id);
         admin.setName(request.name());
         admin.setSurname(request.surname());
         return adminRepository.save(admin);
