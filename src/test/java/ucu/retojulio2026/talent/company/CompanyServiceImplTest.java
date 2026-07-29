@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -112,5 +114,20 @@ class CompanyServiceImplTest {
         verify(companyRepository).findAll();
         verify(userService, never()).getAll(any(), any(), any());
         verify(companyRepository, never()).findAllById(any());
+    }
+
+    @Test
+    void registrar_la_revision_guarda_reviewed_at_y_admin_comment() {
+        CompanyServiceImpl service = new CompanyServiceImpl(companyRepository, companyMapper, userService);
+        Company existing = new Company();
+        existing.setCompanyId("company-1");
+        LocalDateTime reviewedAt = LocalDateTime.of(2026, 7, 29, 10, 0);
+        when(companyRepository.findById("company-1")).thenReturn(Optional.of(existing));
+
+        service.review("company-1", reviewedAt, "Datos verificados");
+
+        assertThat(existing.getReviewedAt()).isEqualTo(reviewedAt);
+        assertThat(existing.getAdminComment()).isEqualTo("Datos verificados");
+        verify(companyRepository, times(1)).save(existing);
     }
 }
