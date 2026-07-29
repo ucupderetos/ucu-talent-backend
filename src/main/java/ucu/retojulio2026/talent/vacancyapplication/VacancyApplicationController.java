@@ -84,11 +84,7 @@ public class VacancyApplicationController {
     @GetMapping("/me")
     public ResponseEntity<List<VacancyApplicationStudentResponse>> getMyApplications(
             @AuthenticationPrincipal Jwt jwt) {
-        List<VacancyApplicationStudentResponse> response = vacancyApplicationService.getByStudentProfileId(jwt.getSubject())
-                .stream()
-                .map(vacancyApplicationMapper::toStudentResponse)
-                .toList();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(vacancyApplicationService.getStudentApplications(jwt.getSubject()));
     }
 
     @Operation(summary = "Obtener una postulación por id (solo la empresa dueña de la vacante)")

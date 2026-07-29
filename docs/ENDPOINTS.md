@@ -396,7 +396,7 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 - `vacancyApplicationId` · `vacancyId` · `studentProfileId` · `status` (`VacancyApplicationStatus`) · `appliedAt` (date) · `accepted` boolean (default `false`; solo se pasa a `true` vía `PATCH /vacancy-application/{id}/accept`)
 
 **`VacancyApplicationStudentResponse`** (salida — usado solo en `GET /vacancy-application/me`, nunca expone `accepted`)
-- `vacancyApplicationId` · `vacancyId` · `studentProfileId` · `status` (`VacancyApplicationStatus`) · `appliedAt` (date)
+- `vacancyApplicationId` · `vacancyId` · `vacancyName` · `companyId` · `companyName` · `appliedAt` (date) · `status` (`VacancyApplicationStatus`) · `vacancyStatus` (`VacancyStatus`)
 
 **`VacancyApplicationStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `visto` · `finalizado` (todos `long`)
