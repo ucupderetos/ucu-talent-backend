@@ -1,24 +1,24 @@
 package ucu.retojulio2026.talent.vacancyapplication;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.common.AccountNotApprovedException;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.education.EducationService;
-import ucu.retojulio2026.talent.mail.MailService;
-import ucu.retojulio2026.talent.studentprofile.StudentProfile;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 import ucu.retojulio2026.talent.user.AccountStatus;
-import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.VacancyStatus;
-import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
+import ucu.retojulio2026.talent.vacancy.VacancyService;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
 
 import java.time.LocalDate;
 import java.util.EnumMap;
@@ -32,24 +32,24 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     private final StudentProfileService studentProfileService;
     private final EducationService educationService;
     private final VacancyApplicationMapper vacancyApplicationMapper;
-    private final VacancyServiceImpl vacancyService;
+    private final VacancyService vacancyService;
     private final UserService userService;
-    private final MailService mailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public VacancyApplicationServiceImpl(VacancyApplicationRepository vacancyApplicationRepository,
                                          StudentProfileService studentProfileService,
                                          EducationService educationService,
                                          VacancyApplicationMapper vacancyApplicationMapper,
-                                         VacancyServiceImpl vacancyService,
+                                         VacancyService vacancyService,
                                          UserService userService,
-                                         MailService mailService) {
+                                         ApplicationEventPublisher eventPublisher) {
         this.vacancyApplicationRepository = vacancyApplicationRepository;
         this.studentProfileService = studentProfileService;
         this.educationService = educationService;
         this.vacancyApplicationMapper = vacancyApplicationMapper;
         this.vacancyService = vacancyService;
         this.userService = userService;
-        this.mailService = mailService;
+        this.eventPublisher = eventPublisher;
     }
 
 
@@ -63,6 +63,7 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     }
 
     @Override
+    @Transactional
     public VacancyApplication create(CreateVacancyApplicationRequest request) {
         Vacancy vacancy = vacancyService.getVacancyById(request.vacancyId());
 
@@ -96,41 +97,51 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         vacancyApplication.setAppliedAt(LocalDate.now());
         VacancyApplication created = vacancyApplicationRepository.save(vacancyApplication);
 
-        StudentProfile applicant = studentProfileService.getById(request.studentProfileId());
-        User companyUser = userService.getById(vacancy.getCompanyId());
-        String applicantFullName = applicant.getName() + " " + applicant.getSurname();
-        mailService.sendCompanyNewApplicationEmail(companyUser.getEmail(), applicantFullName, vacancy.getName());
+        eventPublisher.publishEvent(new VacancyApplicationCreatedEvent(
+                created.getVacancyId(), created.getStudentProfileId()));
 
         return created;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public VacancyApplication getById(String id) {
         return vacancyApplicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("VacancyApplication con id '" + id + "' no encontrada"));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<VacancyApplication> getAll() {
         return vacancyApplicationRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<VacancyApplication> getByVacancyId(String vacancyId) {
         return vacancyApplicationRepository.findByVacancyId(vacancyId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<VacancyApplication> getByStudentProfileId(String studentProfileId) {
         return vacancyApplicationRepository.findByStudentProfileId(studentProfileId);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<VacancyApplicationStudentResponse> getStudentApplications(String studentProfileId) {
+        return vacancyApplicationRepository.findStudentApplications(studentProfileId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<VacancyApplication> getByStatus(VacancyApplicationStatus status) {
         return vacancyApplicationRepository.findByStatus(status);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<VacancyApplicationStatus, Long> countByStatusSummary() {
         Map<VacancyApplicationStatus, Long> counts = new EnumMap<>(VacancyApplicationStatus.class);
         for (VacancyApplicationStatus status : VacancyApplicationStatus.values()) {
@@ -140,6 +151,7 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     }
 
     @Override
+    @Transactional
     public VacancyApplication update(String id, VacancyApplicationStatus status) {
         VacancyApplication vacancyApplication = getById(id);
         VacancyApplicationStatus previousStatus = vacancyApplication.getStatus();
@@ -151,22 +163,15 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
         VacancyApplication updated = vacancyApplicationRepository.save(vacancyApplication);
 
         if (previousStatus != status) {
-            Vacancy vacancy = vacancyService.getVacancyById(vacancyApplication.getVacancyId());
-            User applicantUser = userService.getById(vacancyApplication.getStudentProfileId());
-            StudentProfile applicant = studentProfileService.getById(vacancyApplication.getStudentProfileId());
-            String applicantFullName = applicant.getName() + " " + applicant.getSurname();
-
-            if (status == VacancyApplicationStatus.VISTO) {
-                mailService.sendApplicationVistoEmail(applicantUser.getEmail(), applicantFullName, vacancy.getName());
-            } else if (status == VacancyApplicationStatus.FINALIZADO) {
-                mailService.sendVacancyClosedEmail(applicantUser.getEmail(), applicantFullName, vacancy.getName());
-            }
+            eventPublisher.publishEvent(new VacancyApplicationStatusChangedEvent(
+                    updated.getVacancyId(), updated.getStudentProfileId(), status));
         }
 
         return updated;
     }
 
     @Override
+    @Transactional
     public VacancyApplication accept(String id) {
         VacancyApplication vacancyApplication = getById(id);
         vacancyApplication.setAccepted(true);
@@ -174,6 +179,7 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     }
 
     @Override
+    @Transactional
     public void delete(String id) {
         if (!vacancyApplicationRepository.existsById(id)) {
             throw new ResourceNotFoundException("VacancyApplication con id '" + id + "' no encontrada");
