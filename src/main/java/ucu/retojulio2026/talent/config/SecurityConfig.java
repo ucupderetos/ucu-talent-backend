@@ -172,6 +172,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.PATCH, "/user/profile/image").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")

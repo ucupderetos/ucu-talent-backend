@@ -2,18 +2,26 @@ package ucu.retojulio2026.talent.user;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
+import ucu.retojulio2026.talent.storage.StorageService;
+import ucu.retojulio2026.talent.storage.dto.StorageUploadResponse;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
 
 //Implementacion concreta del contrato UserService. Es el bean que Spring inyecta.
 @Service
@@ -22,11 +30,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final StorageService storageService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, StorageService storageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.storageService = storageService;
     }
 
     @Override
@@ -93,6 +103,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public String getProfileImage(String profileObject, Jwt jwt) {
+        if(!(userRepository.existsByProfileImage((profileObject)))) {
+            throw new ResourceNotFoundException("User con la imagen de perfil '" + profileObject + "' no encontrado");
+        }
+
+        Instant expiresAt = jwt.getExpiresAt();
+
+        Duration remaining = Duration.between(Instant.now(), expiresAt);
+
+        if (remaining.isNegative() || remaining.isZero()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "El token ya expiró."
+            );
+        }
+
+        return storageService
+                .getSignedUrl(profileObject, remaining)
+                .toString();
+    }
+
+    @Override
     public void delete(String id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User con id '" + id + "' no encontrado");
@@ -115,5 +147,30 @@ public class UserServiceImpl implements UserService {
         }
         user.setStatus(newStatus);
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public User updateProfileImage(String userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User con id '" + userId + "' no encontrado"));
+
+        String oldObjectName = user.getProfileImage();
+
+        StorageUploadResponse uploaded = storageService.upload(file, "users/profile-images");
+
+        try {
+            user.setProfileImage(uploaded.objectName());
+            User saved = userRepository.save(user);
+
+            if (oldObjectName != null && !oldObjectName.isBlank()) {
+                storageService.delete(oldObjectName);
+            }
+
+            return saved;
+        } catch (RuntimeException e) {
+            storageService.delete(uploaded.objectName());
+            throw e;
+        }
     }
 }

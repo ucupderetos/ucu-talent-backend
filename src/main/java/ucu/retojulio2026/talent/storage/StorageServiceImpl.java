@@ -12,15 +12,19 @@ import org.springframework.web.server.ResponseStatusException;
 import ucu.retojulio2026.talent.storage.dto.StorageUploadResponse;
 
 import java.io.IOException;
+import java.net.URL;
+import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class StorageServiceImpl implements StorageService {
 
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "image/jpeg",
-            "image/png"
+            "image/png",
+            "application/pdf"
     );
 
     private final Storage storage;
@@ -37,13 +41,20 @@ public class StorageServiceImpl implements StorageService {
         this.publicBaseUrl = publicBaseUrl;
     }
 
+    public String buildObjectName(String originalFileName, String folder){
+        String extension = "";
+        if (originalFileName != null && originalFileName.contains(".")){
+            extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        }
+        return folder + "/" + UUID.randomUUID() + extension;
+    }
+
     @Override
-    public StorageUploadResponse uploadImage(MultipartFile file) {
+    public StorageUploadResponse upload(MultipartFile file, String folder) {
         validateFile(file);
 
         String originalFilename = file.getOriginalFilename() == null ? "image" : file.getOriginalFilename();
-        String safeFilename = originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
-        String objectName = "images/" + UUID.randomUUID() + "-" + safeFilename;
+        String objectName = buildObjectName(originalFilename, folder);
 
         BlobId blobId = BlobId.of(bucketName, objectName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
@@ -73,6 +84,18 @@ public class StorageServiceImpl implements StorageService {
                 bucketName,
                 gcsUri,
                 publicUrl
+        );
+    }
+
+    @Override
+    public URL getSignedUrl(String objectName, Duration ttl) {
+        long seconds = Math.max(1, Math.min(ttl.getSeconds(), TimeUnit.DAYS.toSeconds(7)));
+
+        return storage.signUrl(
+                BlobInfo.newBuilder(bucketName, objectName).build(),
+                seconds,
+                TimeUnit.SECONDS,
+                Storage.SignUrlOption.withV4Signature()
         );
     }
 

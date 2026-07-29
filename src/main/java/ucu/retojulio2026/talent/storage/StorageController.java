@@ -20,10 +20,12 @@ public class StorageController {
         this.storageService = storageService;
     }
 
-    @Operation(summary = "Subir una imagen")
-    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<StorageUploadResponse> uploadImage(@RequestPart("file") MultipartFile file) {
-        StorageUploadResponse response = storageService.uploadImage(file);
+    @Operation(summary = "Subir un archivo")
+    @PostMapping(value = "/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<StorageUploadResponse> uploadImage(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam("field") String field) {
+        StorageUploadResponse response = storageService.upload(file, field);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
