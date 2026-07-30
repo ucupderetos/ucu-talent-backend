@@ -166,11 +166,11 @@ public class VacancyApplicationController {
             @ApiResponse(responseCode = "403", description = "No es la empresa dueña de la vacante ni tiene rol ADMIN"),
             @ApiResponse(responseCode = "404", description = "No existe una vacante con ese id")
     })
-    @GetMapping(value = "/detailed", params = "vacancyId")
+    @GetMapping("/vacancy/{vacancyId}/detailed")
     public ResponseEntity<List<ApplicationListItemResponse>> getDetailedByVacancyId(
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de la vacante", example = "V1StGXR8_Z5j")
-            @RequestParam
+            @PathVariable
             @NotBlank(message = "El vacancyId es obligatorio")
             String vacancyId) {
         Vacancy vacancy = vacancyService.getVacancyById(vacancyId);
