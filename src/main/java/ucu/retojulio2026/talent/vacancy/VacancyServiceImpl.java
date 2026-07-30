@@ -279,7 +279,10 @@ public class VacancyServiceImpl implements VacancyService {
         existing.setDeletedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
         existing.setStatus(VacancyStatus.FINALIZADO);
         existing.setDeleted(true);
-        vacancyRepository.save(existing);
+        Vacancy deleted = vacancyRepository.save(existing);
+
+        vacancyApplicationRepository.finalizeByVacancyId(id);
+        vacancyFinalizationNotifier.notifyApplicants(deleted);
     }
 
     @Override
@@ -305,6 +308,7 @@ public class VacancyServiceImpl implements VacancyService {
 
         Vacancy updated = vacancyRepository.save(existing);
         if (request.status() == VacancyStatus.FINALIZADO) {
+            vacancyApplicationRepository.finalizeByVacancyId(updated.getVacancyId());
             vacancyFinalizationNotifier.notifyApplicants(updated);
         }
         return updated;
