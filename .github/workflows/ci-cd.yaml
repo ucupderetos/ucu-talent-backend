@@ -94,7 +94,8 @@ jobs:
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
             GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}
-            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}          
+            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}
+            GCP_STORAGE_ENABLED=true
 
           secrets: |
             POSTGRES_USER=dev-backend-db-username:latest
@@ -157,7 +158,8 @@ jobs:
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH }}
             SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ vars.SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE }}
             GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}
-            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}  
+            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}
+            GCP_STORAGE_ENABLED=true
 
           secrets: |
             POSTGRES_USER=prod-backend-db-username:latest
