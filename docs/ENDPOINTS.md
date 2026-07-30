@@ -77,14 +77,14 @@ Controller: `studentprofile/StudentProfileController` · Tag: **Alumnos**
 Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no hay campo
 `userId` en el body de creación).
 
-| # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
-|---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
+| # | Método | Path | Descripción | Permisos                           | Request schema | Response schema | Happy | No happy                                                                                |
+|---|--------|------|-------------|------------------------------------|----------------|-----------------|-------|-----------------------------------------------------------------------------------------|
 | 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` datos inválidos o documento con formato inválido · `409` ya tiene perfil o documento duplicado |
 | 2 | GET | `/student-profile?status={status}` | Listar perfiles, opcionalmente filtrados por estado | 🔒 rol `ADMIN` | — (query `status`: `AccountStatus`, opcional) | `List<StudentProfileResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
 | 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 rol `ADMIN` | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
 | 5 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
-| 6 | GET | `/student-profile/cv?cvFile={objectName}` | Obtener una URL firmada del CV | 🔒 rol `EMPRESA` | — (query `cvFile`) | `String` (URL firmada) | `200` | `401` no autenticado · `403` no es EMPRESA · `404` no existe CV |
+| 6 | GET | `/student-profile/cv?cvFile={objectName}` | Obtener una URL firmada del CV | 🔒 rol `EMPRESA` o el propietario (`ALUMNO`) | — (query `cvFile`) | `String` (URL firmada) | `200` | `401` no autenticado · `403` no es EMPRESA o no es el propietario (ALUMNO) · `404` no existe CV |
 | 7 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 8 | PATCH | `/student-profile/cv` | Subir o reemplazar el CV (siempre el propio, sale del JWT) | 🔒 + dueño (implícito, sin `id` en el path) | `multipart/form-data` — `file` (solo PDF) | `StudentProfileResponse` | `200` | `400` solo se permite PDF · `401` no autenticado · `404` no existe |
 | 9 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
