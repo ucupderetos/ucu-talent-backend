@@ -13,4 +13,17 @@ public final class AuthorizationGuard {
             throw new ForbiddenOperationException("Usuario autenticado no tiene permisos para modificar esta recurso.");
         }
     }
+
+    public static void requireOwnershipOrRoles(Jwt jwt, String ownerId, String... roles) {
+        if (jwt.getSubject().equals(ownerId)) {
+            return;
+        }
+        String role = jwt.getClaimAsString("role");
+        for (String allowed : roles) {
+            if (allowed.equals(role)) {
+                return;
+            }
+        }
+        throw new ForbiddenOperationException("Usuario autenticado no tiene permisos para acceder a este recurso.");
+    }
 }

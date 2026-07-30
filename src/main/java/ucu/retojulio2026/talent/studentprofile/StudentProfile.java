@@ -52,6 +52,9 @@ public class StudentProfile {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "cv_file", length = 255, nullable = true)
+    private String cvFile;
+
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
 

@@ -187,6 +187,25 @@ public class VacancyController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Listar Puestos de una empresa para gestión")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "400", description = "El companyId es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No es la empresa dueña ni tiene rol ADMIN"),
+            @ApiResponse(responseCode = "404", description = "La empresa no existe"),
+    })
+    @GetMapping("/company/{companyId}/management")
+    public ResponseEntity<List<VacancyManagementResponse>> getManagementByCompanyId(
+            @Parameter(description = "Id de la empresa", example = "V1StGXR8_Z5j")
+            @PathVariable
+            @NotBlank(message = "El companyId es obligatorio")
+            String companyId,
+            @AuthenticationPrincipal Jwt jwt) {
+        AuthorizationGuard.requireOwnershipOrRoles(jwt, companyId, "ADMIN");
+        return ResponseEntity.ok(vacancyService.getManagementByCompanyId(companyId));
+    }
+
     @Operation(summary = "Listar Puestos por area")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),

@@ -45,6 +45,7 @@ import org.springframework.http.ProblemDetail;
 
 import ucu.retojulio2026.talent.auth.CookieBearerTokenResolver;
 import ucu.retojulio2026.talent.auth.LoginRateLimitFilter;
+import ucu.retojulio2026.talent.auth.SignupRateLimitFilter;
 
 @EnableMethodSecurity
 @Configuration
@@ -128,21 +129,34 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain publicFilterChain(HttpSecurity http, LoginRateLimitFilter loginRateLimitFilter)
-            throws Exception {
+    public SecurityFilterChain publicFilterChain(HttpSecurity http, LoginRateLimitFilter loginRateLimitFilter,
+            SignupRateLimitFilter signupRateLimitFilter) throws Exception {
         http
                 .securityMatcher(PUBLIC_MATCHER)
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .addFilterAfter(loginRateLimitFilter, CorsFilter.class)
+                .addFilterAfter(signupRateLimitFilter, CorsFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 
+    // LoginRateLimitFilter/SignupRateLimitFilter son @Component, y Spring Boot auto-registra como
+    // filtro global (para "/*") cualquier bean de tipo Filter que encuentre, sin importar si ya lo
+    // agregamos a mano dentro de una SecurityFilterChain con addFilterAfter. Sin estos beans
+    // deshabilitados, cada filtro correria DOS VECES por request, duplicando el consumo del limite.
     @Bean
     public FilterRegistrationBean<LoginRateLimitFilter> loginRateLimitFilterAutoRegistrationDisabler(
             LoginRateLimitFilter loginRateLimitFilter) {
         FilterRegistrationBean<LoginRateLimitFilter> registration = new FilterRegistrationBean<>(loginRateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<SignupRateLimitFilter> signupRateLimitFilterAutoRegistrationDisabler(
+            SignupRateLimitFilter signupRateLimitFilter) {
+        FilterRegistrationBean<SignupRateLimitFilter> registration = new FilterRegistrationBean<>(signupRateLimitFilter);
         registration.setEnabled(false);
         return registration;
     }
@@ -170,12 +184,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.DELETE, "/student-profile/cv").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.PATCH, "/user/profile/image").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/storage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/storage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/storage/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de admins: expone todos los admins, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/admin").hasRole("ADMIN")
@@ -183,6 +202,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
                         // Listado de alumnos: expone datos personales (documento, telefono) de todos, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/student-profile").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/student-profile/cv/**").hasRole("EMPRESA")
                         // Aprobar/rechazar cuenta: solo ADMIN.
                         .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
