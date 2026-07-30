@@ -636,6 +636,61 @@ class VacancyServiceImplTest {
     }
 
     @Test
+    void admin_al_finalizar_una_vacante_finaliza_tambien_sus_postulaciones() {
+        Vacancy existing = publishedVacancy();
+        UpdateVacancyStatusAdminRequest request = new UpdateVacancyStatusAdminRequest(
+                "Cerrado por incumplir las normas", VacancyStatus.FINALIZADO);
+
+        when(vacancyRepository.findById("vacancy-1")).thenReturn(Optional.of(existing));
+        when(vacancyRepository.save(any(Vacancy.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateVacancyStatusAdmin("vacancy-1", "admin-1", request);
+
+        verify(vacancyApplicationRepository).finalizeByVacancyId("vacancy-1");
+        verify(vacancyFinalizationNotifier).notifyApplicants(existing);
+    }
+
+    @Test
+    void admin_al_publicar_una_vacante_no_toca_las_postulaciones() {
+        Vacancy existing = pendingVacancy();
+        UpdateVacancyStatusAdminRequest request = new UpdateVacancyStatusAdminRequest(
+                "Puesto aprobado por admin", VacancyStatus.PUBLICADO);
+
+        when(vacancyRepository.findById("vacancy-1")).thenReturn(Optional.of(existing));
+        when(vacancyRepository.save(any(Vacancy.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateVacancyStatusAdmin("vacancy-1", "admin-1", request);
+
+        verify(vacancyApplicationRepository, never()).finalizeByVacancyId(anyString());
+        verifyNoInteractions(vacancyFinalizationNotifier);
+    }
+
+    @Test
+    void dar_de_baja_vacante_se_comporta_como_un_cierre_y_finaliza_sus_postulaciones() {
+        Vacancy existing = publishedVacancy();
+
+        when(vacancyRepository.findById("vacancy-1")).thenReturn(Optional.of(existing));
+        when(vacancyRepository.save(any(Vacancy.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.deleteVacancy("vacancy-1");
+
+        verify(vacancyApplicationRepository).finalizeByVacancyId("vacancy-1");
+        verify(vacancyFinalizationNotifier).notifyApplicants(existing);
+    }
+
+    @Test
+    void dar_de_baja_vacante_ya_finalizada_no_toca_las_postulaciones_ni_avisa() {
+        Vacancy existing = finalizedVacancy();
+
+        when(vacancyRepository.findById("vacancy-1")).thenReturn(Optional.of(existing));
+
+        assertThrows(ForbiddenOperationException.class, () -> service.deleteVacancy("vacancy-1"));
+
+        verify(vacancyApplicationRepository, never()).finalizeByVacancyId(anyString());
+        verifyNoInteractions(vacancyFinalizationNotifier);
+    }
+
+    @Test
     void cerrar_vacante_a_mano_finaliza_tambien_sus_postulaciones() {
         Vacancy existing = publishedVacancy();
         UpdateVacancyStatusRequest request = new UpdateVacancyStatusRequest(VacancyStatus.FINALIZADO);
