@@ -102,14 +102,17 @@ public class StudentProfileController {
             @ApiResponse(responseCode = "200", description = "Perfil encontrado"),
             @ApiResponse(responseCode = "400", description = "El userId es invalido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No es el dueño del perfil, ni ADMIN, ni EMPRESA"),
             @ApiResponse(responseCode = "404", description = "No existe un perfil para ese usuario")
     })
     @GetMapping(params = "userId")
     public ResponseEntity<StudentProfileResponse> getByUserId(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id del usuario dueño del perfil", example = "V1StGXR8_Z5j")
             @RequestParam
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
+        AuthorizationGuard.requireOwnershipOrRoles(jwt, userId, "ADMIN", "EMPRESA");
         // PK compartida: studentProfileId == userId, asi que buscar por userId es getById.
         StudentProfile studentProfile = studentProfileService.getById(userId);
         return ResponseEntity.ok(toResponse(studentProfile));
