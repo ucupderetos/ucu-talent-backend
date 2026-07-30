@@ -7,6 +7,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -23,6 +25,8 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
     private static final String IP_KEY_PREFIX = "ip:";
     private static final String EMAIL_KEY_PREFIX = "email:";
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final ObjectMapper objectMapper;
     private final String path;
     private final String method;
@@ -31,7 +35,8 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
     private final Duration emailWindow;
     private final long ipCapacity;
     private final Duration ipWindow;
-    private final EscalatingKeyRateLimiter limiter;
+    private final EscalatingKeyRateLimiter ipLimiter;
+    private final EscalatingKeyRateLimiter emailLimiter;
     private final String tooManyRequestsMessage;
 
     protected AbstractKeyedRateLimitFilter(
@@ -45,7 +50,8 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
             long ipWindowSeconds,
             long cacheMaxSize,
             long cacheExpireMinutes,
-            String lockoutScheduleSeconds,
+            String ipLockoutScheduleSeconds,
+            String emailLockoutScheduleSeconds,
             long lockoutResetMinutes,
             String tooManyRequestsMessage) {
         this.objectMapper = objectMapper;
@@ -56,7 +62,9 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
         this.emailWindow = Duration.ofSeconds(emailWindowSeconds);
         this.ipCapacity = ipCapacity;
         this.ipWindow = Duration.ofSeconds(ipWindowSeconds);
-        this.limiter = new EscalatingKeyRateLimiter(cacheMaxSize, cacheExpireMinutes, lockoutScheduleSeconds,
+        this.ipLimiter = new EscalatingKeyRateLimiter(cacheMaxSize, cacheExpireMinutes, ipLockoutScheduleSeconds,
+                lockoutResetMinutes);
+        this.emailLimiter = new EscalatingKeyRateLimiter(cacheMaxSize, cacheExpireMinutes, emailLockoutScheduleSeconds,
                 lockoutResetMinutes);
         this.tooManyRequestsMessage = tooManyRequestsMessage;
     }
@@ -88,29 +96,50 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
         // Si ya esta en penitencia, ni siquiera tocamos los buckets: se mantiene bloqueado hasta
         // que venza el castigo actual (que crece cada vez que vuelve a exceder el limite).
         long lockedSeconds = Math.max(
-                limiter.remainingLockoutSeconds(ipKey, now),
-                limiter.remainingLockoutSeconds(emailKey, now));
+                ipLimiter.remainingLockoutSeconds(ipKey, now),
+                emailLimiter.remainingLockoutSeconds(emailKey, now));
         if (lockedSeconds > 0) {
+            logBlocked("castigo-vigente", clientIp, email, lockedSeconds);
             writeRateLimitedResponse(response, lockedSeconds);
             return;
         }
 
-        boolean ipConsumed = limiter.tryConsume(ipKey, ipCapacity, ipWindow);
-        boolean emailConsumed = limiter.tryConsume(emailKey, emailCapacity, emailWindow);
+        boolean ipConsumed = ipLimiter.tryConsume(ipKey, ipCapacity, ipWindow);
+        boolean emailConsumed = emailLimiter.tryConsume(emailKey, emailCapacity, emailWindow);
 
         if (!ipConsumed || !emailConsumed) {
             long retryAfterSeconds = 0;
             if (!ipConsumed) {
-                retryAfterSeconds = Math.max(retryAfterSeconds, limiter.escalateLockout(ipKey, now));
+                retryAfterSeconds = Math.max(retryAfterSeconds, ipLimiter.escalateLockout(ipKey, now));
             }
             if (!emailConsumed) {
-                retryAfterSeconds = Math.max(retryAfterSeconds, limiter.escalateLockout(emailKey, now));
+                retryAfterSeconds = Math.max(retryAfterSeconds, emailLimiter.escalateLockout(emailKey, now));
             }
+            String triggeredBy = !ipConsumed && !emailConsumed ? "ip+email" : (ipConsumed ? "email" : "ip");
+            logBlocked(triggeredBy, clientIp, email, retryAfterSeconds);
             writeRateLimitedResponse(response, retryAfterSeconds);
             return;
         }
 
         filterChain.doFilter(wrappedRequest, response);
+    }
+
+    private void logBlocked(String triggeredBy, String clientIp, String email, long retryAfterSeconds) {
+        log.warn("rate_limit_blocked endpoint=\"{} {}\" clave={} ip={} email={} retryAfterSeconds={}",
+                method, path, triggeredBy, clientIp, maskEmail(email), retryAfterSeconds);
+    }
+
+    // El email se enmascara: el log sirve para identificar el patron de abuso, no para
+    // dejar direcciones de alumnos en texto plano en Cloud Logging.
+    private static String maskEmail(String email) {
+        if (email == null || EMAIL_FALLBACK_KEY.equals(email)) {
+            return "-";
+        }
+        int at = email.indexOf('@');
+        if (at <= 0) {
+            return "***";
+        }
+        return email.charAt(0) + "***" + email.substring(at);
     }
 
     private void writeRateLimitedResponse(HttpServletResponse response, long retryAfterSeconds) throws IOException {
@@ -119,6 +148,7 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
         response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, tooManyRequestsMessage);
+        problem.setProperty("retryAfterSeconds", retryAfterSeconds);
         objectMapper.writeValue(response.getOutputStream(), problem);
     }
 }
