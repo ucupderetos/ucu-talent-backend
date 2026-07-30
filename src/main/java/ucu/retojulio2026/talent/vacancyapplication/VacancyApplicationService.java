@@ -37,4 +37,6 @@ public interface VacancyApplicationService {
     VacancyApplication accept(String id);
 
     void delete(String id);
+
+    long count();
 }

@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.vacancy;
 import org.springframework.data.domain.Page;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.RecentVacancyRow;
 import ucu.retojulio2026.talent.vacancy.dto.ResolvedVacancyResponse;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyManagementResponse;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyRequest;
@@ -52,4 +53,10 @@ public interface VacancyService {
     Page<Vacancy> search(SearchCriteriaVacancyRequest criteria, Pageable pageable);
 
     Page<Vacancy> searchPublished(SearchCriteriaVacancyRequest criteria, Pageable pageable);
+
+    long countNotDeleted();
+
+    long countPublished();
+
+    List<RecentVacancyRow> getRecentForDashboard(int limit);
 }

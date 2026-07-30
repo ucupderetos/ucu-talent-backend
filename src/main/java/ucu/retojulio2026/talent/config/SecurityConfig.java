@@ -209,6 +209,7 @@ public class SecurityConfig {
                         // University Registry: exclusivo de ADMIN, incluidos los GET.
                         .requestMatchers("/university-registry/**").hasRole("ADMIN")
                         // Consultas de admin: totales por estado, solo ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/admin/dashboard").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/company/status-summary").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/student-profile/status-summary").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/vacancy/status-summary").hasRole("ADMIN")

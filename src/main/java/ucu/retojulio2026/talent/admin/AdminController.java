@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import ucu.retojulio2026.talent.admin.dto.AdminDashboardResponse;
 import ucu.retojulio2026.talent.admin.dto.AdminMapper;
 import ucu.retojulio2026.talent.admin.dto.AdminResponse;
 import ucu.retojulio2026.talent.admin.dto.CreateAdminRequest;
@@ -31,10 +32,13 @@ public class AdminController {
 
     private final AdminService adminService;
     private final AdminMapper adminMapper;
+    private final AdminDashboardService adminDashboardService;
 
-    public AdminController(AdminService adminService, AdminMapper adminMapper) {
+    public AdminController(AdminService adminService, AdminMapper adminMapper,
+                           AdminDashboardService adminDashboardService) {
         this.adminService = adminService;
         this.adminMapper = adminMapper;
+        this.adminDashboardService = adminDashboardService;
     }
 
     // ===== CREATE =====
@@ -56,6 +60,18 @@ public class AdminController {
     }
 
     // ===== READ =====
+
+    @Operation(summary = "Totales y listados de la pantalla inicial del admin (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Dashboard obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No tiene rol ADMIN")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/dashboard")
+    public ResponseEntity<AdminDashboardResponse> getDashboard() {
+        return ResponseEntity.ok(adminDashboardService.getDashboard());
+    }
 
     @Operation(summary = "Listar todos los admins (solo ADMIN)")
     @ApiResponses({

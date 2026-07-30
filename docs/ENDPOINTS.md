@@ -161,11 +161,12 @@ Perfil del `ADMIN` (PK compartida con `User`, mismo patrón que `StudentProfile`
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/admin` | Crear el admin del usuario logueado | 🔒 rol `ADMIN` | `CreateAdminRequest` | `AdminResponse` | `201` | `400` · `403` rol incorrecto · `409` ya tiene admin |
-| 2 | GET | `/admin` | Listar todos los admins | 🔒 rol `ADMIN` | — | `List<AdminResponse>` | `200` | `403` no es ADMIN |
-| 3 | GET | `/admin/{id}` | Obtener admin por id | 🔒 Autenticado | — (path `id`) | `AdminResponse` | `200` | `404` |
-| 4 | GET | `/admin?userId={userId}` | Admin de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `AdminResponse` | `200` | `400` · `404` no existe |
-| 5 | PUT | `/admin/{id}` | Actualizar admin por id | 🔒 + dueño | `UpdateAdminRequest` | `AdminResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
-| 6 | DELETE | `/admin/{id}` | Eliminar admin por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
+| 2 | GET | `/admin/dashboard` | Totales y listados de la pantalla inicial del admin | 🔒 rol `ADMIN` | — | `AdminDashboardResponse` | `200` | `403` no es ADMIN |
+| 3 | GET | `/admin` | Listar todos los admins | 🔒 rol `ADMIN` | — | `List<AdminResponse>` | `200` | `403` no es ADMIN |
+| 4 | GET | `/admin/{id}` | Obtener admin por id | 🔒 Autenticado | — (path `id`) | `AdminResponse` | `200` | `404` |
+| 5 | GET | `/admin?userId={userId}` | Admin de un usuario (PK compartida: equivale a `getById`) | 🔒 Autenticado | — (query `userId`: `@NotBlank`) | `AdminResponse` | `200` | `400` · `404` no existe |
+| 6 | PUT | `/admin/{id}` | Actualizar admin por id | 🔒 + dueño | `UpdateAdminRequest` | `AdminResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 7 | DELETE | `/admin/{id}` | Eliminar admin por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 
 ### Schemas
 
@@ -174,6 +175,14 @@ Perfil del `ADMIN` (PK compartida con `User`, mismo patrón que `StudentProfile`
 
 **`UpdateAdminRequest`** (entrada — no incluye `userId`)
 - `name` `@NotBlank` · `surname` `@NotBlank`
+
+**`AdminDashboardResponse`** (salida)
+- `counts.companies` `{ total, pendientes }` — `pendientes` = empresas cuya cuenta esta en `PENDIENTE`
+- `counts.vacancies` `{ total, publicadas }` — `total` excluye las borradas (`deleted = true`)
+- `counts.applications` `{ total, pendientes }` · `counts.users` `{ total, alumnos, empresas, admins }`
+- `applicationStatusSummary` `[{ status: VacancyApplicationStatus, count: long }]` — siempre los 3 estados, aunque den 0
+- `recentVacancies` `[{ vacancyId, name, companyName, publicationDate, status, applicationCount }]` — tope 5, `publicationDate` DESC, sin borradas
+- `pendingCompanies` `[{ companyId, name, industry, registeredAt }]` — tope 10, `registeredAt` DESC
 
 **`AdminResponse`** (salida — no expone `userId`, la PK ya lo es)
 - `adminId` (= `userId`) · `name` · `surname`

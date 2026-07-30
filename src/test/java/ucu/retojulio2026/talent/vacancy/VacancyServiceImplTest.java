@@ -636,6 +636,68 @@ class VacancyServiceImplTest {
     }
 
     @Test
+    void cerrar_vacante_a_mano_finaliza_tambien_sus_postulaciones() {
+        Vacancy existing = publishedVacancy();
+        UpdateVacancyStatusRequest request = new UpdateVacancyStatusRequest(VacancyStatus.FINALIZADO);
+
+        when(vacancyRepository.findById("vacancy-1")).thenReturn(Optional.of(existing));
+        when(vacancyRepository.save(any(Vacancy.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateVacancyStatus("vacancy-1", request);
+
+        verify(vacancyApplicationRepository).finalizeByVacancyId("vacancy-1");
+        verify(vacancyFinalizationNotifier).notifyApplicants(existing);
+    }
+
+    @Test
+    void cerrar_vacante_a_mano_a_un_estado_que_no_es_finalizado_no_toca_las_postulaciones() {
+        Vacancy existing = publishedVacancy();
+        UpdateVacancyStatusRequest request = new UpdateVacancyStatusRequest(VacancyStatus.PUBLICADO);
+
+        when(vacancyRepository.findById("vacancy-1")).thenReturn(Optional.of(existing));
+        when(vacancyRepository.save(any(Vacancy.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateVacancyStatus("vacancy-1", request);
+
+        verify(vacancyApplicationRepository, never()).finalizeByVacancyId(anyString());
+        verifyNoInteractions(vacancyFinalizationNotifier);
+    }
+
+    @Test
+    void cierre_automatico_finaliza_las_postulaciones_de_cada_vacante_vencida() {
+        LocalDate today = LocalDate.now(ZoneId.of("America/Montevideo"));
+
+        Vacancy expiredVacancy = publishedVacancy();
+        expiredVacancy.setVacancyId("expired-1");
+        expiredVacancy.setClosingDate(today.minusDays(1));
+
+        Vacancy expiresTodayVacancy = publishedVacancy();
+        expiresTodayVacancy.setVacancyId("expired-2");
+        expiresTodayVacancy.setClosingDate(today);
+
+        when(vacancyRepository.findByStatusAndClosingDateLessThanEqual(VacancyStatus.PUBLICADO, today))
+                .thenReturn(List.of(expiredVacancy, expiresTodayVacancy));
+
+        service.finalizeExpiredVacancies();
+
+        verify(vacancyApplicationRepository).finalizeByVacancyId("expired-1");
+        verify(vacancyApplicationRepository).finalizeByVacancyId("expired-2");
+    }
+
+    @Test
+    void cierre_automatico_sin_vacantes_vencidas_no_toca_ninguna_postulacion() {
+        LocalDate today = LocalDate.now(ZoneId.of("America/Montevideo"));
+
+        when(vacancyRepository.findByStatusAndClosingDateLessThanEqual(VacancyStatus.PUBLICADO, today))
+                .thenReturn(List.of());
+
+        service.finalizeExpiredVacancies();
+
+        verify(vacancyApplicationRepository, never()).finalizeByVacancyId(anyString());
+        verifyNoInteractions(vacancyFinalizationNotifier);
+    }
+
+    @Test
     void tablero_de_gestion_falla_si_la_empresa_no_existe() {
         when(companyService.existsById("company-1")).thenReturn(false);
 

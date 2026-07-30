@@ -215,4 +215,10 @@ public class    VacancyApplicationServiceImpl implements VacancyApplicationServi
         }
         vacancyApplicationRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return vacancyApplicationRepository.count();
+    }
 }

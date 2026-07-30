@@ -1,9 +1,11 @@
 package ucu.retojulio2026.talent.company;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
+import ucu.retojulio2026.talent.company.dto.PendingCompanyRow;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.company.dto.CompanyMapper;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
@@ -105,5 +107,19 @@ public class CompanyServiceImpl implements CompanyService {
         return companyRepository.existsById(id);
     }
 
-}
 
+    @Override
+    public long count() {
+        return companyRepository.count();
+    }
+
+    @Override
+    public long countByAccountStatus(AccountStatus status) {
+        return companyRepository.countByAccountStatus(status);
+    }
+
+    @Override
+    public List<PendingCompanyRow> getPendingForDashboard(int limit) {
+        return companyRepository.findPendingForDashboard(PageRequest.of(0, limit));
+    }
+}

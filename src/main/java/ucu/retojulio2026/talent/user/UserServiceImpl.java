@@ -208,4 +208,14 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         storageService.delete(oldObjectName);
     }
+
+    @Override
+    public long count() {
+        return userRepository.count();
+    }
+
+    @Override
+    public long countByRole(Role role) {
+        return userRepository.countByRole(role);
+    }
 }
