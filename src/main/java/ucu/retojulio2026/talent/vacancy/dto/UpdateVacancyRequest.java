@@ -35,6 +35,6 @@ public record UpdateVacancyRequest(
     @Schema(description = "Tipo de contrato", example = "Full time")
     ContractType contractType,
 
-    @Schema(description = "Rango salarial", example = "USD 800 - 2000")
-    String salaryRange
+    @Schema(description = "Salario", example = "USD 700")
+    String salary
 ) {}

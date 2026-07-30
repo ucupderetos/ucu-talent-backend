@@ -90,6 +90,18 @@ public class VacancyServiceImpl implements VacancyService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<VacancyManagementResponse> getManagementByCompanyId(String companyId) {
+        if (!companyService.existsById(companyId)) {
+            throw new ResourceNotFoundException("Company not found.");
+        }
+        return vacancyRepository.findManagementByCompanyId(companyId)
+                .stream()
+                .map(vacancyMapper::toManagementResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Vacancy> getByAreaId(String areaId) {
         return vacancyRepository.findByAreaId(areaId);
     }
@@ -125,12 +137,7 @@ public class VacancyServiceImpl implements VacancyService {
         if (!areaService.existsById(request.areaId())) {
             throw new ResourceNotFoundException("Area not found.");
         }
-        if (request.publicationDate().isAfter(request.closingDate())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
-            );
-        }
+        dateValidation(request.publicationDate(),request.closingDate());
         Vacancy vacancy = vacancyMapper.toEntity(request);
         vacancy.setCreatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
         return vacancyRepository.save(vacancy);
@@ -162,6 +169,29 @@ public class VacancyServiceImpl implements VacancyService {
     public Page<Vacancy> searchPublished(SearchCriteriaVacancyRequest criteria, Pageable pageable) {
         Specification<Vacancy> specification = vacancyFilterResolverImpl.buildStudentSpecification(criteria);
         return vacancyRepository.findAll(specification, pageable);
+    }
+
+    public void dateValidation(LocalDate inicio, LocalDate fin) {
+
+        LocalDate today = LocalDate.now(ZoneId.of("America/Montevideo"));
+
+        if (inicio.isAfter(fin)) {
+            throw new ForbiddenOperationException(
+                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
+            );
+        }
+
+        if (inicio.isBefore(today)) {
+            throw new ForbiddenOperationException(
+                    "La fecha de publicación no puede ser anterior a la fecha actual."
+            );
+        }
+
+        if (fin.isAfter(inicio.plusYears(1))) { // Consideramos 1 año como maximo
+            throw new ForbiddenOperationException(
+                    "La fecha de cierre no puede superar un año desde la fecha de publicación."
+            );
+        }
     }
 
     @Override
@@ -215,15 +245,11 @@ public class VacancyServiceImpl implements VacancyService {
         if (request.contractType() != null) {
             existing.setContractType(request.contractType());
         }
-        if (request.salaryRange() != null) {
-            existing.setSalary(request.salaryRange());
+        if (request.salary() != null) {
+            existing.setSalary(request.salary());
         }
 
-        if (existing.getPublicationDate().isAfter(existing.getClosingDate())) {
-            throw new ForbiddenOperationException(
-                    "La fecha de publicación no puede ser posterior a la fecha de cierre."
-            );
-        }
+        dateValidation(existing.getPublicationDate(),(existing.getClosingDate()));
 
         existing.setUpdatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
 
@@ -237,7 +263,7 @@ public class VacancyServiceImpl implements VacancyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
         if (existing.getStatus().equals(VacancyStatus.FINALIZADO)) {
             throw new ForbiddenOperationException(
-                    "No puedes borrar un puesto finalizado."
+                    "No puedes borrar un puesto finalizado o borrado."
             );
         }
         existing.setDeletedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));

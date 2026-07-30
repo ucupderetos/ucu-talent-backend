@@ -46,6 +46,9 @@ public record StudentProfileResponse(
         @Schema(description = "Descripción del perfil del alumno",  example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
         String description,
 
+        @Schema(description = "CV del estudiante", example = "student-profiles/cv/V6SgGZR2Z5j.pdf")
+        String cvFile,
+
         @Schema(description = "Fecha de aprobación/rechazo del ADMIN")
         LocalDateTime reviewedAt,
 

@@ -13,7 +13,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
@@ -101,14 +102,17 @@ public class StudentProfileController {
             @ApiResponse(responseCode = "200", description = "Perfil encontrado"),
             @ApiResponse(responseCode = "400", description = "El userId es invalido"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No es el dueño del perfil, ni ADMIN, ni EMPRESA"),
             @ApiResponse(responseCode = "404", description = "No existe un perfil para ese usuario")
     })
     @GetMapping(params = "userId")
     public ResponseEntity<StudentProfileResponse> getByUserId(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id del usuario dueño del perfil", example = "V1StGXR8_Z5j")
             @RequestParam
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
+        AuthorizationGuard.requireOwnershipOrRoles(jwt, userId, "ADMIN", "EMPRESA");
         // PK compartida: studentProfileId == userId, asi que buscar por userId es getById.
         StudentProfile studentProfile = studentProfileService.getById(userId);
         return ResponseEntity.ok(toResponse(studentProfile));
@@ -124,6 +128,22 @@ public class StudentProfileController {
     @GetMapping("/status-summary")
     public ResponseEntity<StudentProfileStatusSummaryResponse> getStatusSummary() {
         return ResponseEntity.ok(StudentProfileStatusSummaryResponse.from(studentProfileService.getStatusSummary()));
+    }
+
+    @Operation(summary = "Obtener una URL firmada del CV")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "CV encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "El archivo no pertenece a un perfil"),
+            @ApiResponse(responseCode = "404", description = "No existe un CV para ese perfil")
+    })
+    @GetMapping("/cv")
+    public ResponseEntity<String> getCvFile(
+            @RequestParam String cvFile,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String url = studentProfileService.getCvFile(cvFile, jwt);
+        return ResponseEntity.ok(url);
     }
 
     // ===== UPDATE =====
@@ -146,6 +166,22 @@ public class StudentProfileController {
         return ResponseEntity.ok(toResponse(updated));
     }
 
+    @Operation(summary = "Subir o reemplazar el CV del perfil de alumno")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+            @ApiResponse(responseCode = "400", description = "Solo se permite PDF"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "404", description = "No existe un perfil con ese id")
+    })
+    @PatchMapping(value = "/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<StudentProfileResponse> updateCvFile(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestPart("file") MultipartFile file) {
+
+        StudentProfile updated = studentProfileService.updateCvFile(jwt.getSubject(), file);
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
     // ===== DELETE =====
 
     @Operation(summary = "Eliminar un perfil de alumno por id")
@@ -161,6 +197,18 @@ public class StudentProfileController {
             @Parameter(description = "Id del perfil de alumno") @PathVariable String id) {
         AuthorizationGuard.requireOwnership(jwt, id);
         studentProfileService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Eliminar el CV del perfil de alumno")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "CV eliminado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "404", description = "No existe un perfil con CV")
+    })
+    @DeleteMapping("/cv")
+    public ResponseEntity<Void> deleteCvFile(@AuthenticationPrincipal Jwt jwt) {
+        studentProfileService.deleteCvFile(jwt.getSubject());
         return ResponseEntity.noContent().build();
     }
 }
