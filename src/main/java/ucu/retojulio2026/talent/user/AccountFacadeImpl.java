@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ucu.retojulio2026.talent.admin.AdminService;
+import ucu.retojulio2026.talent.audit.Auditable;
 import ucu.retojulio2026.talent.common.UruguayClock;
 import ucu.retojulio2026.talent.company.CompanyDeletionService;
 import ucu.retojulio2026.talent.company.CompanyService;
@@ -60,6 +61,7 @@ public class AccountFacadeImpl implements AccountFacade {
         userService.delete(userId);
     }
 
+    @Auditable(module = "USER", action = "ACCOUNT_REVIEW", entityId = "#userId")
     @Override
     @Transactional
     public void reviewAccount(String userId, AccountStatus status, String adminComment) {

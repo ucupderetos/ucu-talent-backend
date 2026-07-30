@@ -24,6 +24,7 @@ class LoginRateLimitFilterTest {
                 60,
                 1_000,
                 10,
+                "60,300,1800",
                 "30,180,900",
                 1_440);
 
@@ -50,6 +51,7 @@ class LoginRateLimitFilterTest {
                 60,
                 1_000,
                 10,
+                "60,300,1800",
                 "30,180,900",
                 1_440);
 
@@ -60,7 +62,8 @@ class LoginRateLimitFilterTest {
         assertThat(firstResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(secondResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(thirdResponse.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-        assertThat(thirdResponse.getHeader("Retry-After")).isEqualTo("30");
+        // La IP usa su propia escala, mas corta que la del email.
+        assertThat(thirdResponse.getHeader("Retry-After")).isEqualTo("60");
     }
 
     @Test
@@ -74,6 +77,7 @@ class LoginRateLimitFilterTest {
                 60,
                 1_000,
                 10,
+                "60,300,1800",
                 "30,180,900",
                 1_440);
 
@@ -100,6 +104,7 @@ class LoginRateLimitFilterTest {
                 60,
                 1_000,
                 10,
+                "60,300,1800",
                 "30,180,900",
                 1_440);
 
