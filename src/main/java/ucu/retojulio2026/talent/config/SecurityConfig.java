@@ -31,9 +31,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatchers;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
@@ -42,6 +44,8 @@ import tools.jackson.databind.ObjectMapper;
 import org.springframework.http.ProblemDetail;
 
 import ucu.retojulio2026.talent.auth.CookieBearerTokenResolver;
+import ucu.retojulio2026.talent.auth.LoginRateLimitFilter;
+import ucu.retojulio2026.talent.auth.SignupRateLimitFilter;
 
 @EnableMethodSecurity
 @Configuration
@@ -92,12 +96,7 @@ public class SecurityConfig {
         return source;
     }
 
-    // Se ejecuta cuando oauth2ResourceServer rechaza un request sin JWT valido, ANTES de que
-    // llegue a cualquier controller (por eso GlobalExceptionHandler nunca lo ve). Sin este bean,
-    // Spring Security responde 401 vacio + solo el header WWW-Authenticate (RFC 6750) - correcto
-    // para clientes OAuth2 maquina-a-maquina, pero inconsistente con el resto de la API (que
-    // siempre responde ProblemDetail JSON). Mantenemos el header (cumple el RFC) y agregamos el
-    // mismo body que ya usa GlobalExceptionHandler en todos los demas errores.
+    
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint(ObjectMapper objectMapper) {
         return (request, response, authException) -> {
@@ -127,23 +126,40 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/work-experience")
     );
 
-    // Cadena 1: paths publicos. NO tiene oauth2ResourceServer -> el filtro que decodifica el
-    // JWT ni corre aca. Es la unica forma real de que una cookie access_token vieja/invalida
-    // no rompa el login/signup: si el filtro de JWT se ejecutara igual (como pasaba antes,
-    // con todo en una sola cadena + permitAll), una cookie corrupta tira una
-    // AuthenticationException ANTES de que se llegue a evaluar que el path era permitAll,
-    // porque los filtros de autenticacion corren antes que los de autorizacion.
+
     @Bean
     @Order(1)
-    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain publicFilterChain(HttpSecurity http, LoginRateLimitFilter loginRateLimitFilter,
+            SignupRateLimitFilter signupRateLimitFilter) throws Exception {
         http
                 .securityMatcher(PUBLIC_MATCHER)
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+                .addFilterAfter(loginRateLimitFilter, CorsFilter.class)
+                .addFilterAfter(signupRateLimitFilter, CorsFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 
+    // LoginRateLimitFilter/SignupRateLimitFilter son @Component, y Spring Boot auto-registra como
+    // filtro global (para "/*") cualquier bean de tipo Filter que encuentre, sin importar si ya lo
+    // agregamos a mano dentro de una SecurityFilterChain con addFilterAfter. Sin estos beans
+    // deshabilitados, cada filtro correria DOS VECES por request, duplicando el consumo del limite.
+    @Bean
+    public FilterRegistrationBean<LoginRateLimitFilter> loginRateLimitFilterAutoRegistrationDisabler(
+            LoginRateLimitFilter loginRateLimitFilter) {
+        FilterRegistrationBean<LoginRateLimitFilter> registration = new FilterRegistrationBean<>(loginRateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<SignupRateLimitFilter> signupRateLimitFilterAutoRegistrationDisabler(
+            SignupRateLimitFilter signupRateLimitFilter) {
+        FilterRegistrationBean<SignupRateLimitFilter> registration = new FilterRegistrationBean<>(signupRateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
     @Bean
     @Order(2)
@@ -168,12 +184,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.DELETE, "/student-profile/cv").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.PATCH, "/user/profile/image").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/storage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/storage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/storage/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de admins: expone todos los admins, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/admin").hasRole("ADMIN")
@@ -181,6 +202,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
                         // Listado de alumnos: expone datos personales (documento, telefono) de todos, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/student-profile").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/student-profile/cv/**").hasRole("EMPRESA")
                         // Aprobar/rechazar cuenta: solo ADMIN.
                         .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.

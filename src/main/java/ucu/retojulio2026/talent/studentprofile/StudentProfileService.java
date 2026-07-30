@@ -1,5 +1,7 @@
 package ucu.retojulio2026.talent.studentprofile;
 
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.multipart.MultipartFile;
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.UpdateStudentProfileRequest;
 import ucu.retojulio2026.talent.user.AccountStatus;
@@ -27,4 +29,10 @@ public interface StudentProfileService {
     void review(String id, LocalDateTime reviewedAt, String adminComment);
 
     boolean hasProfile(String id);
+
+    StudentProfile updateCvFile(String id, MultipartFile file);
+
+    void deleteCvFile(String id);
+
+    String getCvFile(String cvFile, Jwt jwt);
 }

@@ -2,10 +2,12 @@ package ucu.retojulio2026.talent;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -15,19 +17,19 @@ import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.education.Education;
 import ucu.retojulio2026.talent.education.EducationService;
-import ucu.retojulio2026.talent.mail.MailService;
-import ucu.retojulio2026.talent.studentprofile.StudentProfile;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.Vacancy;
-import ucu.retojulio2026.talent.vacancy.VacancyServiceImpl;
+import ucu.retojulio2026.talent.vacancy.VacancyService;
 import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplication;
+import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationCreatedEvent;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus;
+import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatusChangedEvent;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 
@@ -52,9 +54,9 @@ class VacancyApplicationServiceImplTest {
     @Mock private StudentProfileService studentProfileService;
     @Mock private EducationService educationService;
     @Mock private VacancyApplicationMapper vacancyApplicationMapper;
-    @Mock private VacancyServiceImpl vacancyService;
+    @Mock private VacancyService vacancyService;
     @Mock private UserService userService;
-    @Mock private MailService mailService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks private VacancyApplicationServiceImpl service;
 
@@ -76,13 +78,6 @@ class VacancyApplicationServiceImplTest {
         User studentUser = new User();
         studentUser.setStatus(AccountStatus.APROBADO);
 
-        User companyUser = new User();
-        companyUser.setEmail("contacto@qsy.com");
-
-        StudentProfile applicant = new StudentProfile();
-        applicant.setName("Nico");
-        applicant.setSurname("Perez");
-
         VacancyApplication entity = new VacancyApplication();
         entity.setVacancyId(vacancyId);
         entity.setStudentProfileId(studentId);
@@ -95,8 +90,6 @@ class VacancyApplicationServiceImplTest {
         when(vacancyApplicationMapper.toEntity(request)).thenReturn(entity);
         when(vacancyApplicationRepository.save(any(VacancyApplication.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(studentProfileService.getById(studentId)).thenReturn(applicant);
-        when(userService.getById(companyId)).thenReturn(companyUser);
 
         VacancyApplication result = service.create(request);
 
@@ -105,8 +98,12 @@ class VacancyApplicationServiceImplTest {
         assertEquals(LocalDate.now(), result.getAppliedAt());
 
         verify(vacancyApplicationRepository).save(entity);
-        verify(mailService).sendCompanyNewApplicationEmail(
-                "contacto@qsy.com", "Nico Perez", "Backend Developer");
+
+        ArgumentCaptor<VacancyApplicationCreatedEvent> event =
+                ArgumentCaptor.forClass(VacancyApplicationCreatedEvent.class);
+        verify(eventPublisher).publishEvent(event.capture());
+        assertEquals(vacancyId, event.getValue().vacancyId());
+        assertEquals(studentId, event.getValue().studentProfileId());
     }
 
     @Test
@@ -259,27 +256,21 @@ class VacancyApplicationServiceImplTest {
         application.setVacancyId(vacancyId);
         application.setStudentProfileId(studentId);
 
-        Vacancy vacancy = new Vacancy();
-        vacancy.setName("Backend Developer");
-
-        User applicantUser = new User();
-        applicantUser.setEmail("nico@test.com");
-
-        StudentProfile applicant = new StudentProfile();
-        applicant.setName("Nico");
-        applicant.setSurname("Perez");
-
         when(vacancyApplicationRepository.findById(id)).thenReturn(Optional.of(application));
         when(vacancyApplicationRepository.save(any(VacancyApplication.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(vacancyService.getVacancyById(vacancyId)).thenReturn(vacancy);
-        when(userService.getById(studentId)).thenReturn(applicantUser);
-        when(studentProfileService.getById(studentId)).thenReturn(applicant);
 
         VacancyApplication result = service.update(id, VacancyApplicationStatus.VISTO);
 
         assertEquals(VacancyApplicationStatus.VISTO, result.getStatus());
         verify(vacancyApplicationRepository).save(application);
+
+        ArgumentCaptor<VacancyApplicationStatusChangedEvent> event =
+                ArgumentCaptor.forClass(VacancyApplicationStatusChangedEvent.class);
+        verify(eventPublisher).publishEvent(event.capture());
+        assertEquals(vacancyId, event.getValue().vacancyId());
+        assertEquals(studentId, event.getValue().studentProfileId());
+        assertEquals(VacancyApplicationStatus.VISTO, event.getValue().newStatus());
     }
 
     @Test
