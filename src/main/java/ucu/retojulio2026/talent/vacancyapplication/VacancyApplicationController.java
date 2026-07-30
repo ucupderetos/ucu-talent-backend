@@ -28,6 +28,7 @@ import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.VacancyService;
 import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.MyApplicationRowResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStatusSummaryResponse;
@@ -86,6 +87,18 @@ public class VacancyApplicationController {
     public ResponseEntity<List<VacancyApplicationStudentResponse>> getMyApplications(
             @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(vacancyApplicationService.getStudentApplications(jwt.getSubject()));
+    }
+
+    @Operation(summary = "Listar mis postulaciones con el puesto, la empresa y el area resueltos (alumno autenticado)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no es ALUMNO")
+    })
+    @GetMapping("/me/detailed")
+    public ResponseEntity<List<MyApplicationRowResponse>> getMyApplicationsDetailed(
+            @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(vacancyApplicationService.getMyApplicationsDetailed(jwt.getSubject()));
     }
 
     @Operation(summary = "Obtener una postulación por id (solo la empresa dueña de la vacante)")

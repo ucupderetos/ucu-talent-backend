@@ -18,6 +18,7 @@ import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.VacancyService;
 import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.MyApplicationRowResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
 
@@ -133,6 +134,15 @@ public class    VacancyApplicationServiceImpl implements VacancyApplicationServi
     @Transactional(readOnly = true)
     public List<VacancyApplicationStudentResponse> getStudentApplications(String studentProfileId) {
         return vacancyApplicationRepository.findStudentApplications(studentProfileId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyApplicationRowResponse> getMyApplicationsDetailed(String studentProfileId) {
+        return vacancyApplicationRepository.findMyApplicationsDetailed(studentProfileId)
+                .stream()
+                .map(vacancyApplicationMapper::toMyApplicationRowResponse)
+                .toList();
     }
 
     @Override
