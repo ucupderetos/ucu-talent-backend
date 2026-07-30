@@ -19,6 +19,7 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
 import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
+import ucu.retojulio2026.talent.storage.StorageService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,6 +44,9 @@ class StudentProfileServiceImplTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private StorageService storageService;
+
     private StudentProfileServiceImpl studentProfileService;
 
     @BeforeEach
@@ -50,7 +54,8 @@ class StudentProfileServiceImplTest {
         studentProfileService = new StudentProfileServiceImpl(
                 studentProfileRepository,
                 studentProfileMapper,
-                userService
+                userService,
+                storageService
         );
     }
 
