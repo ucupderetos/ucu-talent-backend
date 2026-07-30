@@ -13,7 +13,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.studentprofile.dto.CreateStudentProfileRequest;
 import ucu.retojulio2026.talent.studentprofile.dto.StudentProfileMapper;
@@ -126,6 +127,22 @@ public class StudentProfileController {
         return ResponseEntity.ok(StudentProfileStatusSummaryResponse.from(studentProfileService.getStatusSummary()));
     }
 
+    @Operation(summary = "Obtener una URL firmada del CV")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "CV encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "El archivo no pertenece a un perfil"),
+            @ApiResponse(responseCode = "404", description = "No existe un CV para ese perfil")
+    })
+    @GetMapping("/cv")
+    public ResponseEntity<String> getCvFile(
+            @RequestParam String cvFile,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String url = studentProfileService.getCvFile(cvFile, jwt);
+        return ResponseEntity.ok(url);
+    }
+
     // ===== UPDATE =====
 
     @Operation(summary = "Actualizar el telefono, LinkedIn y skills de un perfil de alumno")
@@ -146,6 +163,22 @@ public class StudentProfileController {
         return ResponseEntity.ok(toResponse(updated));
     }
 
+    @Operation(summary = "Subir o reemplazar el CV del perfil de alumno")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+            @ApiResponse(responseCode = "400", description = "Solo se permite PDF"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "404", description = "No existe un perfil con ese id")
+    })
+    @PatchMapping(value = "/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<StudentProfileResponse> updateCvFile(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestPart("file") MultipartFile file) {
+
+        StudentProfile updated = studentProfileService.updateCvFile(jwt.getSubject(), file);
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
     // ===== DELETE =====
 
     @Operation(summary = "Eliminar un perfil de alumno por id")
@@ -161,6 +194,18 @@ public class StudentProfileController {
             @Parameter(description = "Id del perfil de alumno") @PathVariable String id) {
         AuthorizationGuard.requireOwnership(jwt, id);
         studentProfileService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Eliminar el CV del perfil de alumno")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "CV eliminado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "404", description = "No existe un perfil con CV")
+    })
+    @DeleteMapping("/cv")
+    public ResponseEntity<Void> deleteCvFile(@AuthenticationPrincipal Jwt jwt) {
+        studentProfileService.deleteCvFile(jwt.getSubject());
         return ResponseEntity.noContent().build();
     }
 }

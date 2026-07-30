@@ -184,12 +184,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
                         // Student-Profile
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.DELETE, "/student-profile/cv").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.PATCH, "/user/profile/image").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/storage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/storage/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/storage/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
                         // Listado de admins: expone todos los admins, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/admin").hasRole("ADMIN")
@@ -197,6 +202,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
                         // Listado de alumnos: expone datos personales (documento, telefono) de todos, solo ADMIN.
                         .requestMatchers(HttpMethod.GET, "/student-profile").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/student-profile/cv/**").hasRole("EMPRESA")
                         // Aprobar/rechazar cuenta: solo ADMIN.
                         .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
                         // University Registry: exclusivo de ADMIN, incluidos los GET.

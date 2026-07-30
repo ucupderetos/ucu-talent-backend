@@ -1,6 +1,5 @@
 package ucu.retojulio2026.talent.user;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -23,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     Page<User> findByStatusAndRole(AccountStatus status, Role role, Pageable pageable);
 
     long countByRoleAndStatus(Role role, AccountStatus status);
+
+    boolean existsByProfileImage(String profileImage);
 
     //Optional es necesario porque hace explicito que la busqueda puede no tener resultado.
     //Asi el servico esta obligado a manejar el caso vacio, en vez de recibir

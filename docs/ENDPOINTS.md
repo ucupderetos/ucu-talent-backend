@@ -28,6 +28,7 @@
 13. Auditoria (`AuditLog`)
 14. **Dev (TEMPORAL)**
 15. Templates de mail (`MailTemplate`)
+16. **Storage (ADMIN)**
 
 ---
 
@@ -44,9 +45,13 @@ Controller: `user/UserController` · Tag: **Usuarios**
 | 1 | POST | `/user` | Crear una cuenta (paso 1 del registro) | 🌐 Público | `CreateUserRequest` | `UserResponse` | `201` | `400` datos inválidos · `409` email duplicado · `429` demasiadas altas (rate limit) |
 | 2 | GET | `/user` | Listar cuentas, filtro opcional por `status`/`role` | 🔒 rol `ADMIN` | — (query `status`? `AccountStatus`, `role`? `Role`) | `List<UserResponse>` | `200` | — |
 | 3 | GET | `/user/{id}` | Obtener una cuenta por id | 🔒 Autenticado | — (path `id`) | `UserResponse` | `200` | `404` |
-| 4 | GET | `/user?email={email}` | Buscar por email | 🔒 rol `ADMIN` (misma regla de path que `GET /user`, no distingue query string) | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `403` no es ADMIN · `404` no existe |
-| 5 | PATCH | `/user/{id}` | Aprobar o rechazar un usuario | 🔒 rol `ADMIN` | `UpdateUserStatusRequest` | `UserResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe · `409` transición inválida |
-| 6 | DELETE | `/user/{id}` | Eliminar una cuenta | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
+| 4 | GET | `/user/mail?email={email}` | Buscar por email | 🔒 rol `ADMIN` | — (query `email`: `@NotBlank`, `@Email`) | `UserResponse` | `200` | `400` email inválido · `403` no es ADMIN · `404` no existe |
+| 5 | GET | `/user/profile-image?profileObject={objectName}` | Obtener URL firmada de la foto de perfil | 🔒 Autenticado | — (query `profileObject`) | `String` (URL firmada) | `200` | `400` formato inválido · `403` no autenticado · `404` no existe |
+| 6 | PATCH | `/user/{id}` | Aprobar o rechazar un usuario | 🔒 rol `ADMIN` | `UpdateUserStatusRequest` | `UserResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe · `409` transición inválida |
+| 7 | PATCH | `/user/profile/image` | Subir o reemplazar la foto de perfil (siempre la propia, sale del JWT) | 🔒 Autenticado | `multipart/form-data` — `file` | `UserResponse` | `200` | `400` · `401` no autenticado · `404` no existe |
+| 8 | DELETE | `/user/{id}` | Eliminar una cuenta | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
+| 9 | DELETE | `/user/profile/image` | Eliminar la foto de perfil (siempre la propia, sale del JWT) | 🔒 Autenticado | — | — (vacío) | `204` | `401` no autenticado · `404` no existe |
+
 
 ### Schemas
 
@@ -61,7 +66,7 @@ Controller: `user/UserController` · Tag: **Usuarios**
   según el rol del usuario (no aplica a `ADMIN`, no tiene perfil asociado)
 
 **`UserResponse`** (salida — nunca expone `passwordHash`)
-- `userId` · `email` · `role` (`Role`) · `status` (`AccountStatus`) · `registeredAt` (date)
+- `userId` · `email` · `role` (`Role`) · `status` (`AccountStatus`) · `registeredAt` (date) · `profileImage` (null hasta que suba una imagen)
 
 ---
 
@@ -77,10 +82,13 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 | 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` datos inválidos o documento con formato inválido · `409` ya tiene perfil o documento duplicado |
 | 2 | GET | `/student-profile?status={status}` | Listar perfiles, opcionalmente filtrados por estado | 🔒 rol `ADMIN` | — (query `status`: `AccountStatus`, opcional) | `List<StudentProfileResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
-| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 rol `ADMIN` (misma regla de path que `GET /student-profile`, no distingue query string) | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
-| 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
-| 6 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
-| 7 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
+| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 rol `ADMIN` | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
+| 5 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
+| 6 | GET | `/student-profile/cv?cvFile={objectName}` | Obtener una URL firmada del CV | 🔒 rol `EMPRESA` | — (query `cvFile`) | `String` (URL firmada) | `200` | `401` no autenticado · `403` no es EMPRESA · `404` no existe CV |
+| 7 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 8 | PATCH | `/student-profile/cv` | Subir o reemplazar el CV (siempre el propio, sale del JWT) | 🔒 + dueño (implícito, sin `id` en el path) | `multipart/form-data` — `file` (solo PDF) | `StudentProfileResponse` | `200` | `400` solo se permite PDF · `401` no autenticado · `404` no existe |
+| 9 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
+| 10 | DELETE | `/student-profile/cv` | Eliminar el CV (siempre el propio, sale del JWT) | 🔒 + dueño (implícito) | — | — (vacío) | `204` | `401` no autenticado · `404` no existe |
 
 ### Schemas
 
@@ -103,7 +111,7 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
   `name` · `surname` · `documentType` (`DocumentType`) · `documentNumber`
   (normalizado, sin `.`/`-`/espacios aunque se haya mandado con ellos) · `phoneNumber` · `linkedinUrl` ·
   `skills` (`string[]`) · `status` (`AccountStatus`, del `User` dueño) · `description` · `reviewedAt`
-  (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise)
+  (date, null hasta que el Admin revise) · `adminComment` (null hasta que el Admin revise) · `cvFile` (null hasta que suba un CV)
 
 **`StudentProfileStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `aprobado` · `rechazado` (todos `long`, cuentas de `User.status` filtradas por rol `ALUMNO`)
@@ -265,16 +273,6 @@ Controller: `auth/AuthController` (`/auth`) + `auth/MeController` (`/me`) · Tag
 - Cloud Run: al usar contadores en memoria, con N instancias el límite efectivo agregado puede acercarse a `N x límite`.
   - Para demo estricta de rate limit: configurar `min-instances=1` y `max-instances=1`.
   - Si se escala a múltiples instancias, este rate limit debe considerarse aproximado.
-
-### 7.5 Rate limiting de alta de cuentas
-
-- El endpoint `POST /user` tiene el mismo mecanismo que el login (Bucket4j + Caffeine + bloqueo progresivo), pero con cache y config totalmente independientes — una IP o email penalizados en el login no afectan el alta de cuentas, y viceversa:
-  - Por email: 3 altas por 60 segundos.
-  - Por IP: 3 altas (cuentas distintas) por 60 segundos.
-- Mismo formato de respuesta al exceder el límite: `429` + `application/problem+json` + header `Retry-After`.
-- Bloqueo mucho más severo que el de login, pensado para desalentar creación masiva de cuentas: **1 día → 3 días → 7 días**, quedándose en 7 días si sigue reincidiendo.
-- El contador de reincidencia dura 30 días (no 1 día): si vuelve a exceder el límite al día siguiente de que expiró el primer bloqueo, escala a 3 días en vez de reiniciar en 1 día.
-- Aplica la misma advertencia de Cloud Run que 7.4 (contadores en memoria, aproximados con N > 1 instancias).
 
 ---
 
@@ -516,3 +514,17 @@ Controller: `mail/MailTemplateController` · Tag: **Templates de mail**
 - **`MailTemplateCode`**: `NEW_APPLICATION`, `APPLICATION_VISTO`, `VACANCY_CLOSED`, `VACANCY_SELECTED` — códigos fijos, sin create/delete por API
 
 ---
+
+## 16. Storage — `/storage`
+
+Controller: `storage/StorageController` · Tag: **Storage**
+
+| # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
+|---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
+| 1 | POST | `/storage/files` | Subir un archivo a Google Cloud Storage | 🔒 rol `ADMIN` | `multipart/form-data` — `file`, query `field` (`@NotBlank`) | `StorageUploadResponse` | `201` | `400` archivo/field inválido |
+| 2 | DELETE | `/storage/images?objectName={objectName}` | Eliminar un archivo/imagen por nombre de objeto | 🔒 rol `ADMIN` | — (query `objectName`: `@NotBlank`) | — (vacío) | `204` | `400` · `404` no existe |
+
+### Schemas
+
+**`StorageUploadResponse`** (salida)
+- `objectName` · `originalFilename` · `contentType` · `size` (long) · `bucket` · `gcsUri` · `publicUrl`

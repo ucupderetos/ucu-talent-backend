@@ -10,11 +10,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UpdateUserStatusRequest;
@@ -108,6 +110,19 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
+    @Operation(summary = "Encontrar imagen por profile-image")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Imagen encontrada"),
+            @ApiResponse(responseCode = "400", description = "Formato invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "404", description = "No existe un usuario con ese email")
+    })
+    @GetMapping("/profile-image")
+    public ResponseEntity<String> getProfileImage(@RequestParam String profileObject, @AuthenticationPrincipal Jwt jwt) {
+        String url = userService.getProfileImage(profileObject, jwt);
+        return ResponseEntity.ok(url);
+    }
+
     // ===== UPDATE =====
 
     @Operation(summary = "Aprobar o rechazar un usuario")
@@ -125,6 +140,22 @@ public class UserController {
             @Valid @RequestBody UpdateUserStatusRequest request) {
         accountFacade.reviewAccount(id, request.status(), request.adminComment());
         User updated = userService.getById(id);
+        return ResponseEntity.ok(userMapper.toResponse(updated));
+    }
+
+    @Operation(summary = "Cambiar imagen de perfil de usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Estado de cuenta actualizado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos (ver el detalle por campo)"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
+    })
+    @PatchMapping(value = "/profile/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> updateProfileImage(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestPart("file") MultipartFile file) {
+
+        User updated = userService.updateProfileImage(jwt.getSubject(), file);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }
 
@@ -146,4 +177,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/profile/image")
+    public ResponseEntity<Void> deleteProfileImage(@AuthenticationPrincipal Jwt jwt) {
+        userService.deleteProfileImage(jwt.getSubject());
+        return ResponseEntity.noContent().build();
+    }
 }
