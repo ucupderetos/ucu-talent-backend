@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemRow;
+import ucu.retojulio2026.talent.vacancyapplication.dto.MyApplicationRow;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
 
 import java.util.List;
@@ -71,6 +72,22 @@ public interface VacancyApplicationRepository extends JpaRepository<VacancyAppli
             ORDER BY a.appliedAt DESC
             """)
     List<ApplicationListItemRow> findAllDetailed();
+
+    @Query("""
+            SELECT new ucu.retojulio2026.talent.vacancyapplication.dto.MyApplicationRow(
+                a,
+                v,
+                c.name,
+                ar.name
+            )
+            FROM VacancyApplication a
+            JOIN Vacancy v ON v.vacancyId = a.vacancyId
+            JOIN Company c ON c.companyId = v.companyId
+            JOIN Area ar ON ar.areaId = v.areaId
+            WHERE a.studentProfileId = :studentProfileId
+            ORDER BY a.appliedAt DESC
+            """)
+    List<MyApplicationRow> findMyApplicationsDetailed(@Param("studentProfileId") String studentProfileId);
 
     List<VacancyApplication> findByVacancyId(String vacancyId);
 
