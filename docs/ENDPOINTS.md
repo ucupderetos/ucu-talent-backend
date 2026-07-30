@@ -77,7 +77,7 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 | 1 | POST | `/student-profile` | Crear perfil de alumno | 🔒 rol `ALUMNO` | `CreateStudentProfileRequest` | `StudentProfileResponse` | `201` | `400` datos inválidos o documento con formato inválido · `409` ya tiene perfil o documento duplicado |
 | 2 | GET | `/student-profile?status={status}` | Listar perfiles, opcionalmente filtrados por estado | 🔒 rol `ADMIN` | — (query `status`: `AccountStatus`, opcional) | `List<StudentProfileResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
 | 3 | GET | `/student-profile/{id}` | Obtener perfil por id | 🔒 Autenticado | — (path `id`) | `StudentProfileResponse` | `200` | `404` |
-| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 rol `ADMIN` (misma regla de path que `GET /student-profile`, no distingue query string) | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
+| 4 | GET | `/student-profile?userId={userId}` | Perfil de un usuario (PK compartida: equivale a `getById`) | 🔒 + dueño, o rol `ADMIN` / `EMPRESA` | — (query `userId`: `@NotBlank`) | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño, ni ADMIN, ni EMPRESA · `404` no existe |
 | 5 | PUT | `/student-profile/{id}` | Actualizar telefono, LinkedIn, skills y descripción por id | 🔒 + dueño | `UpdateStudentProfileRequest` | `StudentProfileResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
 | 6 | DELETE | `/student-profile/{id}` | Eliminar perfil por id | 🔒 + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` no existe |
 | 7 | GET | `/student-profile/status-summary` | Totales de alumnos por estado | 🔒 rol `ADMIN` | — | `StudentProfileStatusSummaryResponse` | `200` | `403` no es ADMIN |
@@ -179,11 +179,12 @@ Controller: `education/EducationController` · Tag: **Educacion**
 | # | Método | Path | Descripción | Permisos | Request schema | Response schema | Happy | No happy |
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/education` | Crear registro de educación | ⚠️ Sin restricción | `CreateEducationRequest` | `EducationResponse` | `201` | `400` datos inválidos |
-| 2 | GET | `/education/{id}` | Obtener registro por id | 🔒 Autenticado | — (path `id`) | `EducationResponse` | `200` | `404` |
-| 3 | GET | `/education/by-id?educationId={id}` | Obtener registro por id (DTO request) | 🔒 Autenticado | `GetEducationByIdRequest` (query `@ModelAttribute`) | `EducationResponse` | `200` | `400` parámetro inválido · `404` no existe |
-| 4 | GET | `/education?studentProfileId={id}` | Listar por studentProfileId | 🔒 Autenticado | — (query `studentProfileId`: `@NotBlank`) | `List<EducationResponse>` | `200` | `400` parámetro inválido |
-| 5 | PUT | `/education/{id}` | Actualizar registro por id | ⚠️ Sin restricción | `UpdateEducationRequest` | `EducationResponse` | `200` | `400` · `404` no existe |
-| 6 | DELETE | `/education/{id}` | Eliminar registro por id | ⚠️ Sin restricción | — (path `id`) | — (vacío) | `204` | `404` |
+| 2 | GET | `/education` | Listar todos los registros de educación | 🔒 rol `ADMIN` | — | `List<EducationResponse>` | `200` | `403` no es ADMIN |
+| 3 | GET | `/education/{id}` | Obtener registro por id | 🔒 Autenticado | — (path `id`) | `EducationResponse` | `200` | `404` |
+| 4 | GET | `/education/by-id?educationId={id}` | Obtener registro por id (DTO request) | 🔒 Autenticado | `GetEducationByIdRequest` (query `@ModelAttribute`) | `EducationResponse` | `200` | `400` parámetro inválido · `404` no existe |
+| 5 | GET | `/education?studentProfileId={id}` | Listar por studentProfileId | 🔒 Autenticado | — (query `studentProfileId`: `@NotBlank`) | `List<EducationResponse>` | `200` | `400` parámetro inválido |
+| 6 | PUT | `/education/{id}` | Actualizar registro por id | ⚠️ Sin restricción | `UpdateEducationRequest` | `EducationResponse` | `200` | `400` · `404` no existe |
+| 7 | DELETE | `/education/{id}` | Eliminar registro por id | ⚠️ Sin restricción | — (path `id`) | — (vacío) | `204` | `404` |
 
 ### Schemas
 
@@ -327,14 +328,15 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 | 3 | GET | `/vacancy/{id}` | Obtener puesto por id | 🔒 Autenticado | — (path `id`) | `VacancyResponse` | `200` | `404` |
 | 4 | GET | `/vacancy/status/{status}` | Listar por estado | 🔒 Autenticado | — (path `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
 | 5 | GET | `/vacancy/company/{companyId}` | Listar por empresa | 🔒 Autenticado | — (path `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 6 | GET | `/vacancy/area/{areaId}` | Listar por area | 🔒 Autenticado | — (path `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 7 | GET | `/vacancy/modality/{modality}` | Listar por modalidad | 🔒 Autenticado | — (path `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 8 | GET | `/vacancy/location/{location}` | Listar por localidad | 🔒 Autenticado | — (path `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 9 | PUT | `/vacancy/{id}` | Actualizar puesto por id | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
-| 10 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
-| 11 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
-| 12 | DELETE | `/vacancy/{id}` | Eliminar puesto por id | 🔒 rol `EMPRESA` + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` |
-| 13 | GET | `/vacancy/status-summary` | Totales de puestos por estado | 🔒 rol `ADMIN` | — | `VacancyStatusSummaryResponse` | `200` | `403` no es ADMIN |
+| 6 | GET | `/vacancy/company/{companyId}/management` | Listar puestos de una empresa para gestión | 🔒 dueño de `companyId` o rol `ADMIN` | — (path `companyId`: `@NotBlank`) | `List<VacancyManagementResponse>` | `200` | `400` · `403` no es el dueño ni ADMIN · `404` company no existe |
+| 7 | GET | `/vacancy/area/{areaId}` | Listar por area | 🔒 Autenticado | — (path `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 8 | GET | `/vacancy/modality/{modality}` | Listar por modalidad | 🔒 Autenticado | — (path `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 9 | GET | `/vacancy/location/{location}` | Listar por localidad | 🔒 Autenticado | — (path `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 10 | PUT | `/vacancy/{id}` | Actualizar puesto por id | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 11 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 12 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
+| 13 | DELETE | `/vacancy/{id}` | Eliminar puesto por id | 🔒 rol `EMPRESA` + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` |
+| 14 | GET | `/vacancy/status-summary` | Totales de puestos por estado | 🔒 rol `ADMIN` | — | `VacancyStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -346,9 +348,10 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 - `publicationDate` date? · `closingDate` date?
 
 **`UpdateVacancyRequest`** (entrada — sin `companyId`/`areaId`, no se reasignan)
-- `publicationDate` date · `@NotNull` · `closingDate` date · `@NotNull`
-- `location` enum `Departamento` · `@NotNull` · `modality` enum `Modality` · `@NotNull`
-- `name` · `description` · `requirements` · `contractType` · `salary` — todos string `@NotBlank`
+- Update parcial: **todos los campos son opcionales**, sin validaciones. Un campo en `null` no se modifica.
+- `publicationDate` date? · `closingDate` date?
+- `location` enum `Departamento`? · `modality` enum `Modality`?
+- `name`? · `description`? · `requirements`? · `salary`? — string · `contractType` enum `ContractType`?
 
 **`UpdateVacancyStatusRequest`** (entrada)
 - `status` enum `VacancyStatus` · `@NotNull`
@@ -358,6 +361,10 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 
 **`VacancyResponse`** (salida)
 - `vacancyId` · `companyId` · `areaId` · `publicationDate` · `closingDate` · `location` (`Departamento`) · `modality` (`Modality`) · `status` (`VacancyStatus`) · `name` · `description` · `requirements` · `contractType` · `salary`
+
+**`VacancyManagementResponse`** (salida)
+- `vacancy` objeto `VacancyResponse` · `companyName` string · `areaName` string
+- `applicationCount` `long` · `newApplicationsCount` `long` (postulaciones en `PENDIENTE`)
 
 **`VacancyStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `publicado` · `finalizado` (todos `long`)

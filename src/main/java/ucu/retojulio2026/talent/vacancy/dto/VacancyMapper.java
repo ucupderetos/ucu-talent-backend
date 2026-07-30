@@ -12,4 +12,5 @@ public interface VacancyMapper {
 
     VacancyResponse toResponse(Vacancy vacancy);
     VacancyStudentResponse toStudentResponse(Vacancy vacancy);
+    VacancyManagementResponse toManagementResponse(VacancyManagementRow row);
 }
