@@ -30,15 +30,24 @@ import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationServiceImpl;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatusChangedEvent;
+import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemResponse;
+import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemRow;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.MyApplicationRow;
+import ucu.retojulio2026.talent.vacancyapplication.dto.MyApplicationRowResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationResponse;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -323,5 +332,241 @@ class VacancyApplicationServiceImplTest {
         for (VacancyApplicationStatus status : VacancyApplicationStatus.values()) {
             assertTrue(result.containsKey(status));
         }
+    }
+
+    private VacancyApplication application(String id, String vacancyId, String studentId) {
+        VacancyApplication application = new VacancyApplication();
+        application.setVacancyApplicationId(id);
+        application.setVacancyId(vacancyId);
+        application.setStudentProfileId(studentId);
+        application.setStatus(VacancyApplicationStatus.PENDIENTE);
+        application.setAppliedAt(LocalDate.now());
+        return application;
+    }
+
+    private ApplicationListItemRow row(VacancyApplication application, String studentName, String studentEmail,
+                                       String vacancyName, String companyId, String companyName) {
+        return new ApplicationListItemRow(application, studentName, "Perez", studentEmail,
+                application.getVacancyId(), vacancyName, companyId, companyName);
+    }
+
+    private ApplicationListItemResponse response(ApplicationListItemRow row) {
+        VacancyApplication application = row.application();
+        return new ApplicationListItemResponse(
+                new VacancyApplicationResponse(
+                        application.getVacancyApplicationId(),
+                        application.getVacancyId(),
+                        application.getStudentProfileId(),
+                        application.getStatus(),
+                        application.getAppliedAt(),
+                        application.isAccepted()),
+                row.studentName(), row.studentSurname(), row.studentEmail(),
+                row.vacancyId(), row.vacancyName(), row.companyId(), row.companyName());
+    }
+
+    @Test
+    void getDetailedByVacancyId_mapeaCadaFilaYPreservaElOrdenDelRepositorio() {
+        String vacancyId = "vac123456789";
+        ApplicationListItemRow primera = row(application("app111111111", vacancyId, "stu111111111"),
+                "Ana", "ana@correo.ucu.edu.uy", "Backend Developer", "cmp123456789", "ACME S.A.");
+        ApplicationListItemRow segunda = row(application("app222222222", vacancyId, "stu222222222"),
+                "Bruno", "bruno@correo.ucu.edu.uy", "Backend Developer", "cmp123456789", "ACME S.A.");
+
+        when(vacancyApplicationRepository.findDetailedByVacancyId(vacancyId))
+                .thenReturn(List.of(primera, segunda));
+        when(vacancyApplicationMapper.toListItemResponse(primera)).thenReturn(response(primera));
+        when(vacancyApplicationMapper.toListItemResponse(segunda)).thenReturn(response(segunda));
+
+        List<ApplicationListItemResponse> result = service.getDetailedByVacancyId(vacancyId);
+
+        assertEquals(2, result.size());
+        assertEquals("app111111111", result.get(0).application().vacancyApplicationId());
+        assertEquals("app222222222", result.get(1).application().vacancyApplicationId());
+        verify(vacancyApplicationRepository).findDetailedByVacancyId(vacancyId);
+    }
+
+    @Test
+    void getDetailedByVacancyId_devuelveAlumnoVacanteYEmpresaResueltos() {
+        String vacancyId = "vac123456789";
+        ApplicationListItemRow fila = row(application("app111111111", vacancyId, "stu111111111"),
+                "Ana", "ana@correo.ucu.edu.uy", "Backend Developer", "cmp123456789", "ACME S.A.");
+
+        when(vacancyApplicationRepository.findDetailedByVacancyId(vacancyId)).thenReturn(List.of(fila));
+        when(vacancyApplicationMapper.toListItemResponse(fila)).thenReturn(response(fila));
+
+        ApplicationListItemResponse result = service.getDetailedByVacancyId(vacancyId).get(0);
+
+        assertEquals("Ana", result.studentName());
+        assertEquals("Perez", result.studentSurname());
+        assertEquals("ana@correo.ucu.edu.uy", result.studentEmail());
+        assertEquals(vacancyId, result.vacancyId());
+        assertEquals("Backend Developer", result.vacancyName());
+        assertEquals("cmp123456789", result.companyId());
+        assertEquals("ACME S.A.", result.companyName());
+        assertEquals("stu111111111", result.application().studentProfileId());
+        assertEquals(VacancyApplicationStatus.PENDIENTE, result.application().status());
+    }
+
+    @Test
+    void getDetailedByVacancyId_sinPostulaciones_devuelveListaVaciaYNoUsaElMapper() {
+        String vacancyId = "vac123456789";
+        when(vacancyApplicationRepository.findDetailedByVacancyId(vacancyId)).thenReturn(List.of());
+
+        List<ApplicationListItemResponse> result = service.getDetailedByVacancyId(vacancyId);
+
+        assertTrue(result.isEmpty());
+        verify(vacancyApplicationMapper, never()).toListItemResponse(any());
+    }
+
+    @Test
+    void getAllDetailed_devuelveFilasDeDistintasEmpresasSinFiltrar() {
+        ApplicationListItemRow deAcme = row(application("app111111111", "vac111111111", "stu111111111"),
+                "Ana", "ana@correo.ucu.edu.uy", "Backend Developer", "cmp111111111", "ACME S.A.");
+        ApplicationListItemRow deOtra = row(application("app222222222", "vac222222222", "stu222222222"),
+                "Bruno", "bruno@correo.ucu.edu.uy", "Data Analyst", "cmp222222222", "OTRA S.R.L.");
+
+        when(vacancyApplicationRepository.findAllDetailed()).thenReturn(List.of(deAcme, deOtra));
+        when(vacancyApplicationMapper.toListItemResponse(deAcme)).thenReturn(response(deAcme));
+        when(vacancyApplicationMapper.toListItemResponse(deOtra)).thenReturn(response(deOtra));
+
+        List<ApplicationListItemResponse> result = service.getAllDetailed();
+
+        assertEquals(2, result.size());
+        assertEquals("ACME S.A.", result.get(0).companyName());
+        assertEquals("OTRA S.R.L.", result.get(1).companyName());
+        verify(vacancyApplicationRepository).findAllDetailed();
+    }
+
+    @Test
+    void getAllDetailed_sinPostulaciones_devuelveListaVaciaYNoUsaElMapper() {
+        when(vacancyApplicationRepository.findAllDetailed()).thenReturn(List.of());
+
+        List<ApplicationListItemResponse> result = service.getAllDetailed();
+
+        assertTrue(result.isEmpty());
+        verify(vacancyApplicationMapper, never()).toListItemResponse(any());
+    }
+
+    private Vacancy vacancy(String vacancyId, String companyId, String areaId, String name) {
+        Vacancy vacancy = new Vacancy();
+        vacancy.setVacancyId(vacancyId);
+        vacancy.setCompanyId(companyId);
+        vacancy.setAreaId(areaId);
+        vacancy.setName(name);
+        vacancy.setStatus(VacancyStatus.PUBLICADO);
+        return vacancy;
+    }
+
+    private MyApplicationRowResponse myApplicationResponse(MyApplicationRow row) {
+        VacancyApplication application = row.application();
+        Vacancy vacancy = row.vacancy();
+        return new MyApplicationRowResponse(
+                new VacancyApplicationStudentResponse(
+                        application.getVacancyApplicationId(),
+                        application.getVacancyId(),
+                        vacancy.getName(),
+                        vacancy.getCompanyId(),
+                        row.companyName(),
+                        application.getAppliedAt(),
+                        application.getStatus(),
+                        vacancy.getStatus()),
+                new VacancyResponse(
+                        vacancy.getVacancyId(),
+                        vacancy.getCompanyId(),
+                        vacancy.getAreaId(),
+                        vacancy.getPublicationDate(),
+                        vacancy.getClosingDate(),
+                        vacancy.getCreatedAt(),
+                        vacancy.getReviewedAt(),
+                        vacancy.getUpdatedAt(),
+                        vacancy.getDeletedAt(),
+                        vacancy.isDeleted(),
+                        vacancy.getAdminComment(),
+                        vacancy.getLocation(),
+                        vacancy.getModality(),
+                        vacancy.getStatus(),
+                        vacancy.getName(),
+                        vacancy.getDescription(),
+                        vacancy.getRequirements(),
+                        vacancy.getContractType(),
+                        vacancy.getReviewedBy(),
+                        vacancy.getSalary()),
+                row.companyName(),
+                row.areaName());
+    }
+
+    private boolean exponeCampo(Class<?> record, String campo) {
+        return Arrays.stream(record.getRecordComponents())
+                .anyMatch(component -> component.getName().equals(campo));
+    }
+
+    @Test
+    void getMyApplicationsDetailed_mapeaCadaFilaYPreservaElOrdenDelRepositorio() {
+        String studentId = "stu123456789";
+        MyApplicationRow reciente = new MyApplicationRow(
+                application("app111111111", "vac111111111", studentId),
+                vacancy("vac111111111", "cmp111111111", "are111111111", "Java Dev"),
+                "ACME S.A.", "Desarrollo de Software");
+        MyApplicationRow antigua = new MyApplicationRow(
+                application("app222222222", "vac222222222", studentId),
+                vacancy("vac222222222", "cmp111111111", "are111111111", "Python Dev"),
+                "ACME S.A.", "Desarrollo de Software");
+
+        when(vacancyApplicationRepository.findMyApplicationsDetailed(studentId))
+                .thenReturn(List.of(reciente, antigua));
+        when(vacancyApplicationMapper.toMyApplicationRowResponse(reciente)).thenReturn(myApplicationResponse(reciente));
+        when(vacancyApplicationMapper.toMyApplicationRowResponse(antigua)).thenReturn(myApplicationResponse(antigua));
+
+        List<MyApplicationRowResponse> result = service.getMyApplicationsDetailed(studentId);
+
+        assertEquals(2, result.size());
+        assertEquals("app111111111", result.get(0).application().vacancyApplicationId());
+        assertEquals("app222222222", result.get(1).application().vacancyApplicationId());
+        verify(vacancyApplicationRepository).findMyApplicationsDetailed(studentId);
+    }
+
+    @Test
+    void getMyApplicationsDetailed_devuelvePuestoEmpresaYAreaResueltos() {
+        String studentId = "stu123456789";
+        MyApplicationRow fila = new MyApplicationRow(
+                application("app111111111", "vac111111111", studentId),
+                vacancy("vac111111111", "cmp111111111", "are111111111", "Java Dev"),
+                "ACME S.A.", "Desarrollo de Software");
+
+        when(vacancyApplicationRepository.findMyApplicationsDetailed(studentId)).thenReturn(List.of(fila));
+        when(vacancyApplicationMapper.toMyApplicationRowResponse(fila)).thenReturn(myApplicationResponse(fila));
+
+        MyApplicationRowResponse result = service.getMyApplicationsDetailed(studentId).get(0);
+
+        assertEquals("Java Dev", result.application().vacancyName());
+        assertEquals("cmp111111111", result.application().companyId());
+        assertEquals("ACME S.A.", result.application().companyName());
+        assertEquals(VacancyApplicationStatus.PENDIENTE, result.application().status());
+        assertEquals(VacancyStatus.PUBLICADO, result.application().vacancyStatus());
+        assertEquals("vac111111111", result.vacancy().vacancyId());
+        assertEquals("are111111111", result.vacancy().areaId());
+        assertEquals("ACME S.A.", result.companyName());
+        assertEquals("Desarrollo de Software", result.areaName());
+    }
+
+    @Test
+    void getMyApplicationsDetailed_sinPostulaciones_devuelveListaVaciaYNoUsaElMapper() {
+        String studentId = "stu123456789";
+        when(vacancyApplicationRepository.findMyApplicationsDetailed(studentId)).thenReturn(List.of());
+
+        List<MyApplicationRowResponse> result = service.getMyApplicationsDetailed(studentId);
+
+        assertTrue(result.isEmpty());
+        verify(vacancyApplicationMapper, never()).toMyApplicationRowResponse(any());
+    }
+
+    @Test
+    void misPostulaciones_noExponenAcceptedEnNingunNivel() {
+        assertTrue(exponeCampo(VacancyApplicationResponse.class, "accepted"));
+        assertTrue(exponeCampo(VacancyApplicationStudentResponse.class, "status"));
+
+        assertFalse(exponeCampo(MyApplicationRowResponse.class, "accepted"));
+        assertFalse(exponeCampo(VacancyApplicationStudentResponse.class, "accepted"));
+        assertFalse(exponeCampo(VacancyResponse.class, "accepted"));
     }
 }

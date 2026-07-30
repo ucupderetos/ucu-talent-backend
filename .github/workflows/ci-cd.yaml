@@ -170,6 +170,6 @@ jobs:
             SPRING_MAIL_USERNAME=mail-username:latest
             SPRING_MAIL_PASSWORD=mail-password:latest
 
-          flags: '--min-instances=0 --max-instances=2 --cpu=1 --memory=512Mi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
+          flags: '--min-instances=0 --max-instances=2 --cpu=1  --memory=1Gi --allow-unauthenticated --add-cloudsql-instances=${{ vars.CLOUD_SQL_INSTANCE }}'
 
   

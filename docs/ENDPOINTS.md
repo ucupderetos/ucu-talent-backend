@@ -388,15 +388,18 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 |---|--------|------|-------------|----------|----------------|-----------------|-------|----------|
 | 1 | POST | `/vacancy-application` | Crear una postulación | 🔒 rol `ALUMNO` + alumno `APROBADO` | `CreateVacancyApplicationRequest` | `VacancyApplicationResponse` | `201` | `400` · `403` alumno no aprobado · `404` vacante/perfil no existe · `409` ya postulado |
 | 2 | GET | `/vacancy-application/me` | Listar mis postulaciones (alumno autenticado) | 🔒 rol `ALUMNO` | — | `List<VacancyApplicationStudentResponse>` | `200` | `403` no es ALUMNO |
-| 3 | GET | `/vacancy-application/{id}` | Obtener postulación por id | 🔒 + dueño (empresa dueña de la vacante) | — (path `id`) | `VacancyApplicationResponse` | `200` | `403` no es la empresa dueña · `404` no existe |
-| 4 | GET | `/vacancy-application` | Listar todas las postulaciones | 🔒 rol `ADMIN` | — | `List<VacancyApplicationResponse>` | `200` | `403` no es ADMIN |
-| 5 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 + dueño (empresa dueña de la vacante) | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es la empresa dueña · `404` no existe la vacante |
-| 6 | GET | `/vacancy-application?studentProfileId={id}` | Listar por perfil de alumno | 🔒 rol `ADMIN` | — (query `studentProfileId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es ADMIN |
-| 7 | GET | `/vacancy-application?status={status}` | Listar por estado | 🔒 rol `ADMIN` | — (query `status`: `VacancyApplicationStatus`) | `List<VacancyApplicationResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
-| 8 | PUT | `/vacancy-application/{id}` | Actualizar el estado por id | 🔒 + dueño (empresa dueña de la vacante) | `UpdateVacancyApplicationRequest` | `VacancyApplicationResponse` | `200` | `400` · `403` no es la empresa dueña · `404` no existe · `409` transición inválida (retrocede) |
-| 9 | PATCH | `/vacancy-application/{id}/accept` | Marcar la postulación como aceptada (`accepted: true`) | 🔒 + dueño (empresa dueña de la vacante) | — (path `id`) | `VacancyApplicationResponse` | `200` | `403` no es la empresa dueña · `404` no existe |
-| 10 | DELETE | `/vacancy-application/{id}` | Eliminar postulación por id | 🔒 + dueño (alumno postulante) | — (path `id`) | — (vacío) | `204` | `403` no es el postulante · `404` no existe |
-| 11 | GET | `/vacancy-application/status-summary` | Totales de postulaciones por estado | 🔒 rol `ADMIN` | — | `VacancyApplicationStatusSummaryResponse` | `200` | `403` no es ADMIN |
+| 3 | GET | `/vacancy-application/me/detailed` | Listar mis postulaciones con el puesto, la empresa y el area resueltos | 🔒 rol `ALUMNO` | — | `List<MyApplicationRowResponse>` | `200` | `403` no es ALUMNO |
+| 4 | GET | `/vacancy-application/{id}` | Obtener postulación por id | 🔒 + dueño (empresa dueña de la vacante) | — (path `id`) | `VacancyApplicationResponse` | `200` | `403` no es la empresa dueña · `404` no existe |
+| 5 | GET | `/vacancy-application` | Listar todas las postulaciones | 🔒 rol `ADMIN` | — | `List<VacancyApplicationResponse>` | `200` | `403` no es ADMIN |
+| 6 | GET | `/vacancy-application?vacancyId={id}` | Listar por vacante | 🔒 + dueño (empresa dueña de la vacante) | — (query `vacancyId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es la empresa dueña · `404` no existe la vacante |
+| 7 | GET | `/vacancy-application/detailed?vacancyId={id}` | Listar postulaciones de una vacante con datos del alumno, la vacante y la empresa | 🔒 dueño (empresa dueña de la vacante) o rol `ADMIN` | — (query `vacancyId`: `@NotBlank`) | `List<ApplicationListItemResponse>` | `200` | `400` · `403` no es la empresa dueña ni ADMIN · `404` no existe la vacante |
+| 8 | GET | `/vacancy-application/detailed` | Listar todas las postulaciones con datos del alumno, la vacante y la empresa | 🔒 rol `ADMIN` | — | `List<ApplicationListItemResponse>` | `200` | `403` no es ADMIN |
+| 9 | GET | `/vacancy-application?studentProfileId={id}` | Listar por perfil de alumno | 🔒 rol `ADMIN` | — (query `studentProfileId`: `@NotBlank`) | `List<VacancyApplicationResponse>` | `200` | `400` · `403` no es ADMIN |
+| 10 | GET | `/vacancy-application?status={status}` | Listar por estado | 🔒 rol `ADMIN` | — (query `status`: `VacancyApplicationStatus`) | `List<VacancyApplicationResponse>` | `200` | `400` enum inválido · `403` no es ADMIN |
+| 11 | PUT | `/vacancy-application/{id}` | Actualizar el estado por id | 🔒 + dueño (empresa dueña de la vacante) | `UpdateVacancyApplicationRequest` | `VacancyApplicationResponse` | `200` | `400` · `403` no es la empresa dueña · `404` no existe · `409` transición inválida (retrocede) |
+| 12 | PATCH | `/vacancy-application/{id}/accept` | Marcar la postulación como aceptada (`accepted: true`) | 🔒 + dueño (empresa dueña de la vacante) | — (path `id`) | `VacancyApplicationResponse` | `200` | `403` no es la empresa dueña · `404` no existe |
+| 13 | DELETE | `/vacancy-application/{id}` | Eliminar postulación por id | 🔒 + dueño (alumno postulante) | — (path `id`) | — (vacío) | `204` | `403` no es el postulante · `404` no existe |
+| 14 | GET | `/vacancy-application/status-summary` | Totales de postulaciones por estado | 🔒 rol `ADMIN` | — | `VacancyApplicationStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -412,6 +415,18 @@ Controller: `vacancyapplication/VacancyApplicationController` · Tag: **Postulac
 
 **`VacancyApplicationStudentResponse`** (salida — usado solo en `GET /vacancy-application/me`, nunca expone `accepted`)
 - `vacancyApplicationId` · `vacancyId` · `vacancyName` · `companyId` · `companyName` · `appliedAt` (date) · `status` (`VacancyApplicationStatus`) · `vacancyStatus` (`VacancyStatus`)
+
+**`ApplicationListItemResponse`** (salida)
+- `application` objeto `VacancyApplicationResponse`
+- `studentName` string · `studentSurname` string · `studentEmail` string
+- `vacancyId` string · `vacancyName` string
+- `companyId` string · `companyName` string
+
+**`MyApplicationRowResponse`** (salida)
+- `application` objeto `VacancyApplicationStudentResponse`
+- `vacancy` objeto `VacancyResponse` (ver sección 10)
+- `companyName` string · `areaName` string
+- No incluye `accepted` en ningún nivel.
 
 **`VacancyApplicationStatusSummaryResponse`** (salida)
 - `total` · `pendiente` · `visto` · `finalizado` (todos `long`)

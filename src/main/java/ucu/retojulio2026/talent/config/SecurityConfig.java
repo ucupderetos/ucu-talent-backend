@@ -187,6 +187,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/student-profile/cv").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
+                        .requestMatchers(HttpMethod.GET, "/vacancy-application/me/detailed").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.PATCH, "/user/profile/image").hasRole("ALUMNO")
                         // Admin
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
