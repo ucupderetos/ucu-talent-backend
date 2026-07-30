@@ -13,4 +13,6 @@ public interface VacancyApplicationMapper {
 
     VacancyApplicationResponse toResponse(VacancyApplication vacancyApplication);
 
+    ApplicationListItemResponse toListItemResponse(ApplicationListItemRow row);
+
 }

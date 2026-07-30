@@ -19,7 +19,10 @@ import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.User;
 import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyManagementResponse;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyManagementRow;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyMapper;
+import ucu.retojulio2026.talent.vacancy.dto.VacancyResponse;
 import ucu.retojulio2026.talent.vacancy.filter.VacancyFilterResolverImpl;
 import ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationRepository;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyRequest;
@@ -595,5 +598,122 @@ class VacancyServiceImplTest {
         verify(vacancyFinalizationNotifier).notifyApplicants(expiredVacancy);
         verify(vacancyFinalizationNotifier).notifyApplicants(expiresTodayVacancy);
         verify(vacancyRepository, never()).save(any(Vacancy.class));
+    }
+
+    private VacancyResponse responseOf(Vacancy vacancy) {
+        return new VacancyResponse(
+                vacancy.getVacancyId(),
+                vacancy.getCompanyId(),
+                vacancy.getAreaId(),
+                vacancy.getPublicationDate(),
+                vacancy.getClosingDate(),
+                vacancy.getCreatedAt(),
+                vacancy.getReviewedAt(),
+                vacancy.getUpdatedAt(),
+                vacancy.getDeletedAt(),
+                vacancy.isDeleted(),
+                vacancy.getAdminComment(),
+                vacancy.getLocation(),
+                vacancy.getModality(),
+                vacancy.getStatus(),
+                vacancy.getName(),
+                vacancy.getDescription(),
+                vacancy.getRequirements(),
+                vacancy.getContractType(),
+                vacancy.getReviewedBy(),
+                vacancy.getSalary()
+        );
+    }
+
+    private VacancyManagementResponse managementResponseOf(VacancyManagementRow row) {
+        return new VacancyManagementResponse(
+                responseOf(row.vacancy()),
+                row.companyName(),
+                row.areaName(),
+                row.applicationCount(),
+                row.newApplicationsCount()
+        );
+    }
+
+    @Test
+    void tablero_de_gestion_falla_si_la_empresa_no_existe() {
+        when(companyService.existsById("company-1")).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.getManagementByCompanyId("company-1"));
+
+        verify(companyService).existsById("company-1");
+        verifyNoInteractions(vacancyRepository);
+        verifyNoInteractions(vacancyMapper);
+    }
+
+    @Test
+    void tablero_de_gestion_devuelve_contadores_y_nombres_resueltos() {
+        Vacancy vacancy = publishedVacancy();
+        VacancyManagementRow row = new VacancyManagementRow(vacancy, "ACME S.A.", "Desarrollo de Software", 5L, 2L);
+
+        when(companyService.existsById("company-1")).thenReturn(true);
+        when(vacancyRepository.findManagementByCompanyId("company-1")).thenReturn(List.of(row));
+        when(vacancyMapper.toManagementResponse(row)).thenReturn(managementResponseOf(row));
+
+        VacancyManagementResponse result = service.getManagementByCompanyId("company-1").get(0);
+
+        assertEquals("ACME S.A.", result.companyName());
+        assertEquals("Desarrollo de Software", result.areaName());
+        assertEquals(5L, result.applicationCount());
+        assertEquals(2L, result.newApplicationsCount());
+        assertEquals("vacancy-1", result.vacancy().vacancyId());
+        assertEquals("Java Backend Developer", result.vacancy().name());
+        assertEquals(VacancyStatus.PUBLICADO, result.vacancy().status());
+    }
+
+    @Test
+    void tablero_de_gestion_de_puesto_sin_postulaciones_devuelve_contadores_en_cero() {
+        Vacancy vacancy = publishedVacancy();
+        VacancyManagementRow row = new VacancyManagementRow(vacancy, "ACME S.A.", "Desarrollo de Software", 0L, 0L);
+
+        when(companyService.existsById("company-1")).thenReturn(true);
+        when(vacancyRepository.findManagementByCompanyId("company-1")).thenReturn(List.of(row));
+        when(vacancyMapper.toManagementResponse(row)).thenReturn(managementResponseOf(row));
+
+        VacancyManagementResponse result = service.getManagementByCompanyId("company-1").get(0);
+
+        assertEquals(0L, result.applicationCount());
+        assertEquals(0L, result.newApplicationsCount());
+        assertEquals("vacancy-1", result.vacancy().vacancyId());
+    }
+
+    @Test
+    void tablero_de_gestion_mapea_cada_fila_y_preserva_el_orden_del_repositorio() {
+        Vacancy reciente = publishedVacancy();
+        reciente.setVacancyId("vacancy-reciente");
+
+        Vacancy antigua = publishedVacancy();
+        antigua.setVacancyId("vacancy-antigua");
+
+        VacancyManagementRow primera = new VacancyManagementRow(reciente, "ACME S.A.", "Desarrollo de Software", 3L, 1L);
+        VacancyManagementRow segunda = new VacancyManagementRow(antigua, "ACME S.A.", "Desarrollo de Software", 0L, 0L);
+
+        when(companyService.existsById("company-1")).thenReturn(true);
+        when(vacancyRepository.findManagementByCompanyId("company-1")).thenReturn(List.of(primera, segunda));
+        when(vacancyMapper.toManagementResponse(primera)).thenReturn(managementResponseOf(primera));
+        when(vacancyMapper.toManagementResponse(segunda)).thenReturn(managementResponseOf(segunda));
+
+        List<VacancyManagementResponse> result = service.getManagementByCompanyId("company-1");
+
+        assertEquals(2, result.size());
+        assertEquals("vacancy-reciente", result.get(0).vacancy().vacancyId());
+        assertEquals("vacancy-antigua", result.get(1).vacancy().vacancyId());
+        verify(vacancyRepository).findManagementByCompanyId("company-1");
+    }
+
+    @Test
+    void tablero_de_gestion_de_empresa_sin_puestos_devuelve_lista_vacia() {
+        when(companyService.existsById("company-1")).thenReturn(true);
+        when(vacancyRepository.findManagementByCompanyId("company-1")).thenReturn(List.of());
+
+        List<VacancyManagementResponse> result = service.getManagementByCompanyId("company-1");
+
+        assertTrue(result.isEmpty());
+        verify(vacancyMapper, never()).toManagementResponse(any());
     }
 }

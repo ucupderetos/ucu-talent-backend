@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ucu.retojulio2026.talent.common.AuthorizationGuard;
 import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.VacancyService;
+import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationResponse;
@@ -142,6 +143,38 @@ public class VacancyApplicationController {
                 .map(vacancyApplicationMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Listar postulaciones de una vacante con datos del alumno, la vacante y la empresa")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "400", description = "El vacancyId es invalido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "No es la empresa dueña de la vacante ni tiene rol ADMIN"),
+            @ApiResponse(responseCode = "404", description = "No existe una vacante con ese id")
+    })
+    @GetMapping(value = "/detailed", params = "vacancyId")
+    public ResponseEntity<List<ApplicationListItemResponse>> getDetailedByVacancyId(
+            @AuthenticationPrincipal Jwt jwt,
+            @Parameter(description = "Id de la vacante", example = "V1StGXR8_Z5j")
+            @RequestParam
+            @NotBlank(message = "El vacancyId es obligatorio")
+            String vacancyId) {
+        Vacancy vacancy = vacancyService.getVacancyById(vacancyId);
+        AuthorizationGuard.requireOwnershipOrRoles(jwt, vacancy.getCompanyId(), "ADMIN");
+        return ResponseEntity.ok(vacancyApplicationService.getDetailedByVacancyId(vacancyId));
+    }
+
+    @Operation(summary = "Listar todas las postulaciones con datos del alumno, la vacante y la empresa (solo ADMIN)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "403", description = "El usuario autenticado no es ADMIN")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/detailed")
+    public ResponseEntity<List<ApplicationListItemResponse>> getAllDetailed() {
+        return ResponseEntity.ok(vacancyApplicationService.getAllDetailed());
     }
 
     @Operation(summary = "Listar postulaciones por perfil de alumno")
