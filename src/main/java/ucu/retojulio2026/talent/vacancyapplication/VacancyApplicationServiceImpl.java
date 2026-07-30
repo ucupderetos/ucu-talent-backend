@@ -16,6 +16,7 @@ import ucu.retojulio2026.talent.user.UserService;
 import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.VacancyStatus;
 import ucu.retojulio2026.talent.vacancy.VacancyService;
+import ucu.retojulio2026.talent.vacancyapplication.dto.ApplicationListItemResponse;
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationMapper;
 import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class VacancyApplicationServiceImpl implements VacancyApplicationService {
+public class    VacancyApplicationServiceImpl implements VacancyApplicationService {
 
     private final VacancyApplicationRepository vacancyApplicationRepository;
     private final StudentProfileService studentProfileService;
@@ -132,6 +133,24 @@ public class VacancyApplicationServiceImpl implements VacancyApplicationService 
     @Transactional(readOnly = true)
     public List<VacancyApplicationStudentResponse> getStudentApplications(String studentProfileId) {
         return vacancyApplicationRepository.findStudentApplications(studentProfileId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ApplicationListItemResponse> getDetailedByVacancyId(String vacancyId) {
+        return vacancyApplicationRepository.findDetailedByVacancyId(vacancyId)
+                .stream()
+                .map(vacancyApplicationMapper::toListItemResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ApplicationListItemResponse> getAllDetailed() {
+        return vacancyApplicationRepository.findAllDetailed()
+                .stream()
+                .map(vacancyApplicationMapper::toListItemResponse)
+                .toList();
     }
 
     @Override
