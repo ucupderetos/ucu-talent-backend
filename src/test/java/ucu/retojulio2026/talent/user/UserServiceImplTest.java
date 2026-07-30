@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import ucu.retojulio2026.talent.common.DuplicateResourceException;
 import ucu.retojulio2026.talent.common.InvalidStatusTransitionException;
 import ucu.retojulio2026.talent.common.ResourceNotFoundException;
+import ucu.retojulio2026.talent.storage.StorageService;
 import ucu.retojulio2026.talent.user.dto.CreateUserRequest;
 import ucu.retojulio2026.talent.user.dto.UserMapper;
 
@@ -53,6 +54,9 @@ class UserServiceImplTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private StorageService storageService;
+
     private static ValidatorFactory validatorFactory;
     private static Validator validator;
 
@@ -76,7 +80,7 @@ class UserServiceImplTest {
 
     @Test
     void registro_falla_si_el_email_ya_existe() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         CreateUserRequest request = new CreateUserRequest("nicogon@ucu.edu.uy", RAW_PASSWORD, Role.ALUMNO);
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
@@ -87,7 +91,7 @@ class UserServiceImplTest {
 
     @Test
     void registro_hashea_la_contrasena_antes_de_guardar() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         CreateUserRequest request = new CreateUserRequest("nicogon@ucu.edu.uy", RAW_PASSWORD, Role.ALUMNO);
         User mapped = newMappedUser(Role.ALUMNO);
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
@@ -104,7 +108,7 @@ class UserServiceImplTest {
     @ParameterizedTest
     @EnumSource(value = Role.class, names = {"ALUMNO", "EMPRESA"})
     void registro_deja_al_usuario_en_estado_pendiente_de_aprobacion_del_admin(Role role) {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         CreateUserRequest request = new CreateUserRequest("nicogon@ucu.edu.uy", RAW_PASSWORD, role);
         User mapped = newMappedUser(role);
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
@@ -129,7 +133,7 @@ class UserServiceImplTest {
 
     @Test
     void alta_de_admin_con_email_duplicado_lanza_duplicate_resource_exception() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         when(userRepository.existsByEmail("admin@ucu.edu.uy")).thenReturn(true);
 
         assertThrows(DuplicateResourceException.class,
@@ -140,7 +144,7 @@ class UserServiceImplTest {
 
     @Test
     void alta_de_admin_queda_aprobada_con_role_admin_y_status_aprobado() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         when(userRepository.existsByEmail("admin@ucu.edu.uy")).thenReturn(false);
         when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(HASHED_PASSWORD);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -153,7 +157,7 @@ class UserServiceImplTest {
 
     @Test
     void no_se_puede_volver_a_pendiente_una_cuenta_ya_revisada() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         User user = newMappedUser(Role.ALUMNO);
         when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
 
@@ -165,7 +169,7 @@ class UserServiceImplTest {
 
     @Test
     void revisar_un_usuario_inexistente_lanza_resource_not_found_exception() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         when(userRepository.findById("user-x")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
@@ -175,7 +179,7 @@ class UserServiceImplTest {
     @ParameterizedTest
     @EnumSource(value = AccountStatus.class, names = {"APROBADO", "RECHAZADO"})
     void revisar_un_usuario_actualiza_y_guarda_el_nuevo_estado(AccountStatus nuevoEstado) {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         User user = newMappedUser(Role.ALUMNO);
         user.setStatus(AccountStatus.PENDIENTE);
         when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
@@ -188,7 +192,7 @@ class UserServiceImplTest {
 
     @Test
     void buscar_por_email_inexistente_lanza_resource_not_found_exception() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         when(userRepository.findByEmail("nadie@ucu.edu.uy")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.getByEmail("nadie@ucu.edu.uy"));
@@ -196,7 +200,7 @@ class UserServiceImplTest {
 
     @Test
     void borrar_un_usuario_inexistente_lanza_resource_not_found_exception() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         when(userRepository.existsById("user-x")).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> service.delete("user-x"));
@@ -206,7 +210,7 @@ class UserServiceImplTest {
 
     @Test
     void listar_con_status_y_role_filtra_por_ambos() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         Pageable pageable = mock(Pageable.class);
         Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.ALUMNO)));
         when(userRepository.findByStatusAndRole(AccountStatus.APROBADO, Role.ALUMNO, pageable)).thenReturn(page);
@@ -221,7 +225,7 @@ class UserServiceImplTest {
 
     @Test
     void listar_solo_con_status_filtra_por_status() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         Pageable pageable = mock(Pageable.class);
         Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.ALUMNO)));
         when(userRepository.findByStatus(AccountStatus.PENDIENTE, pageable)).thenReturn(page);
@@ -236,7 +240,7 @@ class UserServiceImplTest {
 
     @Test
     void listar_solo_con_role_filtra_por_role() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         Pageable pageable = mock(Pageable.class);
         Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.EMPRESA)));
         when(userRepository.findByRole(Role.EMPRESA, pageable)).thenReturn(page);
@@ -251,7 +255,7 @@ class UserServiceImplTest {
 
     @Test
     void listar_sin_filtros_devuelve_todos_los_usuarios() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         Pageable pageable = mock(Pageable.class);
         Page<User> page = new PageImpl<>(List.of(newMappedUser(Role.ADMIN)));
         when(userRepository.findAll(pageable)).thenReturn(page);
@@ -266,7 +270,7 @@ class UserServiceImplTest {
 
     @Test
     void panel_de_actividad_trae_las_tres_claves_de_estado_aunque_el_conteo_sea_cero() {
-        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper);
+        UserServiceImpl service = new UserServiceImpl(userRepository, passwordEncoder, userMapper, storageService);
         when(userRepository.countByRoleAndStatus(Role.ALUMNO, AccountStatus.PENDIENTE)).thenReturn(3L);
         when(userRepository.countByRoleAndStatus(Role.ALUMNO, AccountStatus.APROBADO)).thenReturn(5L);
         when(userRepository.countByRoleAndStatus(Role.ALUMNO, AccountStatus.RECHAZADO)).thenReturn(0L);
