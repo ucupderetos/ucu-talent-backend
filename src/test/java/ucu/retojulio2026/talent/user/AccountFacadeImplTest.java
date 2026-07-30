@@ -20,8 +20,12 @@ import ucu.retojulio2026.talent.workexperience.WorkExperienceService;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,6 +73,13 @@ class AccountFacadeImplTest {
                 workExperienceService,
                 vacancyApplicationService
         );
+    }
+
+    private User newUser(String userId, Role role) {
+        User user = new User();
+        user.setUserId(userId);
+        user.setRole(role);
+        return user;
     }
 
     @Test
@@ -211,5 +222,104 @@ class AccountFacadeImplTest {
                 companyDeletionService,
                 adminService
         );
+    }
+
+    @Test
+    void eliminar_empresa_con_perfil_delega_en_company_deletion_service_y_borra_el_usuario() {
+        String userId = "company-1";
+
+        when(userService.getById(userId))
+                .thenReturn(newUser(userId, Role.EMPRESA));
+        when(companyService.existsById(userId))
+                .thenReturn(true);
+
+        accountFacade.deleteAccount(userId);
+
+        verify(companyDeletionService).delete(userId);
+        verify(userService).delete(userId);
+    }
+
+    @Test
+    void eliminar_empresa_sin_perfil_no_delega_en_company_deletion_service_pero_borra_el_usuario() {
+        String userId = "company-1";
+
+        when(userService.getById(userId))
+                .thenReturn(newUser(userId, Role.EMPRESA));
+        when(companyService.existsById(userId))
+                .thenReturn(false);
+
+        accountFacade.deleteAccount(userId);
+
+        verify(companyDeletionService, never()).delete(anyString());
+        verify(userService).delete(userId);
+    }
+
+    @Test
+    void revisar_cuenta_de_alumno_llama_a_student_profile_service_review_y_actualiza_el_status() {
+        when(userService.getById("user-1")).thenReturn(newUser("user-1", Role.ALUMNO));
+
+        accountFacade.reviewAccount("user-1", AccountStatus.APROBADO, "ok");
+
+        verify(userService).updateStatus("user-1", AccountStatus.APROBADO);
+        verify(studentProfileService).review(eq("user-1"), any(), eq("ok"));
+        verify(companyService, never()).review(anyString(), any(), anyString());
+    }
+
+    @Test
+    void revisar_cuenta_de_empresa_llama_a_company_service_review_y_actualiza_el_status() {
+        when(userService.getById("user-2")).thenReturn(newUser("user-2", Role.EMPRESA));
+
+        accountFacade.reviewAccount("user-2", AccountStatus.RECHAZADO, "falta info");
+
+        verify(userService).updateStatus("user-2", AccountStatus.RECHAZADO);
+        verify(companyService).review(eq("user-2"), any(), eq("falta info"));
+        verify(studentProfileService, never()).review(anyString(), any(), anyString());
+    }
+
+    @Test
+    void revisar_cuenta_de_admin_no_llama_a_ningun_service_de_perfil_pero_actualiza_el_status() {
+        when(userService.getById("user-3")).thenReturn(newUser("user-3", Role.ADMIN));
+
+        accountFacade.reviewAccount("user-3", AccountStatus.APROBADO, null);
+
+        verify(userService).updateStatus("user-3", AccountStatus.APROBADO);
+        verify(studentProfileService, never()).review(anyString(), any(), anyString());
+        verify(companyService, never()).review(anyString(), any(), anyString());
+    }
+
+    @Test
+    void saber_si_tiene_perfil_delega_en_student_profile_service_para_alumno() {
+        when(userService.getById("user-1")).thenReturn(newUser("user-1", Role.ALUMNO));
+        when(studentProfileService.existsById("user-1")).thenReturn(true);
+
+        boolean result = accountFacade.hasProfile("user-1");
+
+        assertThat(result).isTrue();
+        verify(companyService, never()).existsById(anyString());
+        verify(adminService, never()).existsById(anyString());
+    }
+
+    @Test
+    void saber_si_tiene_perfil_delega_en_company_service_para_empresa() {
+        when(userService.getById("user-2")).thenReturn(newUser("user-2", Role.EMPRESA));
+        when(companyService.existsById("user-2")).thenReturn(false);
+
+        boolean result = accountFacade.hasProfile("user-2");
+
+        assertThat(result).isFalse();
+        verify(studentProfileService, never()).existsById(anyString());
+        verify(adminService, never()).existsById(anyString());
+    }
+
+    @Test
+    void saber_si_tiene_perfil_delega_en_admin_service_para_admin() {
+        when(userService.getById("user-3")).thenReturn(newUser("user-3", Role.ADMIN));
+        when(adminService.existsById("user-3")).thenReturn(true);
+
+        boolean result = accountFacade.hasProfile("user-3");
+
+        assertThat(result).isTrue();
+        verify(studentProfileService, never()).existsById(anyString());
+        verify(companyService, never()).existsById(anyString());
     }
 }
