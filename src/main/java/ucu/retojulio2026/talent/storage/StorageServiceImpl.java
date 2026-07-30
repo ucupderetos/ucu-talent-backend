@@ -5,6 +5,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +33,7 @@ public class StorageServiceImpl implements StorageService {
     private final String publicBaseUrl;
 
     public StorageServiceImpl(
-            Storage storage,
+            @Lazy Storage storage,
             @Value("${gcs.bucket-name}") String bucketName,
             @Value("${app.storage.public-base-url:https://storage.googleapis.com}") String publicBaseUrl
     ) {
@@ -71,6 +72,12 @@ public class StorageServiceImpl implements StorageService {
                     "No se pudo leer el archivo enviado.",
                     e
             );
+        } catch (RuntimeException e){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El almacenamineto de archivos no está configurado en este entorno.",
+                    e
+            );
         }
 
         String gcsUri = "gs://" + bucketName + "/" + objectName;
@@ -89,14 +96,22 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public URL getSignedUrl(String objectName, Duration ttl) {
-        long seconds = Math.max(1, Math.min(ttl.getSeconds(), TimeUnit.DAYS.toSeconds(7)));
+        try {
+            long seconds = Math.max(1, Math.min(ttl.getSeconds(), TimeUnit.DAYS.toSeconds(7)));
 
-        return storage.signUrl(
-                BlobInfo.newBuilder(bucketName, objectName).build(),
-                seconds,
-                TimeUnit.SECONDS,
-                Storage.SignUrlOption.withV4Signature()
-        );
+            return storage.signUrl(
+                    BlobInfo.newBuilder(bucketName, objectName).build(),
+                    seconds,
+                    TimeUnit.SECONDS,
+                    Storage.SignUrlOption.withV4Signature()
+            );
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "El almacenamiento de archivos no está configurado en este entorno.",
+                    e
+            );
+        }
     }
 
     @Override
@@ -111,6 +126,12 @@ public class StorageServiceImpl implements StorageService {
             }
         } catch (StorageException e) {
             throw mapGcsException(e);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "El almacenamiento de archivos no está configurado en este entorno.",
+                    e
+            );
         }
     }
 
