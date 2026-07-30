@@ -34,6 +34,8 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(name = "profile_image", length = 255, nullable = true)
+    private String profileImage;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
