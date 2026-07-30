@@ -88,7 +88,7 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcloud/service-account-key.json
 
     volumes:
-        - "${GOOGLE_APPLICATION_CREDENTIALS_HOST}:/secrets/gcloud/service-account-key.json:ro"
+        - "${GOOGLE_APPLICATION_CREDENTIALS_HOST:-/dev/null}:/secrets/gcloud/service-account-key.json:ro"
 
   api-hosted:
     <<: *api-base
