@@ -92,6 +92,19 @@ public class VacancyController {
         return ResponseEntity.ok(vacancyMapper.toResponse(vacancy));
     }
 
+    @Operation(summary = "Obtener el Puesto por id con la empresa y el area resueltos")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Puesto encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)"),
+            @ApiResponse(responseCode = "404", description = "Puesto no encontrado")
+    })
+    @GetMapping("/{id}/resolved")
+    public ResponseEntity<ResolvedVacancyResponse> getResolvedVacancyById(
+            @Parameter(description = "Vacancy id")
+            @PathVariable String id) {
+        return ResponseEntity.ok(vacancyService.getResolvedById(id));
+    }
+
     @Operation(summary = "Busqueda combinada de Puestos (ADMIN)",
             description = "Filtros combinables (AND): area, tipo de contrato, modalidad, localidad y "
                     + "keyword (busca en nombre y descripcion). Todos los filtros son opcionales.")

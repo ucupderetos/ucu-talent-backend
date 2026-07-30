@@ -8,11 +8,11 @@ import java.time.LocalDate;
 
 public record CreateVacancyApplicationRequest(
 
-        @Schema(description = "Id de la vacante (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")
+        @Schema(description = "Id de la vacante ", example = "V1StGXR8_Z5j")
         @NotBlank(message = "El vacancyId es obligatorio")
         String vacancyId,
 
-        @Schema(description = "Id del perfil de alumno (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")
+        @Schema(description = "Id del perfil de alumno ", example = "V1StGXR8_Z5j")
         @NotBlank(message = "El studentProfileId es obligatorio")
         String studentProfileId,
 

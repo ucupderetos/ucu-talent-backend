@@ -102,6 +102,14 @@ public class VacancyServiceImpl implements VacancyService {
 
     @Override
     @Transactional(readOnly = true)
+    public ResolvedVacancyResponse getResolvedById(String id) {
+        return vacancyRepository.findResolvedById(id)
+                .map(vacancyMapper::toResolvedResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Vacancy not found."));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Vacancy> getByAreaId(String areaId) {
         return vacancyRepository.findByAreaId(areaId);
     }
