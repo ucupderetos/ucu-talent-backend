@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ucu.retojulio2026.talent.common.Department;
+import org.springframework.data.domain.Pageable;
+import ucu.retojulio2026.talent.vacancy.dto.RecentVacancyRow;
 import ucu.retojulio2026.talent.vacancy.dto.ResolvedVacancyRow;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyManagementRow;
 
@@ -56,4 +58,26 @@ public interface VacancyRepository extends JpaRepository<Vacancy, String>, JpaSp
     List<Vacancy> findByLocation(Department location);
     List<Vacancy> findByStatusAndClosingDateLessThanEqual(VacancyStatus status, LocalDate closingDateIsLessThan);
     long countByStatus(VacancyStatus status);
+
+    long countByDeletedFalse();
+
+    long countByStatusAndDeletedFalse(VacancyStatus status);
+
+    @Query("""
+            SELECT new ucu.retojulio2026.talent.vacancy.dto.RecentVacancyRow(
+                v.vacancyId,
+                v.name,
+                c.name,
+                v.publicationDate,
+                v.status,
+                COUNT(a.vacancyApplicationId)
+            )
+            FROM Vacancy v
+            JOIN Company c ON c.companyId = v.companyId
+            LEFT JOIN VacancyApplication a ON a.vacancyId = v.vacancyId
+            WHERE v.deleted = false
+            GROUP BY v.vacancyId, v.name, c.name, v.publicationDate, v.status
+            ORDER BY v.publicationDate DESC
+            """)
+    List<RecentVacancyRow> findRecentForDashboard(Pageable pageable);
 }

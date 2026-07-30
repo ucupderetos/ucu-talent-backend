@@ -1,6 +1,7 @@
 package ucu.retojulio2026.talent.vacancy;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -161,6 +162,7 @@ public class VacancyServiceImpl implements VacancyService {
 
         for (Vacancy vacancy : expired) {
             vacancy.setStatus(VacancyStatus.FINALIZADO);
+            vacancyApplicationRepository.finalizeByVacancyId(vacancy.getVacancyId());
             vacancyFinalizationNotifier.notifyApplicants(vacancy);
         }
     }
@@ -329,8 +331,27 @@ public class VacancyServiceImpl implements VacancyService {
 
         Vacancy updated = vacancyRepository.save(existing);
         if (request.status() == VacancyStatus.FINALIZADO) {
+            vacancyApplicationRepository.finalizeByVacancyId(updated.getVacancyId());
             vacancyFinalizationNotifier.notifyApplicants(updated);
         }
         return updated;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countNotDeleted() {
+        return vacancyRepository.countByDeletedFalse();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countPublished() {
+        return vacancyRepository.countByStatusAndDeletedFalse(VacancyStatus.PUBLICADO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RecentVacancyRow> getRecentForDashboard(int limit) {
+        return vacancyRepository.findRecentForDashboard(PageRequest.of(0, limit));
     }
 }

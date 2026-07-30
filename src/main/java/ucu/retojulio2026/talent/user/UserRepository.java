@@ -23,6 +23,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     long countByRoleAndStatus(Role role, AccountStatus status);
 
+    long countByRole(Role role);
+
     boolean existsByProfileImage(String profileImage);
 
     //Optional es necesario porque hace explicito que la busqueda puede no tener resultado.

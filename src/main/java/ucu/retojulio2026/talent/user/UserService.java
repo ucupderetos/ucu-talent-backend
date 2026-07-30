@@ -34,4 +34,8 @@ public interface UserService {
     User updateProfileImage(String userId, MultipartFile file);
 
     void deleteProfileImage(String userId);
+
+    long count();
+
+    long countByRole(Role role);
 }

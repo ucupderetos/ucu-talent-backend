@@ -1,5 +1,6 @@
 package ucu.retojulio2026.talent.vacancyapplication;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -88,6 +89,15 @@ public interface VacancyApplicationRepository extends JpaRepository<VacancyAppli
             ORDER BY a.appliedAt DESC
             """)
     List<MyApplicationRow> findMyApplicationsDetailed(@Param("studentProfileId") String studentProfileId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE VacancyApplication a
+            SET a.status = ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus.FINALIZADO
+            WHERE a.vacancyId = :vacancyId
+              AND a.status <> ucu.retojulio2026.talent.vacancyapplication.VacancyApplicationStatus.FINALIZADO
+            """)
+    int finalizeByVacancyId(@Param("vacancyId") String vacancyId);
 
     List<VacancyApplication> findByVacancyId(String vacancyId);
 

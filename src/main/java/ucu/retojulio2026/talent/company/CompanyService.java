@@ -1,6 +1,7 @@
 package ucu.retojulio2026.talent.company;
 
 import ucu.retojulio2026.talent.company.dto.CreateCompanyRequest;
+import ucu.retojulio2026.talent.company.dto.PendingCompanyRow;
 import ucu.retojulio2026.talent.company.dto.UpdateCompanyRequest;
 import ucu.retojulio2026.talent.user.AccountStatus;
 
@@ -27,4 +28,10 @@ public interface CompanyService {
     void review(String id, LocalDateTime reviewedAt, String adminComment);
 
     boolean hasProfile(String id);
+
+    long count();
+
+    long countByAccountStatus(AccountStatus status);
+
+    List<PendingCompanyRow> getPendingForDashboard(int limit);
 }
