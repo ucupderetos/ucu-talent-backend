@@ -3,6 +3,7 @@ package ucu.retojulio2026.talent.vacancy;
 import org.springframework.data.domain.Page;
 import ucu.retojulio2026.talent.common.Department;
 import ucu.retojulio2026.talent.vacancy.dto.CreateVacancyRequest;
+import ucu.retojulio2026.talent.vacancy.dto.ResolvedVacancyResponse;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyManagementResponse;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.dto.UpdateVacancyStatusAdminRequest;
@@ -25,6 +26,8 @@ public interface VacancyService {
 
     List<Vacancy> getByCompanyId(String companyId);
     List<VacancyManagementResponse> getManagementByCompanyId(String companyId);
+
+    ResolvedVacancyResponse getResolvedById(String id);
 
     List<Vacancy> getByAreaId(String areaId);
 

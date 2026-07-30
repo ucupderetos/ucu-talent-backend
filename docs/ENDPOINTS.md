@@ -334,17 +334,18 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 | 1 | POST | `/vacancy` | Crear un puesto | 🔒 rol `EMPRESA` + dueño de `companyId` + empresa `APROBADO` | `CreateVacancyRequest` | `VacancyResponse` | `201` | `400` · `403` no es el dueño / empresa no aprobada · `404` company/area no existe |
 | 2 | GET | `/vacancy` | Listar todos los puestos | 🔒 Autenticado | — | `List<VacancyResponse>` | `200` | — |
 | 3 | GET | `/vacancy/{id}` | Obtener puesto por id | 🔒 Autenticado | — (path `id`) | `VacancyResponse` | `200` | `404` |
-| 4 | GET | `/vacancy/status/{status}` | Listar por estado | 🔒 Autenticado | — (path `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 5 | GET | `/vacancy/company/{companyId}` | Listar por empresa | 🔒 Autenticado | — (path `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 6 | GET | `/vacancy/company/{companyId}/management` | Listar puestos de una empresa para gestión | 🔒 dueño de `companyId` o rol `ADMIN` | — (path `companyId`: `@NotBlank`) | `List<VacancyManagementResponse>` | `200` | `400` · `403` no es el dueño ni ADMIN · `404` company no existe |
-| 7 | GET | `/vacancy/area/{areaId}` | Listar por area | 🔒 Autenticado | — (path `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
-| 8 | GET | `/vacancy/modality/{modality}` | Listar por modalidad | 🔒 Autenticado | — (path `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 9 | GET | `/vacancy/location/{location}` | Listar por localidad | 🔒 Autenticado | — (path `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
-| 10 | PUT | `/vacancy/{id}` | Actualizar puesto por id | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
-| 11 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
-| 12 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
-| 13 | DELETE | `/vacancy/{id}` | Eliminar puesto por id | 🔒 rol `EMPRESA` + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` |
-| 14 | GET | `/vacancy/status-summary` | Totales de puestos por estado | 🔒 rol `ADMIN` | — | `VacancyStatusSummaryResponse` | `200` | `403` no es ADMIN |
+| 4 | GET | `/vacancy/{id}/resolved` | Obtener puesto por id con la empresa y el area resueltos | 🔒 Autenticado | — (path `id`) | `ResolvedVacancyResponse` | `200` | `404` |
+| 5 | GET | `/vacancy/status/{status}` | Listar por estado | 🔒 Autenticado | — (path `status`: `VacancyStatus`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 6 | GET | `/vacancy/company/{companyId}` | Listar por empresa | 🔒 Autenticado | — (path `companyId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 7 | GET | `/vacancy/company/{companyId}/management` | Listar puestos de una empresa para gestión | 🔒 dueño de `companyId` o rol `ADMIN` | — (path `companyId`: `@NotBlank`) | `List<VacancyManagementResponse>` | `200` | `400` · `403` no es el dueño ni ADMIN · `404` company no existe |
+| 8 | GET | `/vacancy/area/{areaId}` | Listar por area | 🔒 Autenticado | — (path `areaId`: `@NotBlank`) | `List<VacancyResponse>` | `200` | `400` |
+| 9 | GET | `/vacancy/modality/{modality}` | Listar por modalidad | 🔒 Autenticado | — (path `modality`: `Modality`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 10 | GET | `/vacancy/location/{location}` | Listar por localidad | 🔒 Autenticado | — (path `location`: `Departamento`) | `List<VacancyResponse>` | `200` | `400` enum inválido |
+| 11 | PUT | `/vacancy/{id}` | Actualizar puesto por id | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 12 | PATCH | `/vacancy/status/{id}` | Cambiar estado del puesto (empresa) | 🔒 rol `EMPRESA` + dueño | `UpdateVacancyStatusRequest` | `VacancyResponse` | `200` | `400` · `403` no es el dueño · `404` no existe |
+| 13 | PUT | `/vacancy/status/{id}` | Cambiar estado del puesto (admin) | 🔒 rol `ADMIN` | `UpdateVacancyStatusAdminRequest` | `VacancyResponse` | `200` | `400` · `403` no es ADMIN · `404` no existe |
+| 14 | DELETE | `/vacancy/{id}` | Eliminar puesto por id | 🔒 rol `EMPRESA` + dueño | — (path `id`) | — (vacío) | `204` | `403` no es el dueño · `404` |
+| 15 | GET | `/vacancy/status-summary` | Totales de puestos por estado | 🔒 rol `ADMIN` | — | `VacancyStatusSummaryResponse` | `200` | `403` no es ADMIN |
 
 ### Schemas
 
@@ -369,6 +370,15 @@ Controller: `vacancy/VacancyController` · Tag: **Puestos**
 
 **`VacancyResponse`** (salida)
 - `vacancyId` · `companyId` · `areaId` · `publicationDate` · `closingDate` · `location` (`Departamento`) · `modality` (`Modality`) · `status` (`VacancyStatus`) · `name` · `description` · `requirements` · `contractType` · `salary`
+
+**`ResolvedVacancyResponse`** (salida)
+- `vacancy` objeto `VacancyResponse` · `company` objeto `CompanyPublicResponse`
+- `areaName` string · `parentAreaName` string? (`null` si el area es de primer nivel)
+
+**`CompanyPublicResponse`** (salida — `CompanyResponse` sin los campos de moderación)
+- `companyId` · `name` · `industry` · `description` · `webUrl` · `linkedinUrl` — string
+- `location` enum `Departamento` · `status` enum `AccountStatus`
+- No incluye `reviewedAt` ni `adminComment`.
 
 **`VacancyManagementResponse`** (salida)
 - `vacancy` objeto `VacancyResponse` · `companyName` string · `areaName` string

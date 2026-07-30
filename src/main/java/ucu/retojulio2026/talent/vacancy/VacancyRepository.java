@@ -5,12 +5,31 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ucu.retojulio2026.talent.common.Department;
+import ucu.retojulio2026.talent.vacancy.dto.ResolvedVacancyRow;
 import ucu.retojulio2026.talent.vacancy.dto.VacancyManagementRow;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface VacancyRepository extends JpaRepository<Vacancy, String>, JpaSpecificationExecutor<Vacancy> {
+
+    @Query("""
+            SELECT new ucu.retojulio2026.talent.vacancy.dto.ResolvedVacancyRow(
+                v,
+                c,
+                u.status,
+                ar.name,
+                par.name
+            )
+            FROM Vacancy v
+            JOIN Company c ON c.companyId = v.companyId
+            JOIN User u ON u.userId = v.companyId
+            JOIN Area ar ON ar.areaId = v.areaId
+            LEFT JOIN Area par ON par.areaId = ar.parentAreaId
+            WHERE v.vacancyId = :vacancyId
+            """)
+    Optional<ResolvedVacancyRow> findResolvedById(@Param("vacancyId") String vacancyId);
 
     @Query("""
             SELECT new ucu.retojulio2026.talent.vacancy.dto.VacancyManagementRow(
