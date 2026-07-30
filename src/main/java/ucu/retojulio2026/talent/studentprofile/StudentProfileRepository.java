@@ -11,4 +11,6 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     boolean existsByDocumentTypeAndDocumentNumber(DocumentType documentType, String documentNumber);
 
     boolean existsByCvFile(String cvFile);
+
+    StudentProfile findByCvFile(String cvFile);
 }

@@ -139,14 +139,22 @@ public class StudentProfileServiceImpl implements StudentProfileService {
             );
         }
 
-        Instant expiresAt = jwt.getExpiresAt();
-        if (expiresAt == null) {
+        StudentProfile studentProfile = studentProfileRepository.findByCvFile(cvFile);
+
+        String role = jwt.getClaimAsString("role");
+
+        boolean isEmpresa = "EMPRESA".equals(role);
+        boolean isOwner = studentProfile.getStudentProfileId().equals(jwt.getSubject());
+
+        if (!isEmpresa && !isOwner) {
             throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "El token no tiene expiración."
+                    HttpStatus.FORBIDDEN,
+                    "No tenés permisos para ver este CV."
             );
         }
 
+        Instant expiresAt = jwt.getExpiresAt();
+        
         Duration remaining = Duration.between(Instant.now(), expiresAt);
         if (remaining.isNegative() || remaining.isZero()) {
             throw new ResponseStatusException(
