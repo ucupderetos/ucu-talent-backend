@@ -90,6 +90,18 @@ public class VacancyServiceImpl implements VacancyService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<VacancyManagementResponse> getManagementByCompanyId(String companyId) {
+        if (!companyService.existsById(companyId)) {
+            throw new ResourceNotFoundException("Company not found.");
+        }
+        return vacancyRepository.findManagementByCompanyId(companyId)
+                .stream()
+                .map(vacancyMapper::toManagementResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Vacancy> getByAreaId(String areaId) {
         return vacancyRepository.findByAreaId(areaId);
     }
@@ -233,8 +245,8 @@ public class VacancyServiceImpl implements VacancyService {
         if (request.contractType() != null) {
             existing.setContractType(request.contractType());
         }
-        if (request.salaryRange() != null) {
-            existing.setSalary(request.salaryRange());
+        if (request.salary() != null) {
+            existing.setSalary(request.salary());
         }
 
         dateValidation(existing.getPublicationDate(),(existing.getClosingDate()));

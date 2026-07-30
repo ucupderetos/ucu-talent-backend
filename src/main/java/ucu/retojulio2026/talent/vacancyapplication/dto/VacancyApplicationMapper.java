@@ -13,5 +13,4 @@ public interface VacancyApplicationMapper {
 
     VacancyApplicationResponse toResponse(VacancyApplication vacancyApplication);
 
-    VacancyApplicationStudentResponse toStudentResponse(VacancyApplication vacancyApplication);
 }

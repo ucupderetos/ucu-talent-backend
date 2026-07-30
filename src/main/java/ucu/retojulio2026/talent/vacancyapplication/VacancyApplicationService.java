@@ -1,6 +1,7 @@
 package ucu.retojulio2026.talent.vacancyapplication;
 
 import ucu.retojulio2026.talent.vacancyapplication.dto.CreateVacancyApplicationRequest;
+import ucu.retojulio2026.talent.vacancyapplication.dto.VacancyApplicationStudentResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ public interface VacancyApplicationService {
     List<VacancyApplication> getByVacancyId(String vacancyId);
 
     List<VacancyApplication> getByStudentProfileId(String studentProfileId);
+
+    List<VacancyApplicationStudentResponse> getStudentApplications(String studentProfileId);
 
     List<VacancyApplication> getByStatus(VacancyApplicationStatus status);
 

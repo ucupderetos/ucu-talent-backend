@@ -45,3 +45,5 @@ learning/
 .claude/TODO.md
 
 docker-compose.override.yml
+
+.change-journal/
