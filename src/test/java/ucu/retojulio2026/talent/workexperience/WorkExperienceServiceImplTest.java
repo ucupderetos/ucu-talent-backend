@@ -6,14 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
-import ucu.retojulio2026.talent.common.ResourceNotFoundException;
 import ucu.retojulio2026.talent.studentprofile.StudentProfileService;
 import ucu.retojulio2026.talent.workexperience.dto.CreateWorkExperienceRequest;
-import ucu.retojulio2026.talent.workexperience.dto.UpdateWorkExperienceRequest;
 import ucu.retojulio2026.talent.workexperience.dto.WorkExperienceMapper;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -125,13 +122,13 @@ class WorkExperienceServiceImplTest {
     }
 
     @Test
-    void crear_falla_si_la_fecha_de_inicio_es_anterior_a_2015() {
+    void crear_falla_si_la_fecha_de_inicio_es_anterior_al_anio_minimo() {
         CreateWorkExperienceRequest request =
                 new CreateWorkExperienceRequest(
                         "student-1",
                         "Acme S.A.",
                         "Backend Developer",
-                        LocalDate.of(2014, 12, 31),
+                        LocalDate.of(1959, 12, 31),
                         null,
                         "Desarrollo de APIs REST"
                 );
