@@ -41,7 +41,6 @@ public class VacancyServiceImpl implements VacancyService {
     private final VacancyFilterResolverImpl vacancyFilterResolverImpl;
     private final VacancyFinalizationNotifier vacancyFinalizationNotifier;
 
-
     public VacancyServiceImpl(VacancyRepository vacancyRepository, VacancyMapper vacancyMapper, CompanyService companyService, AreaService areaService, UserService userService, VacancyApplicationRepository vacancyApplicationRepository, VacancyFilterResolverImpl vacancyFilterResolverImpl, VacancyFinalizationNotifier vacancyFinalizationNotifier) {
         this.vacancyRepository = vacancyRepository;
         this.vacancyMapper = vacancyMapper;
@@ -148,7 +147,7 @@ public class VacancyServiceImpl implements VacancyService {
         }
         dateValidation(request.publicationDate(),request.closingDate());
         Vacancy vacancy = vacancyMapper.toEntity(request);
-        vacancy.setCreatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
+        vacancy.setCreatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
         return vacancyRepository.save(vacancy);
     }
 
@@ -197,7 +196,7 @@ public class VacancyServiceImpl implements VacancyService {
             );
         }
 
-        if (fin.isAfter(inicio.plusYears(1))) { // Consideramos 1 año como maximo
+        if (fin.isAfter(inicio.plusYears(1))) {
             throw new ForbiddenOperationException(
                     "La fecha de cierre no puede superar un año desde la fecha de publicación."
             );
@@ -303,8 +302,8 @@ public class VacancyServiceImpl implements VacancyService {
         }
         existing.setReviewedBy(adminId);
         existing.setStatus(request.status());
-        existing.setAdminComment(request.adminComment()); // Si no queda un comentario de otro, da igual si manda null
-        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo"))); // No guarda adecuadamente la hora si no especifico la zona.
+        existing.setAdminComment(request.adminComment());
+        existing.setReviewedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
 
         Vacancy updated = vacancyRepository.save(existing);
         if (request.status() == VacancyStatus.FINALIZADO) {
@@ -329,7 +328,7 @@ public class VacancyServiceImpl implements VacancyService {
                     "El Puesto está en revisión."
             );
         }
-        // El Updated solo cuando es la misma compañia que cambia algo en su Puesto.
+
         existing.setUpdatedAt(LocalDateTime.now(ZoneId.of("America/Montevideo")));
         existing.setStatus(request.status());
 

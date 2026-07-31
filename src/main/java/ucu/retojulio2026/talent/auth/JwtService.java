@@ -35,8 +35,6 @@ public class JwtService {
                 .claim("role", user.getRole().name())
                 .build();
 
-        // Sin esto, NimbusJwtEncoder asume por default un algoritmo asimetrico (RS256) para
-        // elegir la JWK con la que firmar - incompatible con nuestra llave simetrica (HMAC).
         JwsHeader jwsHeader = JwsHeader.with(MacAlgorithm.HS256).build();
 
         return encoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();

@@ -7,8 +7,6 @@ import ucu.retojulio2026.talent.education.Education.DegreeLevel;
 
 import java.time.LocalDate;
 
-//Datos que la API RECIBE para actualizar un registro de educacion.
-//Tampoco incluye el id: la PK viaja en el path, no en el body.
 public record UpdateEducationRequest(
 
         @Schema(description = "Id del perfil de alumno (NanoID de 12 caracteres)", example = "V1StGXR8_Z5j")

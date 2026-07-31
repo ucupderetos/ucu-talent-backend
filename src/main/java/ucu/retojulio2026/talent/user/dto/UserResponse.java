@@ -6,9 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ucu.retojulio2026.talent.user.AccountStatus;
 import ucu.retojulio2026.talent.user.Role;
 
-//Datos que la API DEVUELVE de un usuario: identidad y estado de la cuenta.
-//Los datos personales se piden a /student-profile o /company.
-
 public record UserResponse(
         @Schema(description = "Id del usuario (NanoID)", example = "V1StGXR8_Z5j")
         String userId,

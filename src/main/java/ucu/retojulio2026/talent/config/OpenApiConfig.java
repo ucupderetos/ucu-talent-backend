@@ -18,17 +18,15 @@ import java.util.Map;
 @Configuration
 public class OpenApiConfig {
 
-    // El tag "Actuator" lo genera solo springdoc (springdoc.show-actuator=true), no un @Tag nuestro.
-    // Lo renombramos a "Health" aca porque no hay forma de anotarlo directamente.
     private static final String ACTUATOR_TAG = "Actuator";
     private static final String HEALTH_TAG = "Health";
 
     private static final List<String> TAG_ORDER = List.of(
-            "Usuarios",             // 1 - User
-            "Alumnos",              // 2 - StudentProfile
-            "Empresas",             // 3 - Company
-            "Educacion",            // 4 - Education
-            "Experiencia laboral",  // 5 - WorkExperience
+            "Usuarios",
+            "Alumnos",
+            "Empresas",
+            "Educacion",
+            "Experiencia laboral",
             "Autenticacion",
             "Puestos",
             HEALTH_TAG
@@ -43,9 +41,6 @@ public class OpenApiConfig {
                         .version("v0.1"));
     }
 
-    // springdoc arma la lista de tags juntando los @Tag de cada controller (con descripcion) con los
-    // globales, dejando duplicados y en orden de escaneo. Este customizer los deduplica (quedandose con
-    // la version que tenga descripcion) y los ordena segun TAG_ORDER, que es lo que respeta Swagger UI.
     @Bean
     public OpenApiCustomizer tagOrderCustomizer() {
         return openApi -> {

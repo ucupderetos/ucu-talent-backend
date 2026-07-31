@@ -4,8 +4,6 @@ import java.security.SecureRandom;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 
-//Genera IDs cortos y URL-safe (NanoID) para usar como claves primarias.
-
 public final class NanoIdGenerator {
 
     private static final char[] ALPHABET =

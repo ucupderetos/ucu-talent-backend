@@ -48,7 +48,7 @@ public class AccountFacadeImpl implements AccountFacade {
     @Override
     @Transactional
     public void deleteAccount(String userId) {
-        User user = userService.getById(userId); // 404 si no existe
+        User user = userService.getById(userId);
 
         switch (user.getRole()) {
             case ALUMNO -> deleteStudentProfileCascade(userId);

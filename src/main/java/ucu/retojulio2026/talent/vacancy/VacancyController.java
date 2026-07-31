@@ -24,7 +24,6 @@ import org.springframework.data.domain.Page;
 import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 import ucu.retojulio2026.talent.vacancy.filter.VacancySortField;
 
-
 import java.util.List;
 
 @RestController
@@ -44,8 +43,6 @@ public class VacancyController {
         this.companyService = companyService;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear Puesto")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Puesto creado"),
@@ -61,8 +58,6 @@ public class VacancyController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Obtener todos los Puestos")
     @ApiResponse(responseCode = "200", description = "Puestos encontrados")
@@ -284,8 +279,6 @@ public class VacancyController {
         return ResponseEntity.ok(VacancyStatusSummaryResponse.from(vacancyService.countByStatusSummary()));
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar Puesto")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Puesto actualizado"),
@@ -314,7 +307,7 @@ public class VacancyController {
     })
     @PatchMapping("status/{id}")
     public ResponseEntity<VacancyResponse> updateVacancyStatusCompany(
-            @AuthenticationPrincipal Jwt jwt, // Version NO ADMIN
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable String id,
             @Valid @RequestBody UpdateVacancyStatusRequest vacancy) {
         Vacancy existing = vacancyService.getVacancyById(id);
@@ -332,15 +325,13 @@ public class VacancyController {
     })
     @PutMapping("status/{id}")
     public ResponseEntity<VacancyResponse> updateVacancyStatus(
-            @AuthenticationPrincipal Jwt jwt, // Version ADMIN
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable String id,
             @Valid @RequestBody UpdateVacancyStatusAdminRequest vacancy) {
         String adminId = jwt.getSubject();
         Vacancy updated = vacancyService.updateVacancyStatusAdmin(id, adminId, vacancy);
         return ResponseEntity.ok(vacancyMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Borrar Puesto")
     @ApiResponses({
@@ -360,10 +351,6 @@ public class VacancyController {
         return ResponseEntity.noContent().build();
     }
 
-    // Sin usar por ahora: derivaba companyId del token en vez del body (fix BOLA/IDOR, ver
-    // learning/JWT-step-by-step/08 y 11). Se dejo el metodo listo para reactivarlo despues -
-    // para volver a usarlo, agregar "@AuthenticationPrincipal Jwt jwt" a create()/updateVacancy()
-    // y llamar a withCompanyId(request, jwt.getSubject()) antes de vacancyService.create(...).
     private CreateVacancyRequest withCompanyId(CreateVacancyRequest request, String companyId) {
         return new CreateVacancyRequest(
                 companyId,

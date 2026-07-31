@@ -24,7 +24,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 
-//Implementacion concreta del contrato UserService. Es el bean que Spring inyecta.
 @Service
 public class UserServiceImpl implements UserService {
 

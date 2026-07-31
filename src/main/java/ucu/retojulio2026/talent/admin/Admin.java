@@ -3,7 +3,6 @@ package ucu.retojulio2026.talent.admin;
 import jakarta.persistence.*;
 import lombok.*;
 
-//Lombok para no tener que generar los Getters, Setters y Constructores básicos.
 @Getter
 @Setter
 @NoArgsConstructor

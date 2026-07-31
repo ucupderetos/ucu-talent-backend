@@ -8,14 +8,6 @@ import java.lang.annotation.Target;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-/**
- * Valida que un  Role sea uno permitido en el registro PUBLICO
- * (ALUMNO o EMPRESA). Rechaza ADMIN para que nadie pueda auto-asignarse
- * ese rol via POST
- *
- * El alta de administradores debe hacerse por un flujo aparte, protegido
- * y accesible solo para un ADMIN autenticado.
- */
 @Target({ElementType.RECORD_COMPONENT, ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = PublicSignupRoleValidator.class)

@@ -13,5 +13,4 @@ public interface StorageService {
 
     void delete(String objectName);
 
-    //byte[] download(String objectName);
 }

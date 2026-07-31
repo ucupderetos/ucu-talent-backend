@@ -16,8 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import tools.jackson.databind.ObjectMapper;
 
-// Base compartida por LoginRateLimitFilter y SignupRateLimitFilter: doble limite (IP + email) con
-// bloqueo progresivo, cada uno protegiendo un unico (metodo, path) con su propia config/estado.
 abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
 
     private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
@@ -93,8 +91,6 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
 
         long now = System.nanoTime();
 
-        // Si ya esta en penitencia, ni siquiera tocamos los buckets: se mantiene bloqueado hasta
-        // que venza el castigo actual (que crece cada vez que vuelve a exceder el limite).
         long lockedSeconds = Math.max(
                 ipLimiter.remainingLockoutSeconds(ipKey, now),
                 emailLimiter.remainingLockoutSeconds(emailKey, now));
@@ -129,8 +125,6 @@ abstract class AbstractKeyedRateLimitFilter extends OncePerRequestFilter {
                 method, path, triggeredBy, clientIp, maskEmail(email), retryAfterSeconds);
     }
 
-    // El email se enmascara: el log sirve para identificar el patron de abuso, no para
-    // dejar direcciones de alumnos en texto plano en Cloud Logging.
     private static String maskEmail(String email) {
         if (email == null || EMAIL_FALLBACK_KEY.equals(email)) {
             return "-";

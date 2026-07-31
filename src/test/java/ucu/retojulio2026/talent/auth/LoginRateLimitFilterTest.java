@@ -62,7 +62,7 @@ class LoginRateLimitFilterTest {
         assertThat(firstResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(secondResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(thirdResponse.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-        // La IP usa su propia escala, mas corta que la del email.
+
         assertThat(thirdResponse.getHeader("Retry-After")).isEqualTo("60");
     }
 
@@ -81,13 +81,11 @@ class LoginRateLimitFilterTest {
                 "30,180,900",
                 1_440);
 
-        // 1ra infraccion: request 1 pasa (consume el unico token), request 2 excede -> 30s.
         runLoginRequest(filter, "192.0.2.50", "reincidente@ucu.edu.uy");
         MockHttpServletResponse firstLockout = runLoginRequest(filter, "192.0.2.50", "reincidente@ucu.edu.uy");
         assertThat(firstLockout.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
         assertThat(firstLockout.getHeader("Retry-After")).isEqualTo("30");
 
-        // Mientras sigue bloqueado, cualquier otro intento repite el mismo castigo (no escala solo).
         MockHttpServletResponse stillLocked = runLoginRequest(filter, "192.0.2.50", "reincidente@ucu.edu.uy");
         assertThat(stillLocked.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
         assertThat(stillLocked.getHeader("Retry-After")).isEqualTo("30");

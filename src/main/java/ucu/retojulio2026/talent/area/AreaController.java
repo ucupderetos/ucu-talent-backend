@@ -30,8 +30,6 @@ public class AreaController {
         this.areaMapper = areaMapper;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear un area")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Area creada"),
@@ -44,8 +42,6 @@ public class AreaController {
         Area created = areaService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(areaMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Obtener todas las areas")
     @ApiResponse(responseCode = "200", description = "Areas encontradas")
@@ -71,8 +67,6 @@ public class AreaController {
         return ResponseEntity.ok(areaMapper.toResponse(area));
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar un area por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Area actualizada"),
@@ -87,8 +81,6 @@ public class AreaController {
         Area updated = areaService.update(id, request);
         return ResponseEntity.ok(areaMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un area por id")
     @ApiResponses({

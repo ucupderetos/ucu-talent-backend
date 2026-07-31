@@ -9,10 +9,6 @@ import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.filter.VacancyFilterStrategy;
 import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 
-/**
- * keyword sobre nombre O descripcion (no ambos a la vez). LIKE
- * case-insensitive, sin acentos/tildes normalizados.
- */
 @Component
 public class KeywordVacancyFilterStrategy implements VacancyFilterStrategy {
 

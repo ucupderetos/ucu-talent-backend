@@ -9,7 +9,6 @@ import ucu.retojulio2026.talent.common.DocumentType;
 import java.time.LocalDateTime;
 import java.util.List;
 
-//Lombok para no tener que generar los Getters, Setters y Constructores básicos.
 @Getter
 @Setter
 @NoArgsConstructor

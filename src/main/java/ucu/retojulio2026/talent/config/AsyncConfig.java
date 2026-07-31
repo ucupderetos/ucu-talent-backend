@@ -8,15 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-/**
- * Pool de hilos usado para persistir los audit logs y mandar mails sin
- * bloquear el hilo del request (ver AuditService.saveAuditLog y MailServiceImpl,
- * ambos anotados @Async("taskExecutor")).
- * @EnableAsync se declara en TalentApplication, junto con @EnableScheduling
- * y @EnableAspectJAutoProxy. Implementar AsyncConfigurer acá (en vez de solo
- * exponer el Executor como bean) es lo que engancha el
- * LoggingAsyncUncaughtExceptionHandler en vez del default de Spring.
- */
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {
 

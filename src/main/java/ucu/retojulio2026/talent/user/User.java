@@ -7,27 +7,26 @@ import ucu.retojulio2026.talent.common.NanoIdGenerator;
 
 import java.time.LocalDate;
 
-//Lombok para no tener que generar los Getters, Setters y Constructores básicos.
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 
-@Entity    // Le dice al ORM (Hibernate) que es una Entidad de la base de datos
-@Table(name = "\"user\"") // "user" es palabra reservada en Postgres, por eso las comillas dobles
+@Entity
+@Table(name = "\"user\"")
 public class User {
 
-    @Id // Indica que es una Primary Key en la base de datos
+    @Id
     @Column(name = "user_id", length = 12, updatable = false, nullable = false)
-    //Indica que es una calumna a mapear en la base de datos y sus restricciones.
+
     private String userId;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    @ToString.Exclude // nunca loguear el hash de la contraseña
-    @Column(name = "password_hash", length = 60, nullable = false) // BCrypt produce siempre 60 caracteres (largo fijo)
+    @ToString.Exclude
+    @Column(name = "password_hash", length = 60, nullable = false)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -41,13 +40,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private AccountStatus status;
 
-    // Hibernate setea la fecha de alta automaticamente en el insert.
     @CreationTimestamp
     @Column(name = "registered_at", updatable = false, nullable = false)
     private LocalDate registeredAt;
 
-
-    //Metodo para generar IDs unicos, que no sean tan largos como UUIDs. Usar en todos los IDS!
     @PrePersist
     protected void assignId() {
         if (this.userId == null) {

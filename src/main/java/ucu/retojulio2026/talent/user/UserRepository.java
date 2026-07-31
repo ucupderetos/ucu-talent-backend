@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
-
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
@@ -26,9 +25,5 @@ public interface UserRepository extends JpaRepository<User, String> {
     long countByRole(Role role);
 
     boolean existsByProfileImage(String profileImage);
-
-    //Optional es necesario porque hace explicito que la busqueda puede no tener resultado.
-    //Asi el servico esta obligado a manejar el caso vacio, en vez de recibir
-    //un null que despues tira NullPointerException.
 
 }
