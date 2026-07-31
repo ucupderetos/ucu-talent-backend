@@ -1,27 +1,25 @@
 package ucu.retojulio2026.talent.studentprofile.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
 public record UpdateStudentProfileRequest(
 
-        @Schema(description = "Numero de telefono", example = "+59899123456")
-        @NotBlank(message = "El phoneNumber es obligatorio")
+        @Schema(description = "Numero de telefono. Omitir o null para no modificarlo, \"\" para borrarlo",
+                example = "+59899123456")
         String phoneNumber,
 
-        @Schema(description = "URL de LinkedIn", example = "https://linkedin.com/in/nicolas-gonzalez")
-        @NotBlank(message = "El linkedinUrl es obligatorio")
+        @Schema(description = "URL de LinkedIn. Omitir o null para no modificarlo, \"\" para borrarlo",
+                example = "https://linkedin.com/in/nicolas-gonzalez")
         String linkedinUrl,
 
-        @Schema(description = "Skills del alumno", example = "[\"Java\", \"Spring Boot\", \"SQL\"]")
-        @NotEmpty(message = "El skills es obligatorio")
+        @Schema(description = "Skills del alumno. Omitir o null para no modificarlas, [] para borrarlas",
+                example = "[\"Java\", \"Spring Boot\", \"SQL\"]")
         List<String> skills,
 
-        @Schema(description = "Descripción del perfil del alumno",  example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
-        @NotBlank(message = "La descripción es obligatoria")
+        @Schema(description = "Descripción del perfil del alumno. Omitir o null para no modificarla, \"\" para borrarla",
+                example = "Estudiante de Licienciatura en Informática interesado en encontrar mi primera experiencia laboral")
         String description
 
 ) {}

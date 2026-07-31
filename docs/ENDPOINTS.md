@@ -103,8 +103,10 @@ Paso 2 del registro de un `ALUMNO`. El id del perfil sale siempre del token (no 
 - `phoneNumber` string? (opcional) · `linkedinUrl` string? (opcional)
 - `skills` `string[]?` (opcional) · `description` string? (opcional)
 
-**`UpdateStudentProfileRequest`** (entrada — 4 campos, todos obligatorios)
-- `phoneNumber` string · `@NotBlank` · `linkedinUrl` string · `@NotBlank` · `skills` `string[]` · `@NotEmpty` · `description` string · `@NotBlank`
+**`UpdateStudentProfileRequest`** (entrada — update parcial, todos los campos opcionales)
+- `phoneNumber`? · `linkedinUrl`? · `description`? — string · `skills`? `string[]`
+- Campo omitido o `null` → no se modifica. `""` (o solo espacios) → se borra (queda `null`).
+  `skills: []` → se borran las skills.
 
 **`StudentProfileResponse`** (salida — no expone `userId`, la PK ya lo es)
 - `studentProfileId` (= `userId`) · `email` (del `User` dueño) · `registeredAt` (date, del `User` dueño) ·
