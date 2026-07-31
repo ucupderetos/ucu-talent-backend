@@ -58,7 +58,7 @@ Controller: `user/UserController` · Tag: **Usuarios**
 **`CreateUserRequest`** (entrada — solo credenciales, el perfil se crea en un paso 2 aparte)
 - `email` string · `@NotBlank` `@Email`
 - `password` string · `@NotBlank` `@Size(min=8)`
-- `role` enum `Role` · `@NotNull` `@PublicSignupRole` (solo `ALUMNO` | `EMPRESA`; `ADMIN` no se crea por acá) — `role: ALUMNO` nace con `status: APROBADO`, `role: EMPRESA` nace con `status: PENDIENTE`
+- `role` enum `Role` · `@NotNull` `@PublicSignupRole` (solo `ALUMNO` | `EMPRESA`; `ADMIN` no se crea por acá) — toda cuenta creada por acá nace con `status: PENDIENTE`, sin importar el rol
 
 **`UpdateUserStatusRequest`** (entrada)
 - `status` enum `AccountStatus` · `@NotNull` (solo `APROBADO` | `RECHAZADO`)
@@ -545,7 +545,7 @@ Controller: `mail/MailTemplateController` · Tag: **Templates de mail**
 ## Enums de referencia
 
 - **`Role`**: `ALUMNO`, `EMPRESA`, `ADMIN` (registro público solo `ALUMNO` | `EMPRESA`; `ADMIN` vía sección 13, temporal)
-- **`AccountStatus`**: `PENDIENTE`, `APROBADO`, `RECHAZADO` — reemplaza a `Company.approved`, aplica a los tres roles. Al registrarse (`POST /user`): `ALUMNO` nace `APROBADO`, `EMPRESA` nace `PENDIENTE` (el `ADMIN` de `/dev/admin` nace `APROBADO` directo). Transición vía `PATCH /user/{id}`: desde `APROBADO`/`RECHAZADO` el Admin puede alternar libremente entre ambos (reversible); nunca se puede volver a `PENDIENTE` (`409`).
+- **`AccountStatus`**: `PENDIENTE`, `APROBADO`, `RECHAZADO` — reemplaza a `Company.approved`, aplica a los tres roles. Al registrarse (`POST /user`): `ALUMNO` y `EMPRESA` nacen `PENDIENTE` — ninguno de los dos puede operar hasta que un Admin lo apruebe (el `ADMIN` de `/dev/admin` nace `APROBADO` directo). Transición vía `PATCH /user/{id}`: desde `APROBADO`/`RECHAZADO` el Admin puede alternar libremente entre ambos (reversible); nunca se puede volver a `PENDIENTE` (`409`).
 - **`DocumentType`**: `CEDULA_IDENTIDAD`, `PASAPORTE`, `DNI` — enum **único compartido** en
   `common.DocumentType`, usado por `StudentProfile` y `UniversityRegistry`
 - **`Education.DegreeLevel`**: `TECNICATURA`, `LICENCIATURA`, `GRADO`, `POSGRADO`, `DOCTORADO`
