@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class WorkExperienceServiceImpl implements WorkExperienceService {
 
-    private static final LocalDate MIN_LOGICAL_START_DATE = LocalDate.of(2015, 1, 1);
+    private static final LocalDate MIN_LOGICAL_START_DATE = LocalDate.of(1960, 1, 1); // Se puede cambiar en caso que quieran menos años.
 
     private final WorkExperienceRepository workExperienceRepository;
     private final WorkExperienceMapper workExperienceMapper;
