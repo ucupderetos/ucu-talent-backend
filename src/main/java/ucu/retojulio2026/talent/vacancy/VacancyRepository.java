@@ -70,13 +70,13 @@ public interface VacancyRepository extends JpaRepository<Vacancy, String>, JpaSp
                 c.name,
                 v.publicationDate,
                 v.status,
-                COUNT(a.vacancyApplicationId)
+                (SELECT COUNT(a.vacancyApplicationId)
+                   FROM VacancyApplication a
+                  WHERE a.vacancyId = v.vacancyId)
             )
             FROM Vacancy v
             JOIN Company c ON c.companyId = v.companyId
-            LEFT JOIN VacancyApplication a ON a.vacancyId = v.vacancyId
             WHERE v.deleted = false
-            GROUP BY v.vacancyId, v.name, c.name, v.publicationDate, v.status
             ORDER BY v.publicationDate DESC
             """)
     List<RecentVacancyRow> findRecentForDashboard(Pageable pageable);
