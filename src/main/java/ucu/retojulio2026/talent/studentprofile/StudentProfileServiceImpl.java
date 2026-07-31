@@ -85,11 +85,23 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     @Override
     public StudentProfile update(String id, UpdateStudentProfileRequest request) {
         StudentProfile studentProfile = getById(id);
-        studentProfile.setPhoneNumber(request.phoneNumber());
-        studentProfile.setLinkedinUrl(request.linkedinUrl());
-        studentProfile.setSkills(normalizeSkills(request.skills()));
-        studentProfile.setDescription(request.description());
+        if (request.phoneNumber() != null) {
+            studentProfile.setPhoneNumber(vacioComoNull(request.phoneNumber()));
+        }
+        if (request.linkedinUrl() != null) {
+            studentProfile.setLinkedinUrl(vacioComoNull(request.linkedinUrl()));
+        }
+        if (request.skills() != null) {
+            studentProfile.setSkills(normalizeSkills(request.skills()));
+        }
+        if (request.description() != null) {
+            studentProfile.setDescription(vacioComoNull(request.description()));
+        }
         return studentProfileRepository.save(studentProfile);
+    }
+
+    private String vacioComoNull(String valor) {
+        return valor.isBlank() ? null : valor;
     }
 
     private List<String> normalizeSkills(List<String> skills) {

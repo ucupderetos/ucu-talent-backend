@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -358,6 +359,113 @@ class StudentProfileServiceImplTest {
         assertEquals("12345678", result.getDocumentNumber());
 
         verify(studentProfileRepository).save(existingProfile);
+    }
+
+    private StudentProfile perfilCompleto(String userId) {
+        StudentProfile perfil = new StudentProfile();
+        perfil.setStudentProfileId(userId);
+        perfil.setName("Facundo");
+        perfil.setSurname("Rodriguez");
+        perfil.setDocumentType(DocumentType.CEDULA_IDENTIDAD);
+        perfil.setDocumentNumber("12345678");
+        perfil.setPhoneNumber("099000000");
+        perfil.setLinkedinUrl("https://linkedin.com/in/anterior");
+        perfil.setSkills(List.of("python"));
+        perfil.setDescription("Descripción anterior");
+        return perfil;
+    }
+
+    @Test
+    void actualizar_solo_las_skills_no_pisa_el_resto_del_perfil() {
+        String userId = "user-1";
+        StudentProfile existente = perfilCompleto(userId);
+
+        UpdateStudentProfileRequest request =
+                new UpdateStudentProfileRequest(null, null, List.of("Java"), null);
+
+        when(studentProfileRepository.findById(userId)).thenReturn(java.util.Optional.of(existente));
+        when(studentProfileRepository.save(existente)).thenReturn(existente);
+
+        StudentProfile result = studentProfileService.update(userId, request);
+
+        assertEquals(List.of("java"), result.getSkills());
+        assertEquals("099000000", result.getPhoneNumber());
+        assertEquals("https://linkedin.com/in/anterior", result.getLinkedinUrl());
+        assertEquals("Descripción anterior", result.getDescription());
+    }
+
+    @Test
+    void actualizar_solo_el_telefono_no_pisa_las_skills_ni_la_descripcion() {
+        String userId = "user-1";
+        StudentProfile existente = perfilCompleto(userId);
+
+        UpdateStudentProfileRequest request =
+                new UpdateStudentProfileRequest("098123456", null, null, null);
+
+        when(studentProfileRepository.findById(userId)).thenReturn(java.util.Optional.of(existente));
+        when(studentProfileRepository.save(existente)).thenReturn(existente);
+
+        StudentProfile result = studentProfileService.update(userId, request);
+
+        assertEquals("098123456", result.getPhoneNumber());
+        assertEquals(List.of("python"), result.getSkills());
+        assertEquals("https://linkedin.com/in/anterior", result.getLinkedinUrl());
+        assertEquals("Descripción anterior", result.getDescription());
+    }
+
+    @Test
+    void actualizar_con_string_vacio_borra_el_campo() {
+        String userId = "user-1";
+        StudentProfile existente = perfilCompleto(userId);
+
+        UpdateStudentProfileRequest request =
+                new UpdateStudentProfileRequest(null, "", null, "   ");
+
+        when(studentProfileRepository.findById(userId)).thenReturn(java.util.Optional.of(existente));
+        when(studentProfileRepository.save(existente)).thenReturn(existente);
+
+        StudentProfile result = studentProfileService.update(userId, request);
+
+        assertNull(result.getLinkedinUrl());
+        assertNull(result.getDescription());
+        assertEquals("099000000", result.getPhoneNumber());
+        assertEquals(List.of("python"), result.getSkills());
+    }
+
+    @Test
+    void actualizar_con_lista_vacia_borra_las_skills() {
+        String userId = "user-1";
+        StudentProfile existente = perfilCompleto(userId);
+
+        UpdateStudentProfileRequest request =
+                new UpdateStudentProfileRequest(null, null, List.of(), null);
+
+        when(studentProfileRepository.findById(userId)).thenReturn(java.util.Optional.of(existente));
+        when(studentProfileRepository.save(existente)).thenReturn(existente);
+
+        StudentProfile result = studentProfileService.update(userId, request);
+
+        assertEquals(List.of(), result.getSkills());
+        assertEquals("Descripción anterior", result.getDescription());
+    }
+
+    @Test
+    void actualizar_sin_ningun_campo_no_cambia_nada() {
+        String userId = "user-1";
+        StudentProfile existente = perfilCompleto(userId);
+
+        UpdateStudentProfileRequest request =
+                new UpdateStudentProfileRequest(null, null, null, null);
+
+        when(studentProfileRepository.findById(userId)).thenReturn(java.util.Optional.of(existente));
+        when(studentProfileRepository.save(existente)).thenReturn(existente);
+
+        StudentProfile result = studentProfileService.update(userId, request);
+
+        assertEquals("099000000", result.getPhoneNumber());
+        assertEquals("https://linkedin.com/in/anterior", result.getLinkedinUrl());
+        assertEquals(List.of("python"), result.getSkills());
+        assertEquals("Descripción anterior", result.getDescription());
     }
 
     @Test
