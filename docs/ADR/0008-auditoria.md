@@ -1,4 +1,4 @@
-# ADR - 0005: Auditoría de acciones administrativas
+# ADR - 0006: Auditoría de acciones administrativas
 
 **Status:** accepted
 **Date:** 2026-07-20

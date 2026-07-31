@@ -28,7 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/student-profile")
-@Tag(name = "Alumnos", description = "Alta, consulta y baja de perfiles de alumno") // agrupa los endpoints en Swagger UI
+@Tag(name = "Alumnos", description = "Alta, consulta y baja de perfiles de alumno")
 public class StudentProfileController {
 
     private final StudentProfileService studentProfileService;
@@ -46,8 +46,6 @@ public class StudentProfileController {
         return studentProfileMapper.toResponse(studentProfile, userService.getById(studentProfile.getStudentProfileId()));
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear un perfil de alumno")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Perfil creado"),
@@ -63,8 +61,6 @@ public class StudentProfileController {
         StudentProfile created = studentProfileService.create(jwt.getSubject(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Listar todos los perfiles de alumno, opcionalmente filtrados por estado (solo ADMIN)")
     @ApiResponses({
@@ -113,7 +109,7 @@ public class StudentProfileController {
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
         AuthorizationGuard.requireOwnershipOrRoles(jwt, userId, "ADMIN", "EMPRESA");
-        // PK compartida: studentProfileId == userId, asi que buscar por userId es getById.
+
         StudentProfile studentProfile = studentProfileService.getById(userId);
         return ResponseEntity.ok(toResponse(studentProfile));
     }
@@ -145,8 +141,6 @@ public class StudentProfileController {
         String url = studentProfileService.getCvFile(cvFile, jwt);
         return ResponseEntity.ok(url);
     }
-
-    // ===== UPDATE =====
 
     @Operation(summary = "Actualizar el telefono, LinkedIn y skills de un perfil de alumno")
     @ApiResponses({
@@ -181,8 +175,6 @@ public class StudentProfileController {
         StudentProfile updated = studentProfileService.updateCvFile(jwt.getSubject(), file);
         return ResponseEntity.ok(toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un perfil de alumno por id")
     @ApiResponses({

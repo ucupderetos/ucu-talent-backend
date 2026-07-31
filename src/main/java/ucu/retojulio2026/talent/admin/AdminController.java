@@ -41,8 +41,6 @@ public class AdminController {
         this.adminDashboardService = adminDashboardService;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear el admin del usuario logueado")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Admin creado"),
@@ -58,8 +56,6 @@ public class AdminController {
         Admin created = adminService.create(jwt.getSubject(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(adminMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Totales y listados de la pantalla inicial del admin (solo ADMIN)")
     @ApiResponses({
@@ -115,12 +111,10 @@ public class AdminController {
             @RequestParam
             @NotBlank(message = "El userId es obligatorio")
             String userId) {
-        // PK compartida: adminId == userId, asi que buscar por userId es getById.
+
         Admin admin = adminService.getById(userId);
         return ResponseEntity.ok(adminMapper.toResponse(admin));
     }
-
-    // ===== UPDATE =====
 
     @Operation(summary = "Actualizar un admin por id")
     @ApiResponses({
@@ -139,8 +133,6 @@ public class AdminController {
         Admin updated = adminService.update(id, request);
         return ResponseEntity.ok(adminMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un admin por id")
     @ApiResponses({

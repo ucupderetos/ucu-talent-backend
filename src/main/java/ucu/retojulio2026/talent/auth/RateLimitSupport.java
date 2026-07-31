@@ -5,8 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-// Helpers compartidos por los filtros de rate limit (login y alta de cuentas): identificar el
-// cliente y sacar el email del body sin atarse al DTO especifico de cada endpoint.
 final class RateLimitSupport {
 
     private RateLimitSupport() {

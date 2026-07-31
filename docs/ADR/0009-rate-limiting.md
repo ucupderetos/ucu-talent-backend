@@ -195,6 +195,6 @@ la imagen.
 - `src/main/resources/application.properties` — bloques `security.rate-limit.login.*` y `security.rate-limit.signup.*`.
 - `src/main/java/ucu/retojulio2026/talent/config/SecurityConfig.java` — `PUBLIC_MATCHER` (por qué no se expone `/actuator/metrics`) y registro de los filtros.
 - `.github/workflows/ci-cd.yaml` — `--min-instances=0 --max-instances=2`.
-- [ADR-0005](0005-auditoria.md) — auditoría en base de datos, descartada acá como destino de los bloqueos.
+- [ADR-0008](0008-auditoria.md) — auditoría en base de datos, descartada acá como destino de los bloqueos.
 - RFC 9110 §10.2.3 (`Retry-After`) y RFC 9457 (extensiones de `ProblemDetail`).
 

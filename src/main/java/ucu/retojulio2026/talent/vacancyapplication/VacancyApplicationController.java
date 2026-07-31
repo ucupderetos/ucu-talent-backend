@@ -54,8 +54,6 @@ public class VacancyApplicationController {
         this.vacancyService = vacancyService;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear una postulación")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Postulación creada"),
@@ -74,8 +72,6 @@ public class VacancyApplicationController {
         VacancyApplication created = vacancyApplicationService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(vacancyApplicationMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Listar mis postulaciones (alumno autenticado)")
     @ApiResponses({
@@ -242,8 +238,6 @@ public class VacancyApplicationController {
         return ResponseEntity.ok(VacancyApplicationStatusSummaryResponse.from(vacancyApplicationService.countByStatusSummary()));
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar el estado de una postulación por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Postulación actualizada"),
@@ -281,8 +275,6 @@ public class VacancyApplicationController {
         VacancyApplication accepted = vacancyApplicationService.accept(id);
         return ResponseEntity.ok(vacancyApplicationMapper.toResponse(accepted));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar una postulación por id")
     @ApiResponses({

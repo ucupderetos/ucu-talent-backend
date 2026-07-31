@@ -3,8 +3,6 @@ package ucu.retojulio2026.talent.admin.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
-//Datos EDITABLES de un admin (PUT).
-//No lleva userId: el dueño no se reasigna (es la PK).
 public record UpdateAdminRequest(
 
         @Schema(description = "Nombre del admin", example = "Juan")

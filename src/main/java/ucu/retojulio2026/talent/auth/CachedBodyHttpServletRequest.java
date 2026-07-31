@@ -12,8 +12,6 @@ import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 
-// Envuelve el request para poder leer el body (sacar el email) sin romper la lectura posterior
-// del controller: un InputStream normal solo se puede consumir una vez.
 final class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
 
     private final byte[] cachedBody;
@@ -63,7 +61,7 @@ final class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
 
         @Override
         public void setReadListener(ReadListener readListener) {
-            // No-op: stream sin IO asincrono.
+
         }
 
         @Override

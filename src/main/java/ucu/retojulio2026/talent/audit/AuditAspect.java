@@ -27,22 +27,6 @@ import tools.jackson.databind.ObjectMapper;
 import ucu.retojulio2026.talent.user.Role;
 import ucu.retojulio2026.talent.user.User;
 
-/**
- * Intercepta cualquier metodo anotado con @Auditable. Si quien esta
- * ejecutando la request es un usuario con rol ADMIN, dispara (async, ver
- * AuditService) el guardado de un registro en audit_log con el resultado
- * de la operacion. Si no hay usuario resuelto o no es ADMIN, no hace nada
- * mas que ejecutar el metodo original: cero overhead para EMPRESA/ALUMNO.
- *
- * El orden de las cosas importa: SecurityContextHolder es ThreadLocal,
- * asi que el actor SIEMPRE se resuelve aca, en el hilo del request, antes
- * de proceed(). Nunca dentro de AuditService.saveAuditLog (que corre en el
- * pool "taskExecutor"): ahi ya no habria SecurityContext.
- *
- * Nota sobre self-invocation: al ser un proxy de Spring AOP, @Auditable
- * solo se dispara cuando el metodo se llama "desde afuera" del bean. Una
- * llamada interna (this.metodo(...)) no pasa por el proxy y no se audita.
- */
 @Aspect
 @Component
 public class AuditAspect {
@@ -121,8 +105,7 @@ public class AuditAspect {
             Object value = expression.getValue(context);
             return value == null ? null : value.toString();
         } catch (Exception ex) {
-            // Ej: "#result.vacancyId" en el branch de error, donde #result
-            // no llego a existir porque el metodo tiro antes de devolver algo.
+
             return null;
         }
     }
@@ -148,8 +131,6 @@ public class AuditAspect {
         }
     }
 
-    // Convierte cada argumento a un Map/List "generico" (via Jackson) y saca
-    // los campos sensibles antes de volver a serializar.
     private Object sanitizar(Object valor) {
         if (valor == null) {
             return null;

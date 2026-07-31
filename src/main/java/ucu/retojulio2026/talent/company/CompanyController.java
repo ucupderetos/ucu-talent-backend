@@ -47,8 +47,6 @@ public class CompanyController {
         return companyMapper.toResponse(company, userService.getById(company.getCompanyId()).getStatus());
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear una empresa")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Empresa creada"),
@@ -62,8 +60,6 @@ public class CompanyController {
         Company created = companyService.create(jwt.getSubject(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Listar todas las empresas, opcionalmente filtradas por estado")
     @ApiResponse(responseCode = "200", description = "Listado obtenido")
@@ -121,8 +117,6 @@ public class CompanyController {
         return ResponseEntity.ok(CompanyStatusSummaryResponse.from(companyService.getStatusSummary()));
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar una empresa por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empresa actualizada"),
@@ -141,8 +135,6 @@ public class CompanyController {
         Company updated = companyService.update(id, request);
         return ResponseEntity.ok(toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar una empresa por id")
     @ApiResponses({

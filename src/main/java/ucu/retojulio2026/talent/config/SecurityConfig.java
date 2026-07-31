@@ -71,7 +71,6 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(jwtSecretKey).build();
     }
 
-    // Mapea el claim "role"=ALUMNO -> authority "ROLE_ALUMNO" (lo que espera hasRole(...)).
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -96,7 +95,6 @@ public class SecurityConfig {
         return source;
     }
 
-    
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint(ObjectMapper objectMapper) {
         return (request, response, authException) -> {
@@ -110,7 +108,6 @@ public class SecurityConfig {
         };
     }
 
-    // Paths publicos: login/logout, signup, swagger y health checks.
     private static final RequestMatcher PUBLIC_MATCHER = RequestMatchers.anyOf(
             PathPatternRequestMatcher.pathPattern("/auth/**"),
             PathPatternRequestMatcher.pathPattern("/api-docs/**"),
@@ -120,12 +117,11 @@ public class SecurityConfig {
             PathPatternRequestMatcher.pathPattern("/actuator/**"),
             PathPatternRequestMatcher.pathPattern("/error"),
             PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/user"),
-            // TEMPORAL: alta de ADMIN para pruebas. Ver DevAdminController.
+
             PathPatternRequestMatcher.pathPattern("/dev/**"),
-            // WorkExperience: lectura publica por query param (ej: /work-experience?studentProfileId=...)
+
             PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/work-experience")
     );
-
 
     @Bean
     @Order(1)
@@ -141,10 +137,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // LoginRateLimitFilter/SignupRateLimitFilter son @Component, y Spring Boot auto-registra como
-    // filtro global (para "/*") cualquier bean de tipo Filter que encuentre, sin importar si ya lo
-    // agregamos a mano dentro de una SecurityFilterChain con addFilterAfter. Sin estos beans
-    // deshabilitados, cada filtro correria DOS VECES por request, duplicando el consumo del limite.
     @Bean
     public FilterRegistrationBean<LoginRateLimitFilter> loginRateLimitFilterAutoRegistrationDisabler(
             LoginRateLimitFilter loginRateLimitFilter) {
@@ -170,30 +162,30 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Company
+
                         .requestMatchers(HttpMethod.POST, "/company").hasRole("EMPRESA")
-                        // La busqueda pueda ser para todos los autenticados
+
                         .requestMatchers(HttpMethod.GET, "/vacancy/search").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/vacancy/student/search").hasRole("ALUMNO")
-                        // Vacancy
+
                         .requestMatchers(HttpMethod.POST, "/vacancy").hasRole("EMPRESA")
-                        // Admin primero así puede hacer el status y el usuario empresa no.
+
                         .requestMatchers(HttpMethod.PUT, "/vacancy/status/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/vacancy/**").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.PATCH, "/vacancy/**").hasRole("EMPRESA")
                         .requestMatchers(HttpMethod.DELETE, "/vacancy/**").hasRole("EMPRESA")
-                        // Student-Profile
+
                         .requestMatchers(HttpMethod.POST, "/student-profile").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.DELETE, "/student-profile/cv").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.POST, "/vacancy-application").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me").hasRole("ALUMNO")
                         .requestMatchers(HttpMethod.GET, "/vacancy-application/me/detailed").hasRole("ALUMNO")
-                        // User (profile y cv)
+
                         .requestMatchers(HttpMethod.PATCH, "/user/profile/image").authenticated()
                         .requestMatchers(HttpMethod.GET, "/user/profile-image").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/user/profile/image").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/student-profile/cv/**").authenticated() // SOLO EMPRESA Y EL DUEÑO DEL CV
-                        // Admin
+                        .requestMatchers(HttpMethod.GET, "/student-profile/cv/**").authenticated()
+
                         .requestMatchers(HttpMethod.POST, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/audit/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/audit/**").hasRole("ADMIN")
@@ -201,17 +193,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/storage/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/storage/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/admin").hasRole("ADMIN")
-                        // Listado de admins: expone todos los admins, solo ADMIN.
+
                         .requestMatchers(HttpMethod.GET, "/admin").hasRole("ADMIN")
-                        // Listado de usuarios: expone todos los emails, solo ADMIN.
+
                         .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
-                        // Listado de alumnos: expone datos personales (documento, telefono) de todos, solo ADMIN.
+
                         .requestMatchers(HttpMethod.GET, "/student-profile").hasRole("ADMIN")
-                        // Aprobar/rechazar cuenta: solo ADMIN.
+
                         .requestMatchers(HttpMethod.PATCH, "/user/**").hasRole("ADMIN")
-                        // University Registry: exclusivo de ADMIN, incluidos los GET.
+
                         .requestMatchers("/university-registry/**").hasRole("ADMIN")
-                        // Consultas de admin: totales por estado, solo ADMIN.
+
                         .requestMatchers(HttpMethod.GET, "/admin/dashboard").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/company/status-summary").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/student-profile/status-summary").hasRole("ADMIN")

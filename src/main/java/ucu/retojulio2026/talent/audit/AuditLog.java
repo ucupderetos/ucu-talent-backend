@@ -24,8 +24,6 @@ import java.time.ZoneId;
 import ucu.retojulio2026.talent.common.NanoIdGenerator;
 import ucu.retojulio2026.talent.user.Role;
 
-// @Immutable: le dice a Hibernate que esta entidad nunca se hace UPDATE,
-// solo INSERT. Un registro de auditoria no deberia poder editarse.
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,13 +39,9 @@ public class AuditLog {
     @Column(name = "audit_id", length = 12, updatable = false, nullable = false)
     private String auditId;
 
-    // Correlaciona todos los logs (de aplicacion y de auditoria) de un mismo
-    // request (ver MdcTaskDecorator)
     @Column(name = "trace_id", length = 36, updatable = false)
     private String traceId;
 
-    // Denormalizado a proposito: sin FK a "user". Si el usuario se borra
-    // despues, el log conserva quien hizo la accion en su momento.
     @Column(name = "actor_user_id", length = 12, nullable = false, updatable = false)
     private String actorUserId;
 
@@ -68,13 +62,11 @@ public class AuditLog {
     private String entityId;
 
     @Column(nullable = false, length = 20, updatable = false)
-    private String outcome; // SUCCESS | ERROR
+    private String outcome;
 
     @Column(nullable = false, columnDefinition = "text", updatable = false)
     private String message;
 
-    // JSON con los argumentos del metodo (sanitizado, sin password/passwordHash)
-    // en SUCCESS; stacktrace truncado en ERROR.
     @Column(columnDefinition = "text", updatable = false)
     private String detail;
 
@@ -87,7 +79,7 @@ public class AuditLog {
             this.auditId = NanoIdGenerator.generate();
         }
         if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now(ZoneId.of("America/Montevideo")); // Así tiene la hora y fecha correcta
+            this.createdAt = LocalDateTime.now(ZoneId.of("America/Montevideo"));
         }
     }
 }

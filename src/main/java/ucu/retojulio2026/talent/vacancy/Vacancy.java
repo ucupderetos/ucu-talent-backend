@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "\"vacancy\"") // Puesto
+@Table(name = "\"vacancy\"")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,7 +36,6 @@ public class Vacancy {
     @Column(name = "closing_date", updatable = true, nullable = false)
     private LocalDate closingDate;
 
-    //@CreationTimestamp // No tiene en cuenta la zona horaria real con esa anotación.
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 

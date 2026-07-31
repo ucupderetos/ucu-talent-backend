@@ -13,13 +13,6 @@ import ucu.retojulio2026.talent.vacancy.Vacancy;
 import ucu.retojulio2026.talent.vacancy.filter.VacancyFilterStrategy;
 import ucu.retojulio2026.talent.vacancy.dto.SearchCriteriaVacancyRequest;
 
-/**
- * Vacancy no tiene un degreeId propio -- filtrar por carrera
- * significa resolver Degree -> areaId, y desde ahi reusar la misma
- * expansion de subareas que usa AreaVacancyFilterStrategy. Si el
- * degreeId no existe, no rompe la busqueda simplemente no aporta ningun
- * resultado (equivalente a "ningun puesto matchea esa carrera").
- */
 @Component
 public class CareerVacancyFilterStrategy implements VacancyFilterStrategy {
 

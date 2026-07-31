@@ -47,8 +47,6 @@ public class EducationController {
         this.educationMapper = educationMapper;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear un registro de educacion")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Registro creado"),
@@ -70,8 +68,6 @@ public class EducationController {
                 Education created = educationService.create(ownRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(educationMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Listar todos los registros de educacion (solo ADMIN)")
     @ApiResponses({
@@ -132,8 +128,6 @@ public class EducationController {
         return ResponseEntity.ok(response);
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar un registro de educacion por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro actualizado"),
@@ -161,8 +155,6 @@ public class EducationController {
         Education updated = educationService.update(educationId, ownRequest);
         return ResponseEntity.ok(educationMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un registro de educacion por id")
     @ApiResponses({

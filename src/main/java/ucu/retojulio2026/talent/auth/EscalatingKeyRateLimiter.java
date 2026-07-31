@@ -8,11 +8,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 
-// Motor generico de rate limiting con bloqueo progresivo: un bucket de tokens por key (Bucket4j)
-// mas un cache de "castigos" que escala la duracion del bloqueo cada vez que la misma key vuelve
-// a exceder su limite (30s -> 3min -> 15min por default), en vez de solo esperar el proximo
-// refill. Cada filtro (login, alta de cuentas) usa su propia instancia, con buckets y castigos
-// completamente independientes entre features.
 final class EscalatingKeyRateLimiter {
 
     private final Cache<String, Bucket> buckets;

@@ -31,8 +31,6 @@ public class UniversityRegistryController {
         this.universityRegistryMapper = universityRegistryMapper;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear un registro universitario")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Registro creado"),
@@ -44,8 +42,6 @@ public class UniversityRegistryController {
         UniversityRegistry created = universityRegistryService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(universityRegistryMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Listar todos los registros universitarios")
     @ApiResponse(responseCode = "200", description = "Listado obtenido")
@@ -71,8 +67,6 @@ public class UniversityRegistryController {
         return ResponseEntity.ok(universityRegistryMapper.toResponse(universityRegistry));
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar los datos de un registro universitario por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registro actualizado"),
@@ -87,8 +81,6 @@ public class UniversityRegistryController {
         UniversityRegistry updated = universityRegistryService.update(id, request);
         return ResponseEntity.ok(universityRegistryMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un registro universitario por id")
     @ApiResponses({

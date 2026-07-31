@@ -18,11 +18,10 @@ import ucu.retojulio2026.talent.degree.dto.UpdateDegreeRequest;
 import ucu.retojulio2026.talent.degree.dto.DegreeMapper;
 import ucu.retojulio2026.talent.degree.dto.DegreeResponse;
 
-//Bean que indica que es un Controller cuyos returns se serializan directo a JSON
 @RestController
-// Da el path de la url a donde llamar al Endpoint, ej: localhost:8080/degree/{id} para obtener una carrera
+
 @RequestMapping("/degree")
-@Tag(name = "Carreras", description = "Alta, consulta, actualizacion y baja de carreras") // agrupa los endpoints en Swagger UI
+@Tag(name = "Carreras", description = "Alta, consulta, actualizacion y baja de carreras")
 public class DegreeController {
 
     private final DegreeService degreeService;
@@ -33,10 +32,6 @@ public class DegreeController {
         this.degreeMapper = degreeMapper;
     }
 
-    // ===== CREATE =====
-
-    //PostMapping indica que usa el verbo HTTP POST para guardar un recurso.
-    //@Valid dispara las validaciones del CreateDegreeRequest (@NotBlank, @NotNull, etc)
     @Operation(summary = "Crear una carrera")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Carrera creada"),
@@ -48,12 +43,8 @@ public class DegreeController {
         Degree created = degreeService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(degreeMapper.toResponse(created));
 
-        //Devuelve el DegreeResponse mas codigo HTTP 201 (Created)
     }
 
-    // ===== READ =====
-
-    //GetMapping indica que usa el verbo HTTP GET para obtener un recurso
     @Operation(summary = "Obtener una carrera por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Carrera encontrada"),
@@ -66,8 +57,6 @@ public class DegreeController {
         Degree degree = degreeService.getById(id);
         return ResponseEntity.ok(degreeMapper.toResponse(degree));
 
-        //Devuelve un DegreeResponse (Json) mas codigo HTTP 200 (OK)
-        //Si no existe lanza 404 NotFound en GlobalExceptionHandler
     }
 
     @Operation(summary = "Listar todas las carreras")
@@ -105,9 +94,6 @@ public class DegreeController {
         return ResponseEntity.ok(response);
     }
 
-    // ===== UPDATE =====
-
-    //PutMapping indica que usa el verbo HTTP PUT para actualizar un recurso existente.
     @Operation(summary = "Actualizar una carrera por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Carrera actualizada"),
@@ -123,9 +109,6 @@ public class DegreeController {
         return ResponseEntity.ok(degreeMapper.toResponse(updated));
     }
 
-    // ===== DELETE =====
-
-    //Lo mismo que los otros con DELETE
     @Operation(summary = "Eliminar una carrera por id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Carrera eliminada (sin contenido)"),
@@ -138,8 +121,5 @@ public class DegreeController {
         degreeService.delete(id);
         return ResponseEntity.noContent().build();
 
-        //devuelve solo el codigo 204 No Content - No siempre hay que devolver un JSON al front
-        //pero siempre un codigo HTTP para que sepan si salio bien (200s) o hubo algun fallo
-        // (400s cliente) (500s servidor)
     }
 }

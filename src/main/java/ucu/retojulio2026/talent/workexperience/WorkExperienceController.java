@@ -42,8 +42,6 @@ public class WorkExperienceController {
         this.workExperienceMapper = workExperienceMapper;
     }
 
-    // ===== CREATE =====
-
     @Operation(summary = "Crear una experiencia laboral")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Experiencia creada"),
@@ -60,15 +58,13 @@ public class WorkExperienceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(workExperienceMapper.toResponse(created));
     }
 
-    // ===== READ =====
-
     @Operation(summary = "Obtener una experiencia laboral por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Experiencia encontrada"),
             @ApiResponse(responseCode = "404", description = "No existe una experiencia con ese id"),
             @ApiResponse(responseCode = "401", description = "No autenticado (sin cookie o token invalido/vencido)")
     })
-    
+
     @GetMapping("/me/{id}")
     public ResponseEntity<WorkExperienceResponse> getById(
             @AuthenticationPrincipal Jwt jwt,
@@ -98,8 +94,6 @@ public class WorkExperienceController {
         return ResponseEntity.ok(response);
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Actualizar una experiencia laboral por id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Experiencia actualizada"),
@@ -113,13 +107,11 @@ public class WorkExperienceController {
             @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Id de workExperience") @PathVariable String id,
             @Valid @RequestBody UpdateWorkExperienceRequest request) {
-        WorkExperience existing = workExperienceService.getById(id); // 404 si no existe
+        WorkExperience existing = workExperienceService.getById(id);
         AuthorizationGuard.requireOwnership(jwt, existing.getStudentProfileId());
         WorkExperience updated = workExperienceService.update(id, request);
         return ResponseEntity.ok(workExperienceMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar una experiencia laboral por id")
     @ApiResponses({

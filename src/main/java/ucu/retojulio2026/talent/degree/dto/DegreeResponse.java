@@ -2,7 +2,6 @@ package ucu.retojulio2026.talent.degree.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-//Datos que la API DEVUELVE de una carrera.
 public record DegreeResponse(
 
         @Schema(description = "Id de la carrera (NanoID)", example = "AbC123xYz890")

@@ -43,9 +43,6 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
-    // ===== CREATE =====
-
-
     @Operation(summary = "Crear un usuario")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuario creado"),
@@ -56,8 +53,6 @@ public class UserController {
         User created = userRegistrationService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(created));
     }
-
-    // ===== READ =====
 
     @Operation(summary = "Listar usuarios, opcionalmente filtrados por estado y/o rol")
     @ApiResponses({
@@ -123,8 +118,6 @@ public class UserController {
         return ResponseEntity.ok(url);
     }
 
-    // ===== UPDATE =====
-
     @Operation(summary = "Aprobar o rechazar un usuario")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Estado de cuenta actualizado"),
@@ -158,8 +151,6 @@ public class UserController {
         User updated = userService.updateProfileImage(jwt.getSubject(), file);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }
-
-    // ===== DELETE =====
 
     @Operation(summary = "Eliminar un usuario por id")
     @ApiResponses({

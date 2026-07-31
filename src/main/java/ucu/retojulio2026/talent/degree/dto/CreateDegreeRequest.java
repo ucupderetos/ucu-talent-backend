@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-//Datos que la API RECIBE para crear una carrera.
-//Usar records garantiza inmutabilidad y evita boilerplate (getters, setters, equals, etc)
 public record CreateDegreeRequest(
 
         @Schema(description = "Id del area a la que pertenece la carrera", example = "V1StGXR8_Z5j")

@@ -5,9 +5,6 @@ import org.springframework.stereotype.Component;
 
 import tools.jackson.databind.ObjectMapper;
 
-// QA reporto que POST /user (alta de cuenta) no tenia ningun limite: 1000+ altas seguidas sin un
-// solo 429. Misma mecanica que LoginRateLimitFilter, pero con cache/config totalmente
-// independiente: una IP o email penalizados aca no afectan su limite de login, y viceversa.
 @Component
 public class SignupRateLimitFilter extends AbstractKeyedRateLimitFilter {
 

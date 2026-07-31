@@ -43,7 +43,7 @@ class SignupRateLimitFilterTest {
         assertThat(secondResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(thirdResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(fourthResponse.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-        assertThat(fourthResponse.getHeader("Retry-After")).isEqualTo("60"); // 1 minuto, no un dia
+        assertThat(fourthResponse.getHeader("Retry-After")).isEqualTo("60");
         assertThat(fourthResponse.getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         assertThat(fourthResponse.getContentAsString()).contains("Demasiadas cuentas creadas");
     }
@@ -88,7 +88,6 @@ class SignupRateLimitFilterTest {
                 "900,3600,86400",
                 43_200);
 
-        // 1er strike: agota el limite por IP (bloqueo corto).
         runSignupRequest(filter, "198.51.100.21", "day1-a@ucu.edu.uy");
         runSignupRequest(filter, "198.51.100.21", "day1-b@ucu.edu.uy");
         runSignupRequest(filter, "198.51.100.21", "day1-c@ucu.edu.uy");
@@ -96,7 +95,6 @@ class SignupRateLimitFilterTest {
         assertThat(firstLockout.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
         assertThat(firstLockout.getHeader("Retry-After")).isEqualTo("60");
 
-        // Sin esperar el minuto real, confirmamos que sigue bloqueado.
         MockHttpServletResponse stillLocked = runSignupRequest(filter, "198.51.100.21", "day1-e@ucu.edu.uy");
         assertThat(stillLocked.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
         assertThat(stillLocked.getHeader("Retry-After")).isEqualTo("60");
@@ -150,7 +148,7 @@ class SignupRateLimitFilterTest {
                 runSignupRequest(porEmail, "198.51.100.43", "repetido@ucu.edu.uy");
 
         assertThat(bloqueadaPorEmail.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-        assertThat(bloqueadaPorEmail.getHeader("Retry-After")).isEqualTo("900"); // 15 minutos
+        assertThat(bloqueadaPorEmail.getHeader("Retry-After")).isEqualTo("900");
 
         SignupRateLimitFilter porIp = new SignupRateLimitFilter(
                 new ObjectMapper(),
@@ -171,7 +169,7 @@ class SignupRateLimitFilterTest {
         MockHttpServletResponse bloqueadaPorIp = runSignupRequest(porIp, "198.51.100.50", "d@ucu.edu.uy");
 
         assertThat(bloqueadaPorIp.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-        assertThat(bloqueadaPorIp.getHeader("Retry-After")).isEqualTo("60"); // 1 minuto
+        assertThat(bloqueadaPorIp.getHeader("Retry-After")).isEqualTo("60");
     }
 
     @Test

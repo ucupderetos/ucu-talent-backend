@@ -5,7 +5,6 @@ import ucu.retojulio2026.talent.education.Education.DegreeLevel;
 
 import java.time.LocalDate;
 
-//Datos que la API DEVUELVE de un registro de educacion.
 public record EducationResponse(
 
         @Schema(description = "Id del registro de educacion (NanoID)", example = "AbC123xYz890")
